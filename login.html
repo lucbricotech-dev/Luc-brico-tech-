@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion — LUC BRICO-TECH</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body class="login-page">
+<div class="login-card">
+  <div class="brand center"><div class="brand-mark">LBT</div><div><strong>LUC BRICO-TECH</strong><small>Gestion & supervision</small></div></div>
+  <h1>Connexion</h1>
+  <p class="muted">Accédez à votre espace de gestion.</p>
+  <form id="loginForm">
+    <label>Email<input id="email" type="email" required placeholder="vous@exemple.com"></label>
+    <label>Mot de passe<input id="password" type="password" required placeholder="••••••••"></label>
+    <button class="primary wide">Se connecter</button>
+  </form>
+  <button id="demoBtn" class="secondary wide">Continuer en mode démo</button>
+  <p id="loginMsg" class="msg"></p>
+</div>
+<script>
+const cfg=window.LBT_CONFIG||{};
+const configured=cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase;
+const client=configured?window.supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY):null;
+document.getElementById('demoBtn').onclick=()=>location.href='index.html?demo=1';
+document.getElementById('loginForm').onsubmit=async e=>{
+ e.preventDefault();
+ const msg=document.getElementById('loginMsg');
+ if(!client){msg.textContent="Supabase n'est pas configuré. Utilisez le mode démo.";return}
+ msg.textContent="Connexion...";
+ const {error}=await client.auth.signInWithPassword({email:email.value,password:password.value});
+ if(error){msg.textContent=error.message;return}
+ location.href='index.html';
+};
+</script>
+</body></html>
