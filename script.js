@@ -277,9 +277,35 @@ async function saveSettings(e){
  e.preventDefault();const f=new FormData(e.target), p=Object.fromEntries(f.entries());
  try{
   const existing=state.db.settings.find(x=>x.user_id===state.user.id);
-  if(existing)await update("settings",existing.id,p);else await insert("settings",p);
-  await audit("update","settings",existing?.id||null,p);toast("Paramètres enregistrés.");render();
- }catch(e){toast(e.message)}
+  if(state.cloud){
+   // settings est identifié de façon unique par user_id, pas par id.
+   // On met donc à jour la ligne existante avec user_id pour éviter
+   // l'erreur de contrainte unique settings_user_id_key.
+   if(existing){
+    const {data,error}=await sb.from("settings")
+      .update({...p,updated_at:now()})
+      .eq("user_id",state.user.id)
+      .select()
+      .single();
+    if(error)throw error;
+    const i=state.db.settings.findIndex(x=>x.user_id===state.user.id);
+    if(i>=0)state.db.settings[i]=data;
+   }else{
+    const data=await insert("settings",p);
+    if(!state.db.settings.some(x=>x.user_id===state.user.id))state.db.settings.unshift(data);
+   }
+  }else{
+   if(existing){
+    Object.assign(existing,p,{updated_at:now()});
+    saveLocal();
+   }else{
+    await insert("settings",p);
+   }
+  }
+  await audit("update","settings",state.user.id,p);
+  toast("Paramètres enregistrés.");
+  render();
+ }catch(e){toast(e.message||"Impossible d'enregistrer les paramètres.")}
 }
 
 function openForm(table,id=null){
