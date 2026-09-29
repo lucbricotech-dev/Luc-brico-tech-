@@ -1,104 +1,180 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>LUC BRICO-TECH — Gestion</title>
+  <title>LUC BRICO-TECH — Gestion & Supervision</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js"></script>
+
+  <!-- Configuration Supabase -->
+  <script src="./config.js"></script>
 </head>
 
 <body>
 
+  <!-- ==============================
+       NOTIFICATION
+  =============================== -->
   <div id="toast" class="toast"></div>
 
+
+  <!-- ==============================
+       APPLICATION
+  =============================== -->
   <div class="app">
 
-    <!-- =========================
-         MENU LATERAL
-    ========================== -->
+    <!-- ==============================
+         SIDEBAR
+    =============================== -->
     <aside id="sidebar" class="sidebar">
 
+      <!-- IDENTITÉ / LOGO -->
       <div class="brand brand-logo">
 
-        <!-- LOGO LUC BRICO-TECH -->
-        <img
-          src="./logo-luc-bricotech.png"
-          alt="Logo LUC BRICO-TECH"
-          class="hero-logo"
-        >
+        <div class="brand-image-wrapper">
+          <img
+            src="./logo-luc-bricotech.png"
+            alt="Logo LUC BRICO-TECH"
+            class="brand-logo-img"
+            onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';"
+          >
 
-        <div>
-          <small>Gestion & supervision</small>
+          <!-- Affiché uniquement si le fichier logo est introuvable -->
+          <div id="logoFallback" class="logo-fallback" style="display:none;">
+            LBT
+          </div>
+        </div>
+
+        <div class="brand-text">
+          <strong>LUC BRICO-TECH</strong>
+          <small>Gestion &amp; supervision</small>
         </div>
 
       </div>
 
-      <!-- NAVIGATION -->
-      <nav id="nav">
 
-        <button data-page="dashboard">
-          📊 Tableau de bord
+      <!-- ==============================
+           NAVIGATION
+      =============================== -->
+      <nav id="nav" class="main-nav">
+
+        <button
+          type="button"
+          data-page="dashboard"
+          class="nav-btn">
+          <span class="nav-icon">📊</span>
+          <span>Tableau de bord</span>
         </button>
 
-        <button data-page="members">
-          👥 Membres
+        <button
+          type="button"
+          data-page="members"
+          class="nav-btn">
+          <span class="nav-icon">👥</span>
+          <span>Membres</span>
         </button>
 
-        <button data-page="sales">
-          💰 Ventes
+        <button
+          type="button"
+          data-page="sales"
+          class="nav-btn">
+          <span class="nav-icon">💰</span>
+          <span>Ventes</span>
         </button>
 
-        <button data-page="purchases">
-          🛒 Achats
+        <button
+          type="button"
+          data-page="purchases"
+          class="nav-btn">
+          <span class="nav-icon">🛒</span>
+          <span>Achats</span>
         </button>
 
-        <button data-page="expenses">
-          💳 Dépenses
+        <button
+          type="button"
+          data-page="expenses"
+          class="nav-btn">
+          <span class="nav-icon">💳</span>
+          <span>Dépenses</span>
         </button>
 
-        <button data-page="stock">
-          📦 Stock & matériel
+        <button
+          type="button"
+          data-page="stock"
+          class="nav-btn">
+          <span class="nav-icon">📦</span>
+          <span>Stock &amp; matériel</span>
         </button>
 
-        <button data-page="activities">
-          🔧 Activités
+        <button
+          type="button"
+          data-page="activities"
+          class="nav-btn">
+          <span class="nav-icon">🔧</span>
+          <span>Activités</span>
         </button>
 
-        <button data-page="projects">
-          🏗️ Projets
+        <button
+          type="button"
+          data-page="projects"
+          class="nav-btn">
+          <span class="nav-icon">🏗️</span>
+          <span>Projets</span>
         </button>
 
-        <button data-page="innovations">
-          💡 Innovations
+        <button
+          type="button"
+          data-page="innovations"
+          class="nav-btn">
+          <span class="nav-icon">💡</span>
+          <span>Innovations</span>
         </button>
 
-        <button data-page="reports">
-          📈 Rapports
+        <button
+          type="button"
+          data-page="reports"
+          class="nav-btn">
+          <span class="nav-icon">📈</span>
+          <span>Rapports</span>
         </button>
 
-        <button data-page="audit">
-          🕘 Journal
+        <button
+          type="button"
+          data-page="audit"
+          class="nav-btn">
+          <span class="nav-icon">🕘</span>
+          <span>Journal</span>
         </button>
 
-        <button data-page="settings">
-          ⚙️ Paramètres
+        <button
+          type="button"
+          data-page="settings"
+          class="nav-btn">
+          <span class="nav-icon">⚙️</span>
+          <span>Paramètres</span>
         </button>
 
       </nav>
 
-      <!-- PIED DU MENU -->
+
+      <!-- ==============================
+           BAS DE SIDEBAR
+      =============================== -->
       <div class="side-footer">
 
-        <span id="modeBadge" class="badge">
+        <span
+          id="modeBadge"
+          class="badge">
           MODE DÉMO
         </span>
 
         <button
+          type="button"
           id="logoutBtn"
           class="danger ghost">
           Déconnexion
@@ -109,22 +185,29 @@
     </aside>
 
 
-    <!-- =========================
+    <!-- ==============================
          CONTENU PRINCIPAL
-    ========================== -->
+    =============================== -->
     <main class="main">
 
-      <!-- BARRE SUPÉRIEURE -->
+
+      <!-- ==============================
+           BARRE SUPÉRIEURE
+      =============================== -->
       <header class="topbar">
 
+        <!-- Menu mobile -->
         <button
+          type="button"
           id="menuBtn"
           class="icon-btn"
           aria-label="Ouvrir le menu">
           ☰
         </button>
 
-        <div>
+
+        <!-- TITRE -->
+        <div class="topbar-title">
 
           <h1 id="pageTitle">
             Tableau de bord
@@ -136,12 +219,15 @@
 
         </div>
 
+
         <!-- UTILISATEUR CONNECTÉ -->
         <div class="userbox">
 
-          <span id="userName">
+          <div
+            id="userName"
+            class="user-name">
             Invité
-          </span>
+          </div>
 
           <span
             id="userRole"
@@ -154,12 +240,17 @@
       </header>
 
 
-      <!-- =========================
+      <!-- ==============================
            CONTENU DYNAMIQUE
-      ========================== -->
+      =============================== -->
       <section
         id="content"
         class="content">
+
+        <!-- Le contenu du tableau de bord
+             et des autres pages est généré
+             par script.js -->
+
       </section>
 
     </main>
@@ -167,12 +258,13 @@
   </div>
 
 
-  <!-- =========================
-       FENÊTRE MODALE
-  ========================== -->
+  <!-- ==============================
+       MODALE
+  =============================== -->
   <div
     id="modal"
-    class="modal hidden">
+    class="modal hidden"
+    aria-hidden="true">
 
     <div class="modal-card">
 
@@ -183,6 +275,7 @@
         </h2>
 
         <button
+          type="button"
           id="closeModal"
           class="icon-btn"
           aria-label="Fermer">
@@ -191,15 +284,20 @@
 
       </div>
 
-      <form id="recordForm"></form>
+      <form
+        id="recordForm"
+        autocomplete="off">
+      </form>
 
     </div>
 
   </div>
 
 
-  <!-- SCRIPT PRINCIPAL -->
-  <script src="script.js"></script>
+  <!-- ==============================
+       JAVASCRIPT
+  =============================== -->
+  <script src="./script.js"></script>
 
 </body>
 </html>
