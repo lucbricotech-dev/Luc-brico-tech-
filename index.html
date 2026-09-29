@@ -3,61 +3,203 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+
   <title>LUC BRICO-TECH — Gestion</title>
+
   <link rel="stylesheet" href="style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
 </head>
+
 <body>
+
   <div id="toast" class="toast"></div>
+
   <div class="app">
+
+    <!-- =========================
+         MENU LATERAL
+    ========================== -->
     <aside id="sidebar" class="sidebar">
+
       <div class="brand brand-logo">
-  <img
-  src="logo-luc-bricotech.png"
-  alt="Logo LUC BRICO-TECH"
-  class="hero-logo"
->
-  <div><small>Gestion & supervision</small></div>
-</div>
-      <nav id="nav">
-        <button data-page="dashboard">📊 Tableau de bord</button>
-        <button data-page="members">👥 Membres</button>
-        <button data-page="sales">💰 Ventes</button>
-        <button data-page="purchases">🛒 Achats</button>
-        <button data-page="expenses">💳 Dépenses</button>
-        <button data-page="stock">📦 Stock & matériel</button>
-        <button data-page="activities">🔧 Activités</button>
-        <button data-page="projects">🏗️ Projets</button>
-        <button data-page="innovations">💡 Innovations</button>
-        <button data-page="reports">📈 Rapports</button>
-        <button data-page="audit">🕘 Journal</button>
-        <button data-page="settings">⚙️ Paramètres</button>
-      </nav>
-      <div class="side-footer">
-        <span id="modeBadge" class="badge">MODE DÉMO</span>
-        <button id="logoutBtn" class="danger ghost">Déconnexion</button>
+
+        <!-- LOGO LUC BRICO-TECH -->
+        <img
+          src="./logo-luc-bricotech.png"
+          alt="Logo LUC BRICO-TECH"
+          class="hero-logo"
+        >
+
+        <div>
+          <small>Gestion & supervision</small>
+        </div>
+
       </div>
+
+      <!-- NAVIGATION -->
+      <nav id="nav">
+
+        <button data-page="dashboard">
+          📊 Tableau de bord
+        </button>
+
+        <button data-page="members">
+          👥 Membres
+        </button>
+
+        <button data-page="sales">
+          💰 Ventes
+        </button>
+
+        <button data-page="purchases">
+          🛒 Achats
+        </button>
+
+        <button data-page="expenses">
+          💳 Dépenses
+        </button>
+
+        <button data-page="stock">
+          📦 Stock & matériel
+        </button>
+
+        <button data-page="activities">
+          🔧 Activités
+        </button>
+
+        <button data-page="projects">
+          🏗️ Projets
+        </button>
+
+        <button data-page="innovations">
+          💡 Innovations
+        </button>
+
+        <button data-page="reports">
+          📈 Rapports
+        </button>
+
+        <button data-page="audit">
+          🕘 Journal
+        </button>
+
+        <button data-page="settings">
+          ⚙️ Paramètres
+        </button>
+
+      </nav>
+
+      <!-- PIED DU MENU -->
+      <div class="side-footer">
+
+        <span id="modeBadge" class="badge">
+          MODE DÉMO
+        </span>
+
+        <button
+          id="logoutBtn"
+          class="danger ghost">
+          Déconnexion
+        </button>
+
+      </div>
+
     </aside>
 
+
+    <!-- =========================
+         CONTENU PRINCIPAL
+    ========================== -->
     <main class="main">
+
+      <!-- BARRE SUPÉRIEURE -->
       <header class="topbar">
-        <button id="menuBtn" class="icon-btn">☰</button>
-        <div><h1 id="pageTitle">Tableau de bord</h1><p id="pageSub">Vue générale de l’activité.</p></div>
-        <div class="userbox"><span id="userName">Invité</span><span id="userRole" class="badge">—</span></div>
+
+        <button
+          id="menuBtn"
+          class="icon-btn"
+          aria-label="Ouvrir le menu">
+          ☰
+        </button>
+
+        <div>
+
+          <h1 id="pageTitle">
+            Tableau de bord
+          </h1>
+
+          <p id="pageSub">
+            Vue générale de l’activité.
+          </p>
+
+        </div>
+
+        <!-- UTILISATEUR CONNECTÉ -->
+        <div class="userbox">
+
+          <span id="userName">
+            Invité
+          </span>
+
+          <span
+            id="userRole"
+            class="badge">
+            —
+          </span>
+
+        </div>
+
       </header>
 
-      <section id="content" class="content"></section>
+
+      <!-- =========================
+           CONTENU DYNAMIQUE
+      ========================== -->
+      <section
+        id="content"
+        class="content">
+      </section>
+
     </main>
+
   </div>
 
-  <div id="modal" class="modal hidden">
+
+  <!-- =========================
+       FENÊTRE MODALE
+  ========================== -->
+  <div
+    id="modal"
+    class="modal hidden">
+
     <div class="modal-card">
-      <div class="modal-head"><h2 id="modalTitle">Ajouter</h2><button id="closeModal" class="icon-btn">✕</button></div>
+
+      <div class="modal-head">
+
+        <h2 id="modalTitle">
+          Ajouter
+        </h2>
+
+        <button
+          id="closeModal"
+          class="icon-btn"
+          aria-label="Fermer">
+          ✕
+        </button>
+
+      </div>
+
       <form id="recordForm"></form>
+
     </div>
+
   </div>
 
-<script src="script.js"></script>
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="script.js"></script>
+
 </body>
 </html>
