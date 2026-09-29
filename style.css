@@ -67,3 +67,11 @@ label{display:grid;gap:6px;font-size:13px;font-weight:600;margin-bottom:12px}inp
 
 /* Gestion des comptes employés */
 .hint{padding:12px 14px;border:1px solid rgba(37,99,235,.22);border-radius:12px;background:rgba(37,99,235,.06);color:#334155;font-size:.9rem;line-height:1.5}.switch{display:inline-flex!important;align-items:center;gap:8px;cursor:pointer}.switch input{display:none}.switch span{width:42px;height:23px;border-radius:999px;background:#cbd5e1;position:relative;display:inline-block;transition:.2s}.switch span:after{content:"";position:absolute;width:17px;height:17px;top:3px;left:3px;background:white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:.2s}.switch input:checked+span{background:#2563eb}.switch input:checked+span:after{transform:translateX(19px)}
+.hero-logo {
+  display: block;
+  width: 180px;
+  max-width: 70%;
+  height: auto;
+  margin: 40px auto 0;
+  object-fit: contain;
+}
