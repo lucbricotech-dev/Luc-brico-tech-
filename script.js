@@ -1,617 +1,3691 @@
 (() => {
-"use strict";
-const CFG=window.LBT_CONFIG||{};
-const hasCloud=!!(CFG.SUPABASE_URL&&CFG.SUPABASE_ANON_KEY&&window.supabase);
-const sb=hasCloud?window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY):null;
-const DBKEY="lbt_v3_demo";
+  "use strict";
 
-const schemas={
- sales:{title:"Nouvelle vente",fields:[
-  ["customer","Client","text",true],["item","Article / service","text",true],["quantity","Quantité","number",true],["amount","Montant (FCFA)","number",true],["payment_method","Paiement","select",false,["cash","mobile_money","bank","credit"]],["status","Statut","select",false,["paid","pending","cancelled"]],["notes","Notes","textarea",false]
- ]},
- purchases:{title:"Nouvel achat",fields:[["supplier","Fournisseur","text",true],["item","Article","text",true],["quantity","Quantité","number",true],["amount","Montant (FCFA)","number",true],["status","Statut","select",false,["received","pending","cancelled"]],["notes","Notes","textarea",false]]},
- expenses:{title:"Nouvelle dépense",fields:[["category","Catégorie","text",true],["label","Libellé","text",true],["amount","Montant (FCFA)","number",true],["beneficiary","Bénéficiaire","text",false],["notes","Notes","textarea",false]]},
- activities:{title:"Nouvelle activité",fields:[["title","Titre","text",true],["category","Catégorie","text",false],["description","Description","textarea",false],["location","Lieu","text",false],["status","Statut","select",false,["open","in_progress","done","cancelled"]],["amount","Montant (FCFA)","number",false]]},
- projects:{title:"Nouveau projet",fields:[["name","Nom du projet","text",true],["client","Client","text",false],["description","Description","textarea",false],["status","Statut","select",false,["planned","active","completed","paused"]],["progress","Progression (%)","number",false],["budget","Budget (FCFA)","number",false]]},
- innovations:{title:"Nouvelle innovation",fields:[["title","Titre","text",true],["description","Description","textarea",false],["stage","Étape","select",false,["idea","prototype","test","production"]],["budget","Budget (FCFA)","number",false],["progress","Progression (%)","number",false]]},
- clients:{title:"Nouveau client",fields:[["full_name","Nom complet","text",true],["company_name","Entreprise","text",false],["phone","Téléphone","tel",false],["email","E-mail","email",false],["address","Adresse","text",false],["city","Ville","text",false],["notes","Notes","textarea",false]]},
- quotes:{title:"Nouveau devis",fields:[["client_id","Client","select",true,"clients"],["quote_number","Numéro du devis","text",true],["issue_date","Date d’émission","date",true],["valid_until","Valable jusqu’au","date",false],["title","Objet","text",true],["description","Description","textarea",false],["subtotal","Sous-total (FCFA)","number",true],["discount","Remise (FCFA)","number",false],["tax","Taxe (FCFA)","number",false],["total","Total (FCFA)","number",true],["status","Statut","select",false,["draft","sent","accepted","rejected","expired","converted"]],["notes","Notes","textarea",false]]},
- invoices:{title:"Nouvelle facture",fields:[["client_id","Client","select",true,"clients"],["invoice_number","Numéro de facture","text",true],["issue_date","Date d’émission","date",true],["due_date","Date d’échéance","date",false],["title","Objet","text",true],["description","Description","textarea",false],["subtotal","Sous-total (FCFA)","number",true],["discount","Remise (FCFA)","number",false],["tax","Taxe (FCFA)","number",false],["total","Total (FCFA)","number",true],["amount_paid","Montant payé (FCFA)","number",false],["status","Statut","select",false,["draft","unpaid","partial","paid","cancelled","overdue"]],["notes","Notes","textarea",false]]},
- payments:{title:"Nouveau paiement",fields:[["invoice_id","Facture","select",true,"invoices"],["amount","Montant (FCFA)","number",true],["payment_method","Mode de paiement","select",true,["cash","mobile_money","bank_transfer","card","other"]],["payment_date","Date","date",true],["reference","Référence","text",false],["notes","Notes","textarea",false]]},
- stock_items:{title:"Nouvel article de stock",fields:[["name","Article","text",true],["category","Catégorie","text",false],["unit","Unité","text",false],["quantity","Quantité","number",true],["min_quantity","Seuil minimum","number",false],["location","Emplacement","text",false]]}
-};
+  const cfg = window.LBT_CONFIG || {};
+  const hasCloud =
+    !!window.supabase &&
+    !!cfg.SUPABASE_URL &&
+    !!cfg.SUPABASE_ANON_KEY;
 
-const state={page:"dashboard",role:"admin",user:null,cloud:hasCloud,db:loadLocal()};
-const TABLES=["profiles","sales","purchases","expenses","stock_items","stock_movements","activities","projects","innovations","audit_logs","settings","clients","quotes","quote_items","invoices","invoice_items","payments"];
-function loadLocal(){
- try{
-  const d=JSON.parse(localStorage.getItem(DBKEY))||seed();
-  TABLES.forEach(t=>{if(!Array.isArray(d[t]))d[t]=[]});
-  return d;
- }catch{return seed()}
-}
-function saveLocal(){localStorage.setItem(DBKEY,JSON.stringify(state.db))}
-function seed(){return {profiles:[{id:"demo-admin",full_name:"Lucien BESSAN",role:"admin",active:true}],sales:[],purchases:[],expenses:[],stock_items:[],stock_movements:[],activities:[],projects:[],innovations:[],audit_logs:[],settings:[]}}
-function toast(s){const e=document.getElementById("toast");e.textContent=s;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2400)}
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function money(n){return new Intl.NumberFormat("fr-FR").format(Number(n||0))+" FCFA"}
-function uid(){return crypto.randomUUID?crypto.randomUUID():"demo-"+Date.now()+"-"+Math.random()}
-function now(){return new Date().toISOString()}
+  const sb = hasCloud
+    ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY)
+    : null;
 
-async function cloudSession(){
- if(!sb)return null;
- const {data:{session}}=await sb.auth.getSession(); return session;
-}
-async function boot(){
- try{
- if(hasCloud){
-  const session=await cloudSession();
-  if(!session){ if(location.pathname.endsWith("login.html")) return; location.href="login.html"; return; }
-  state.user=session.user;
-  const {data:p}=await sb.from("profiles").select("*").eq("id",session.user.id).single();
-  state.profile=p||{id:session.user.id,full_name:session.user.email,email:session.user.email,role:"employee",active:true};
-  if(state.profile.active===false){
-   await sb.auth.signOut();
-   alert("Ce compte a été désactivé par l’administrateur.");
-   location.href="login.html";
-   return;
+  const state = {
+    user: null,
+    profile: null,
+    db: {},
+    cloud: hasCloud,
+    page: "dashboard",
+    modal: null,
+    lineDraft: [],
+    selectedDocument: null
+  };
+
+  const TABLES = [
+    "profiles",
+    "sales",
+    "purchases",
+    "expenses",
+    "stock_items",
+    "stock_movements",
+    "activities",
+    "projects",
+    "innovations",
+    "audit_logs",
+    "settings",
+    "clients",
+    "quotes",
+    "quote_items",
+    "invoices",
+    "invoice_items",
+    "payments"
+  ];
+
+  const TABLES_WITH_USER_ID = [
+    "sales",
+    "purchases",
+    "expenses",
+    "stock_movements",
+    "activities",
+    "projects",
+    "innovations",
+    "audit_logs",
+    "clients",
+    "quotes",
+    "invoices",
+    "payments"
+  ];
+
+  const ROLE_PAGES = {
+    admin: [
+      "dashboard","members","clients","quotes","invoices","payments",
+      "sales","purchases","expenses","stock","activities","projects",
+      "innovations","reports","audit","settings"
+    ],
+    manager: [
+      "dashboard","members","clients","quotes","invoices","payments",
+      "sales","purchases","expenses","stock","activities","projects",
+      "innovations","reports"
+    ],
+    employee: [
+      "dashboard","clients","quotes","invoices","payments",
+      "sales","purchases","expenses","stock","activities","projects",
+      "innovations","reports"
+    ]
+  };
+
+  const schemas = {
+    clients: {
+      title: "Clients",
+      fields: [
+        ["full_name","Nom complet","text",true],
+        ["company_name","Entreprise","text",false],
+        ["phone","Téléphone","text",false],
+        ["email","E-mail","email",false],
+        ["address","Adresse","text",false],
+        ["city","Ville","text",false],
+        ["notes","Notes","textarea",false],
+        ["active","Actif","checkbox",false]
+      ]
+    },
+
+    quotes: {
+      title: "Devis",
+      fields: [
+        ["quote_number","N° devis","text",false],
+        ["client_id","Client","client",true],
+        ["issue_date","Date","date",true],
+        ["valid_until","Valable jusqu'au","date",false],
+        ["status","Statut","select",false,
+          ["draft","sent","accepted","rejected","expired","converted"]],
+        ["title","Objet","text",false],
+        ["description","Description","textarea",false],
+        ["discount","Remise","number",false],
+        ["tax","Taxe","number",false],
+        ["notes","Notes","textarea",false],
+        ["terms","Conditions","textarea",false]
+      ]
+    },
+
+    invoices: {
+      title: "Factures",
+      fields: [
+        ["invoice_number","N° facture","text",false],
+        ["client_id","Client","client",true],
+        ["quote_id","Devis lié","quote",false],
+        ["issue_date","Date","date",true],
+        ["due_date","Échéance","date",false],
+        ["status","Statut","invoice_status",false],
+        ["title","Objet","text",false],
+        ["description","Description","textarea",false],
+        ["discount","Remise","number",false],
+        ["tax","Taxe","number",false],
+        ["amount_paid","Montant payé","number",false],
+        ["notes","Notes","textarea",false],
+        ["terms","Conditions","textarea",false]
+      ]
+    },
+
+    sales: {
+      title: "Ventes",
+      fields: [
+        ["date","Date","date",true],
+        ["description","Description","text",true],
+        ["amount","Montant","number",true],
+        ["payment_method","Paiement","payment_method",false],
+        ["client_id","Client","client",false],
+        ["notes","Notes","textarea",false]
+      ]
+    },
+
+    purchases: {
+      title: "Achats",
+      fields: [
+        ["date","Date","date",true],
+        ["description","Description","text",true],
+        ["amount","Montant","number",true],
+        ["supplier","Fournisseur","text",false],
+        ["notes","Notes","textarea",false]
+      ]
+    },
+
+    expenses: {
+      title: "Dépenses",
+      fields: [
+        ["date","Date","date",true],
+        ["category","Catégorie","text",true],
+        ["description","Description","text",true],
+        ["amount","Montant","number",true],
+        ["payment_method","Paiement","payment_method",false],
+        ["notes","Notes","textarea",false]
+      ]
+    },
+
+    stock_items: {
+      title: "Stock",
+      fields: [
+        ["name","Désignation","text",true],
+        ["sku","Référence","text",false],
+        ["quantity","Quantité","number",true],
+        ["min_quantity","Seuil minimum","number",false],
+        ["unit","Unité","text",false],
+        ["location","Emplacement","text",false],
+        ["notes","Notes","textarea",false]
+      ]
+    },
+
+    activities: {
+      title: "Activités",
+      fields: [
+        ["date","Date","date",true],
+        ["title","Activité","text",true],
+        ["description","Description","textarea",false],
+        ["status","Statut","text",false]
+      ]
+    },
+
+    projects: {
+      title: "Projets",
+      fields: [
+        ["name","Projet","text",true],
+        ["client_id","Client","client",false],
+        ["start_date","Début","date",false],
+        ["end_date","Fin","date",false],
+        ["status","Statut","text",false],
+        ["description","Description","textarea",false]
+      ]
+    },
+
+    innovations: {
+      title: "Innovations",
+      fields: [
+        ["title","Titre","text",true],
+        ["description","Description","textarea",true],
+        ["status","Statut","text",false]
+      ]
+    }
+  };
+
+  const paymentMethods = [
+    ["cash","Espèces"],
+    ["mobile_money","Mobile Money"],
+    ["mtn_momo","MTN MoMo"],
+    ["moov_money","Moov Money"],
+    ["celtiis_cash","Celtiis Cash"],
+    ["bank_transfer","Virement bancaire"],
+    ["card","Carte bancaire"],
+    ["check","Chèque bancaire"],
+    ["pi_spi","PI-SPI"],
+    ["other","Autre"],
+    ["credit","Crédit"]
+  ];
+
+  const labels = {
+    draft: "Brouillon",
+    sent: "Envoyé",
+    accepted: "Accepté",
+    rejected: "Refusé",
+    expired: "Expiré",
+    converted: "Converti",
+
+    unpaid: "Impayée",
+    partial: "Partiellement payée",
+    paid: "Payée",
+    cancelled: "Annulée",
+    overdue: "En retard",
+
+    cash: "Espèces",
+    mobile_money: "Mobile Money",
+    mtn_momo: "MTN MoMo",
+    moov_money: "Moov Money",
+    celtiis_cash: "Celtiis Cash",
+    bank_transfer: "Virement bancaire",
+    card: "Carte bancaire",
+    check: "Chèque bancaire",
+    pi_spi: "PI-SPI",
+    other: "Autre",
+    credit: "Crédit"
+  };
+
+  const esc = value =>
+    String(value ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+
+  const money = value =>
+    `${Number(value || 0).toLocaleString("fr-FR")} FCFA`;
+
+  const today = () => new Date().toISOString().slice(0,10);
+  const now = () => new Date().toISOString();
+
+  function toast(message, type = "info") {
+    let box = document.getElementById("toast");
+
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "toast";
+      box.style.cssText =
+        "position:fixed;right:18px;bottom:18px;z-index:99999;max-width:360px;padding:13px 16px;border-radius:12px;background:#111827;color:white;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:14px;";
+      document.body.appendChild(box);
+    }
+
+    box.textContent = message;
+    box.dataset.type = type;
+
+    clearTimeout(box._timer);
+    box._timer = setTimeout(() => box.remove(),3500);
   }
-  state.role=state.profile.role;
-  await syncCloud();
-  applyRoleNavigation();
- }else{
-  state.user={id:"demo-admin",email:"demo@lucbricotech.local"};
-  state.profile=state.db.profiles[0]; state.role="admin";
- }
- document.getElementById("userName").textContent=state.profile.full_name||state.user.email||"Utilisateur";
- document.getElementById("userRole").textContent=state.role.toUpperCase();
- document.getElementById("modeBadge").textContent=state.cloud?"SUPABASE":"MODE DÉMO";
- bind();
- render();
- }catch(err){
-  console.error("Erreur de démarrage:",err);
-  if(hasCloud){
-   const content=document.getElementById("content");
-   if(content)content.innerHTML=`<div class="card"><h3>Connexion sécurisée indisponible</h3><p class="muted">Impossible de charger les données Supabase. Aucun mode administrateur de démonstration n'est activé.</p><button class="primary" id="retryConnection">Réessayer</button><button class="secondary" id="goLogin" style="margin-left:8px">Retour à la connexion</button></div>`;
-   document.getElementById("retryConnection")?.addEventListener("click",()=>location.reload());
-   document.getElementById("goLogin")?.addEventListener("click",()=>location.href="login.html");
-   toast("Erreur de connexion sécurisée à Supabase.");
-   return;
+
+  function role() {
+    return state.profile?.role || "employee";
   }
-  state.cloud=false;
-  state.user={id:"demo-admin",email:"demo@lucbricotech.local"};
-  state.profile=state.db.profiles?.[0]||{id:"demo-admin",full_name:"Lucien BESSAN",role:"admin",active:true};
-  state.role=state.profile.role||"admin";
-  document.getElementById("userName").textContent=state.profile.full_name||"Utilisateur";
-  document.getElementById("userRole").textContent=state.role.toUpperCase();
-  document.getElementById("modeBadge").textContent="MODE DÉMO";
-  bind();
-  render();
-  toast("Mode démo actif.");
- }
-}
-async function syncCloud(){
- for(const t of TABLES){
-  const query=sb.from(t).select("*");
-  const result=t==="settings"
-    ? await query
-    : await query.order("created_at",{ascending:false});
-  const {data,error}=result;
-  if(!error&&data)state.db[t]=data;
-  else if(!Array.isArray(state.db[t]))state.db[t]=[];
- }
-}
-async function insert(table,payload){
- if(!state.cloud){const x={id:uid(),user_id:state.user.id,created_at:now(),...payload};(state.db[table]??=[]).unshift(x);saveLocal();return x}
- const x={user_id:state.user.id,...payload};
- const {data,error}=await sb.from(table).insert(x).select().single();
- if(error)throw error; state.db[table].unshift(data); return data;
-}
-async function update(table,id,payload){
- if(!state.cloud){const arr=state.db[table]||[];const i=arr.findIndex(x=>x.id===id);if(i>=0)arr[i]={...arr[i],...payload};saveLocal();return}
- const {data,error}=await sb.from(table).update(payload).eq("id",id).select().single();if(error)throw error;
- const arr=state.db[table]||[],i=arr.findIndex(x=>x.id===id);if(i>=0)arr[i]=data;
-}
-async function remove(table,id){
- if(!state.cloud){state.db[table]=(state.db[table]||[]).filter(x=>x.id!==id);saveLocal();return}
- const {error}=await sb.from(table).delete().eq("id",id);if(error)throw error;
- state.db[table]=(state.db[table]||[]).filter(x=>x.id!==id);
-}
-async function audit(action,entity,id,details={}){
- try{await insert("audit_logs",{action,entity,entity_id:id,details})}catch(e){console.warn(e)}
-}
 
-const ROLE_PAGES={
- admin:["dashboard","members","clients","quotes","invoices","payments","sales","purchases","expenses","stock","activities","projects","innovations","reports","audit","settings"],
- manager:["dashboard","members","clients","quotes","invoices","payments","sales","purchases","expenses","stock","activities","projects","innovations","reports"],
- employee:["dashboard","clients","quotes","invoices","payments","sales","purchases","expenses","stock","activities","projects","innovations","reports"]
-};
-function allowedPages(){return ROLE_PAGES[state.role]||ROLE_PAGES.employee}
-function canManageStock(){return state.role==="admin"||state.role==="manager"}
-function applyRoleNavigation(){
- const allowed=allowedPages();
- document.querySelectorAll("#nav button").forEach(b=>{
-   const visible=allowed.includes(b.dataset.page);
-   b.hidden=!visible;
-   b.setAttribute("aria-hidden",String(!visible));
- });
- if(!allowed.includes(state.page))state.page="dashboard";
-}
-function bind(){
- applyRoleNavigation();
- document.querySelectorAll("#nav button:not([hidden])").forEach(b=>b.onclick=()=>{
-   if(!allowedPages().includes(b.dataset.page))return;
-   state.page=b.dataset.page;closeMenu();render();
- });
- document.getElementById("menuBtn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
- document.getElementById("closeModal").onclick=closeModal;
- document.getElementById("logoutBtn").onclick=logout;
-}
-function closeMenu(){document.getElementById("sidebar").classList.remove("open")}
-async function logout(){if(sb)await sb.auth.signOut();location.href="login.html"}
-function setHeader(title,sub){document.getElementById("pageTitle").textContent=title;document.getElementById("pageSub").textContent=sub}
-function render(){
- applyRoleNavigation();
- if(!allowedPages().includes(state.page))state.page="dashboard";
- document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===state.page));
- const map={dashboard:["Tableau de bord","Vue générale de l’activité."],members:["Membres","Utilisateurs et rôles."],clients:["Clients","Carnet clients et coordonnées."],quotes:["Devis","Préparation et suivi des devis."],invoices:["Factures","Facturation et suivi des soldes."],payments:["Paiements","Encaissements et références."],sales:["Ventes","Suivi des ventes et encaissements."],purchases:["Achats","Achats auprès des fournisseurs."],expenses:["Dépenses","Charges et dépenses."],stock:["Stock & matériel","Articles, quantités et seuils."],activities:["Activités","Interventions et opérations réalisées."],projects:["Projets","Suivi des projets et chantiers."],innovations:["Innovations","Idées, prototypes et solutions."],reports:["Rapports","Synthèse financière et opérationnelle."],audit:["Journal","Traçabilité des actions."],settings:["Paramètres","Configuration de l’entreprise."],stockHistory:["Historique du stock","Mouvements et traçabilité du matériel."]};
- setHeader(...map[state.page]);
- const fn={dashboard:dashboard,members:members,clients:clientsPage,quotes:quotesPage,invoices:invoicesPage,payments:paymentsPage,sales:tablePage,purchases:tablePage,expenses:tablePage,stock:stock,stockHistory:stockHistory,activities:tablePage,projects:tablePage,innovations:tablePage,reports:reports,audit:auditPage,settings:settings}[state.page];
- const out=fn(state.page); document.getElementById("content").innerHTML=out;
- bindPage();
-}
-function bindPage(){
- document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>((b.dataset.add==="quotes"||b.dataset.add==="invoices")?openDocumentForm(b.dataset.add):(b.dataset.add==="payments"?openPaymentForm():openForm(b.dataset.add))));
- document.querySelectorAll("[data-delete]").forEach(b=>b.onclick=()=>del(b.dataset.delete,b.dataset.id));
- document.querySelectorAll("[data-role]").forEach(s=>s.onchange=()=>changeRole(s.dataset.id,s.value));
- document.querySelectorAll("[data-create-employee]").forEach(b=>b.onclick=openEmployeeForm);
- document.querySelectorAll("[data-toggle-active]").forEach(s=>s.onchange=()=>toggleMember(s.dataset.id,s.checked));
- document.querySelectorAll("[data-edit-stock]").forEach(b=>b.onclick=()=>openForm("stock_items",b.dataset.editStock));
- document.querySelectorAll("[data-edit-client]").forEach(b=>b.onclick=()=>openForm("clients",b.dataset.editClient));
- document.querySelectorAll("[data-edit-quote]").forEach(b=>b.onclick=()=>openDocumentForm("quotes",b.dataset.editQuote));
- document.querySelectorAll("[data-edit-invoice]").forEach(b=>b.onclick=()=>openDocumentForm("invoices",b.dataset.editInvoice));
- document.querySelectorAll("[data-view-document]").forEach(b=>b.onclick=()=>openDocumentForm(b.dataset.viewDocument,b.dataset.id));
- document.querySelectorAll("[data-stock-move]").forEach(b=>b.onclick=()=>stockMovementForm(b.dataset.stockMove));
- document.getElementById("stockHistoryBtn")?.addEventListener("click",()=>{state.page="stockHistory";render();});
- document.getElementById("backToStock")?.addEventListener("click",()=>{state.page="stock";render();});
- document.getElementById("settingsForm")?.addEventListener("submit",saveSettings);
-}
+  function isAdmin() {
+    return role() === "admin";
+  }
 
-function clientName(id){const c=(state.db.clients||[]).find(x=>x.id===id);return c?.company_name||c?.full_name||"Client inconnu"}
-function invoiceNumber(id){const x=(state.db.invoices||[]).find(i=>i.id===id);return x?.invoice_number||"Facture"}
-function clientsPage(){
- const arr=state.db.clients||[];
- const rows=arr.map(x=>`<tr><td><b>${esc(x.full_name)}</b>${x.company_name?`<br><span class="muted">${esc(x.company_name)}</span>`:""}</td><td>${esc(x.phone||"—")}</td><td>${esc(x.email||"—")}</td><td>${esc(x.city||"—")}</td><td><button class="secondary" data-edit-client="${x.id}">Modifier</button> ${state.role==="admin"?`<button class="danger" data-delete="clients" data-id="${x.id}">Supprimer</button>`:""}</td></tr>`).join("");
- return `<div class="toolbar"><div class="muted"><b>${arr.length}</b> client(s)</div><button class="primary" data-add="clients">+ Nouveau client</button></div><div class="table-wrap"><table><thead><tr><th>Client</th><th>Téléphone</th><th>E-mail</th><th>Ville</th><th>Actions</th></tr></thead><tbody>${rows||`<tr><td colspan="5"><div class="empty">Aucun client enregistré.</div></td></tr>`}</tbody></table></div>`;
-}
-function documentLines(table,id){
- const lineTable=table==="quotes"?"quote_items":"invoice_items";
- const key=table==="quotes"?"quote_id":"invoice_id";
- return (state.db[lineTable]||[]).filter(x=>x[key]===id);
-}
-function linesSummary(table,id){
- const lines=documentLines(table,id);
- return lines.length?`${lines.length} ligne${lines.length>1?"s":""}`:"Aucune ligne";
-}
-function quotesPage(){
- const arr=state.db.quotes||[];
- const rows=arr.map(x=>`<tr><td><b>${esc(x.quote_number||"—")}</b><br><span class="muted">${esc(x.title||"")}</span></td><td>${esc(clientName(x.client_id))}</td><td>${esc(x.issue_date||"—")}</td><td>${linesSummary("quotes",x.id)}</td><td>${money(x.total)}</td><td><span class="badge">${esc(x.status||"draft")}</span></td><td><button class="secondary" data-view-document="quotes" data-id="${x.id}">Détails</button> <button class="secondary" data-edit-quote="${x.id}">Modifier</button> ${state.role==="admin"?`<button class="danger" data-delete="quotes" data-id="${x.id}">Supprimer</button>`:""}</td></tr>`).join("");
- return `<div class="toolbar"><div class="muted"><b>${arr.length}</b> devis</div><button class="primary" data-add="quotes">+ Nouveau devis</button></div><div class="table-wrap"><table><thead><tr><th>Devis</th><th>Client</th><th>Date</th><th>Lignes</th><th>Total</th><th>Statut</th><th>Actions</th></tr></thead><tbody>${rows||`<tr><td colspan="7"><div class="empty">Aucun devis.</div></td></tr>`}</tbody></table></div>`;
-}
-function invoicesPage(){
- const arr=state.db.invoices||[];
- const rows=arr.map(x=>`<tr><td><b>${esc(x.invoice_number||"—")}</b><br><span class="muted">${esc(x.title||"")}</span></td><td>${esc(clientName(x.client_id))}</td><td>${esc(x.issue_date||"—")}</td><td>${linesSummary("invoices",x.id)}</td><td>${money(x.total)}</td><td>${money(x.amount_paid||0)}</td><td>${money(Math.max(0,Number(x.total||0)-Number(x.amount_paid||0)))}</td><td><span class="badge">${esc(x.status||"unpaid")}</span></td><td><button class="secondary" data-view-document="invoices" data-id="${x.id}">Détails</button> <button class="secondary" data-edit-invoice="${x.id}">Modifier</button> ${state.role==="admin"?`<button class="danger" data-delete="invoices" data-id="${x.id}">Supprimer</button>`:""}</td></tr>`).join("");
- return `<div class="toolbar"><div class="muted"><b>${arr.length}</b> facture(s)</div><button class="primary" data-add="invoices">+ Nouvelle facture</button></div><div class="table-wrap"><table><thead><tr><th>Facture</th><th>Client</th><th>Date</th><th>Lignes</th><th>Total</th><th>Payé</th><th>Reste</th><th>Statut</th><th>Actions</th></tr></thead><tbody>${rows||`<tr><td colspan="9"><div class="empty">Aucune facture.</div></td></tr>`}</tbody></table></div>`;
-}
-function paymentLabel(x){
- const map={cash:"Espèces",mobile_money:"Mobile Money",bank_transfer:"Virement bancaire",card:"Carte bancaire",check:"Chèque",other:"Autre"};
- const base=map[x.payment_method]||x.payment_method||"—";
- if(x.payment_method==="mobile_money" && x.payment_network)return `${base} — ${x.payment_network}`;
- if(x.payment_method==="bank_transfer" && x.bank_name)return `${base} — ${x.bank_name}`;
- return base;
-}
-function paymentsPage(){
- const arr=state.db.payments||[];
- const rows=arr.map(x=>`<tr><td>${esc(invoiceNumber(x.invoice_id))}</td><td>${money(x.amount)}</td><td>${esc(paymentLabel(x))}</td><td>${esc(x.payment_date||"—")}</td><td>${esc(x.reference||"—")}</td><td>${state.role==="admin"?`<button class="danger" data-delete="payments" data-id="${x.id}">Supprimer</button>`:"—"}</td></tr>`).join("");
- const total=arr.reduce((a,x)=>a+Number(x.amount||0),0);
- return `<div class="grid cards"><div class="card kpi"><small>Total encaissé</small><strong>${money(total)}</strong></div><div class="card kpi"><small>Paiements enregistrés</small><strong>${arr.length}</strong></div></div><div class="toolbar" style="margin-top:16px"><div class="muted">Historique des encaissements</div><button class="primary" data-add="payments">+ Enregistrer un paiement</button></div><div class="table-wrap"><table><thead><tr><th>Facture</th><th>Montant</th><th>Mode / réseau</th><th>Date</th><th>Référence</th><th>Action</th></tr></thead><tbody>${rows||`<tr><td colspan="6"><div class="empty">Aucun paiement.</div></td></tr>`}</tbody></table></div>`;
-}
-function openPaymentForm(id=null){
- const old=id?(state.db.payments||[]).find(x=>x.id===id):null;
- const invoices=(state.db.invoices||[]);
- document.getElementById("modalTitle").textContent=id?"Modifier le paiement":"Enregistrer un paiement";
- document.getElementById("recordForm").innerHTML=`<div class="form-grid">
- <label class="full">Facture<select name="invoice_id" required>${invoices.map(o=>`<option value="${esc(o.id)}" ${old?.invoice_id===o.id?"selected":""}>${esc(o.invoice_number||"Facture")} — ${esc(clientName(o.client_id))} — ${money(o.total)}</option>`).join("")}</select></label>
- <label>Montant payé (FCFA)<input name="amount" type="number" min="1" step="1" required value="${esc(old?.amount??"")}"></label>
- <label>Date du paiement<input name="payment_date" type="date" required value="${esc(old?.payment_date||new Date().toISOString().slice(0,10))}"></label>
- <label>Mode de paiement<select name="payment_method" id="paymentMethod" required><option value="cash">Espèces</option><option value="mobile_money">Mobile Money</option><option value="bank_transfer">Virement bancaire</option><option value="card">Carte bancaire</option><option value="check">Chèque bancaire</option><option value="other">Autre</option></select></label>
- <label id="paymentNetworkWrap" style="display:none">Réseau Mobile Money<select name="payment_network" id="paymentNetwork"><option value="">Choisir</option><option value="MTN MoMo">MTN MoMo</option><option value="Moov Money">Moov Money</option><option value="Celtiis Cash">Celtiis Cash</option></select></label>
- <label id="bankNameWrap" style="display:none">Banque<input name="bank_name" type="text" placeholder="Nom de la banque" value="${esc(old?.bank_name||"")}"></label>
- <label>Référence / N° transaction<input name="reference" type="text" placeholder="Référence du paiement" value="${esc(old?.reference||"")}"></label>
- <label class="full">Notes<textarea name="notes">${esc(old?.notes||"")}</textarea></label>
- <div class="full hint">Une facture peut recevoir plusieurs paiements. Les paiements mixtes sont donc possibles.</div>
- <div class="full actions"><button type="button" class="secondary" id="cancelForm">Annuler</button><button class="primary">Enregistrer le paiement</button></div></div>`;
- const method=document.getElementById("paymentMethod"), net=document.getElementById("paymentNetworkWrap"), bank=document.getElementById("bankNameWrap");
- function refresh(){net.style.display=method.value==="mobile_money"?"block":"none";bank.style.display=method.value==="bank_transfer"?"block":"none";}
- method.value=old?.payment_method||"cash"; if(old?.payment_network)document.getElementById("paymentNetwork").value=old.payment_network; refresh(); method.onchange=refresh;
- document.getElementById("cancelForm").onclick=closeModal;
- document.getElementById("recordForm").onsubmit=async e=>{
-  e.preventDefault(); const p=Object.fromEntries(new FormData(e.target).entries()); p.amount=Number(p.amount||0);
-  if(p.payment_method!=="mobile_money")p.payment_network="";
-  if(p.payment_method!=="bank_transfer")p.bank_name="";
-  try{
-   if(id){ const previous=(state.db.payments||[]).find(x=>x.id===id); await update("payments",id,p); if(previous?.invoice_id && previous.invoice_id!==p.invoice_id)await recalcInvoicePaid(previous.invoice_id); await recalcInvoicePaid(p.invoice_id); }
-   else { const saved=await insert("payments",p); await recalcInvoicePaid(saved.invoice_id); }
-   await audit(id?"update":"insert","payments",id||null,p); toast("Paiement enregistré."); closeModal(); render();
-  }catch(err){console.error(err);toast(err.message||"Erreur lors de l’enregistrement.");}
- };
- document.getElementById("modal").classList.remove("hidden");
-}
-async function recalcInvoicePaid(invoiceId){
- const inv=(state.db.invoices||[]).find(x=>x.id===invoiceId); if(!inv)return;
- const paid=(state.db.payments||[]).filter(x=>x.invoice_id===invoiceId).reduce((a,x)=>a+Number(x.amount||0),0);
- const total=Number(inv.total||0); const status=paid>=total&&total>0?"paid":paid>0?"partial":"unpaid";
- await update("invoices",invoiceId,{amount_paid:paid,status});
-}
+  function isManagerOrAdmin() {
+    return ["admin","manager"].includes(role());
+  }
 
-function dashboard(){
- const sum=t=>state.db[t].reduce((a,x)=>a+Number(x.amount||0),0);
- const stock=state.db.stock_items.reduce((a,x)=>a+Number(x.quantity||0),0);
- return `<section class="welcome-hero">
-   <div class="hero-glow hero-glow-one"></div><div class="hero-glow hero-glow-two"></div>
-   <div class="hero-copy">
-     <span class="hero-kicker">ESPACE DE GESTION</span>
-     <h2>Bienvenue chez<br><strong>LUC BRICO-TECH</strong></h2>
-     <p>La technologie au service de vos projets.</p>
-     <div class="hero-tags"><span>Électricité</span><span>Maintenance</span><span>Informatique</span><span>Innovation</span></div>
-   </div>
-   <div class="hero-logo"><img src="./logo-luc-bricotech.png" alt="Logo LUC BRICO-TECH"></div>
- </section>
- <div class="grid kpis">
- <div class="card kpi"><small>Ventes</small><strong>${money(sum("sales"))}</strong></div>
- <div class="card kpi"><small>Achats</small><strong>${money(sum("purchases"))}</strong></div>
- <div class="card kpi"><small>Dépenses</small><strong>${money(sum("expenses"))}</strong></div>
- <div class="card kpi"><small>Stock total</small><strong>${stock}</strong></div>
- </div>
- <div class="quick-strip">
-   <div><strong>Votre besoin, notre solution.</strong><span>Centralisez les opérations et gardez une vision claire de l’activité.</span></div>
-   <div class="quick-actions">
-     <button class="primary" data-add="sales">+ Vente</button>
-     <button class="secondary" data-add="activities">+ Activité</button>
-     <button class="secondary" data-add="projects">+ Projet</button>
-   </div>
- </div>
- <div class="grid cards" style="margin-top:16px">
- <div class="card"><h3>Activités récentes</h3>${recent("activities","title")}</div>
- <div class="card"><h3>Projets</h3>${recent("projects","name")}</div>
- <div class="card"><h3>Innovations</h3>${recent("innovations","title")}</div>
- </div>`;
-}
-function recent(t,key){const a=state.db[t].slice(0,5);return a.length?a.map(x=>`<p><strong>${esc(x[key])}</strong><br><span class="muted">${new Date(x.created_at).toLocaleString("fr-FR")}</span></p>`).join(""):`<div class="empty">Aucun élément.</div>`}
+  function canSee(page) {
+    return (ROLE_PAGES[role()] || ROLE_PAGES.employee).includes(page);
+  }
 
-function tablePage(t){
- const labels={sales:["Client","Article","Montant","Statut"],purchases:["Fournisseur","Article","Montant","Statut"],expenses:["Catégorie","Libellé","Montant","Bénéficiaire"],activities:["Titre","Catégorie","Statut","Montant"],projects:["Nom","Client","Statut","Progression"],innovations:["Titre","Étape","Progression","Budget"]};
- const l=labels[t], arr=state.db[t]||[];
- let rows=arr.map(x=>{
-  const vals=t==="sales"?[x.customer,x.item,money(x.amount),x.status]:
-   t==="purchases"?[x.supplier,x.item,money(x.amount),x.status]:
-   t==="expenses"?[x.category,x.label,money(x.amount),x.beneficiary]:
-   t==="activities"?[x.title,x.category,x.status,money(x.amount)]:
-   t==="projects"?[x.name,x.client,x.status,(x.progress||0)+" %"]:
-   [x.title,x.stage,(x.progress||0)+" %",money(x.budget)];
-  const action=state.role==="admin"?`<button class="danger" data-delete="${t}" data-id="${x.id}">Supprimer</button>`:"—";
-  return `<tr>${vals.map(v=>`<td>${esc(v)}</td>`).join("")}<td>${action}</td></tr>`;
- }).join("");
- return `<div class="toolbar"><div class="muted">${arr.length} enregistrement(s)</div><button class="primary" data-add="${t}">+ Ajouter</button></div>
- <div class="table-wrap"><table><thead><tr>${l.map(x=>`<th>${x}</th>`).join("")}<th>Action</th></tr></thead><tbody>${rows||`<tr><td colspan="${l.length+1}"><div class="empty">Aucun enregistrement.</div></td></tr>`}</tbody></table></div>`;
-}
+  function userId() {
+    return state.user?.id || null;
+  }
 
-function stock(){
- const arr=state.db.stock_items||[];
- const rows=arr.map(x=>{
-  const manage=canManageStock();
-  const actions=`<div class="actions-inline">
-    <button class="secondary" data-stock-move="${x.id}">Mouvement</button>
-    ${manage?`<button class="secondary" data-edit-stock="${x.id}">Modifier</button>`:""}
-    ${state.role==="admin"?`<button class="danger" data-delete="stock_items" data-id="${x.id}">Supprimer</button>`:""}
-  </div>`;
-  return `<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.category)}</td><td>${Number(x.quantity||0)} ${esc(x.unit||"")}</td><td>${Number(x.min_quantity||0)}</td><td>${esc(x.location)}</td><td>${Number(x.quantity)<=Number(x.min_quantity)?'<span class="badge warn">Stock faible</span>':'<span class="badge success">OK</span>'}</td><td>${actions}</td></tr>`;
- }).join("");
- const add=canManageStock()?`<button class="primary" data-add="stock_items">+ Ajouter un article</button>`:"";
- return `<div class="toolbar"><div><b>${arr.length}</b> article(s) · <span class="muted">Les mouvements mettent automatiquement les quantités à jour.</span></div><div class="actions-inline">${add}<button class="secondary" id="stockHistoryBtn">Historique des mouvements</button></div></div>
- <div class="table-wrap"><table><thead><tr><th>Article</th><th>Catégorie</th><th>Quantité</th><th>Seuil</th><th>Lieu</th><th>État</th><th>Actions</th></tr></thead><tbody>${rows||`<tr><td colspan="7"><div class="empty">Stock vide.</div></td></tr>`}</tbody></table></div>`;
-}
+  function seed() {
+    const result = {};
+    TABLES.forEach(t => result[t] = []);
+    return result;
+  }
 
-function stockMovementForm(stockId){
- const item=(state.db.stock_items||[]).find(x=>x.id===stockId);
- if(!item)return toast("Article de stock introuvable.");
- const isEmployee=state.role==="employee";
- const projects=state.db.projects||[];
- const activities=state.db.activities||[];
- const members=(state.db.profiles||[]).filter(x=>x.active!==false);
- const typeOptions=isEmployee?["use","return"]:["entry","exit","use","return","adjustment"];
- document.getElementById("modalTitle").textContent=`Mouvement — ${item.name}`;
- document.getElementById("recordForm").innerHTML=`<div class="form-grid">
- <div class="full hint"><b>Stock actuel :</b> ${Number(item.quantity||0)} ${esc(item.unit||"")}</div>
- <label>Type de mouvement<select name="movement_type">${typeOptions.map(v=>`<option value="${v}">${movementLabel(v)}</option>`).join("")}</select></label>
- <label>Quantité<input name="quantity" type="number" min="0.01" step="0.01" required></label>
- <label>Projet<select name="project_id"><option value="">— Aucun —</option>${projects.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")}</select></label>
- <label>Activité<select name="activity_id"><option value="">— Aucune —</option>${activities.map(x=>`<option value="${x.id}">${esc(x.title)}</option>`).join("")}</select></label>
- ${isEmployee?`<input type="hidden" name="employee_id" value="${esc(state.user.id)}">`:`<label>Responsable<select name="employee_id"><option value="">— Non précisé —</option>${members.map(x=>`<option value="${x.id}">${esc(x.full_name||x.email||"Utilisateur")}</option>`).join("")}</select></label>`}
- <label class="full">Motif<textarea name="reason" placeholder="Pourquoi ce mouvement ?"></textarea></label>
- <label class="full">Notes<textarea name="notes" placeholder="Précisions complémentaires"></textarea></label>
- <div class="full actions"><button type="button" class="secondary" id="cancelForm">Annuler</button><button class="primary">Enregistrer le mouvement</button></div></div>`;
- document.getElementById("cancelForm").onclick=closeModal;
- document.getElementById("recordForm").onsubmit=async e=>{
-  e.preventDefault();
-  const p=Object.fromEntries(new FormData(e.target).entries());
-  const qty=Number(p.quantity);
-  if(!Number.isFinite(qty)||qty<=0)return toast("La quantité doit être supérieure à zéro.");
-  try{
-   if(!state.cloud){
-    const current=Number(item.quantity||0);
-    let next=current;
-    if(["entry","return"].includes(p.movement_type))next=current+qty;
-    else if(["exit","use"].includes(p.movement_type)){if(current<qty)throw new Error("Stock insuffisant.");next=current-qty;}
-    else next=qty;
-    item.quantity=next;
-    item.updated_at=now();
-    const movement={id:uid(),stock_item_id:item.id,user_id:state.user.id,movement_type:p.movement_type,quantity:qty,reason:p.reason||null,project_id:p.project_id||null,activity_id:p.activity_id||null,employee_id:p.employee_id||null,notes:p.notes||null,created_at:now()};
-    state.db.stock_movements.unshift(movement);
-    saveLocal();
-    await audit("stock_movement","stock_movements",movement.id,{stock_item_id:item.id,movement_type:p.movement_type,quantity:qty});
-   }else{
-    const {data,error}=await sb.rpc("create_stock_movement",{
-      p_stock_item_id:item.id,
-      p_movement_type:p.movement_type,
-      p_quantity:qty,
-      p_reason:p.reason||null,
-      p_project_id:p.project_id||null,
-      p_activity_id:p.activity_id||null,
-      p_employee_id:p.employee_id||null,
-      p_notes:p.notes||null
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem("lbt_pro_v2");
+      state.db = raw ? JSON.parse(raw) : seed();
+    } catch {
+      state.db = seed();
+    }
+
+    TABLES.forEach(t => {
+      if (!Array.isArray(state.db[t])) state.db[t] = [];
     });
-    if(error)throw error;
-    await syncCloud();
-    await audit("stock_movement","stock_movements",data,{stock_item_id:item.id,movement_type:p.movement_type,quantity:qty});
-   }
-   closeModal();render();toast("Mouvement enregistré. Stock mis à jour.");
-  }catch(err){console.error(err);toast(err.message||"Erreur lors du mouvement.");}
- };
- document.getElementById("modal").classList.remove("hidden");
-}
-
-function movementLabel(v){
- return ({entry:"Entrée en stock",exit:"Sortie de stock",use:"Utilisation",return:"Retour matériel",adjustment:"Ajustement"})[v]||v;
-}
-
-function stockHistory(){
- const arr=state.db.stock_movements||[];
- const names=Object.fromEntries((state.db.stock_items||[]).map(x=>[x.id,x.name]));
- const people=Object.fromEntries((state.db.profiles||[]).map(x=>[x.id,x.full_name||x.email||"Utilisateur"]));
- const projects=Object.fromEntries((state.db.projects||[]).map(x=>[x.id,x.name]));
- const activities=Object.fromEntries((state.db.activities||[]).map(x=>[x.id,x.title]));
- const rows=arr.map(x=>`<tr><td>${x.created_at?new Date(x.created_at).toLocaleString("fr-FR"):""}</td><td><b>${esc(names[x.stock_item_id]||"Article supprimé")}</b></td><td>${movementLabel(x.movement_type)}</td><td>${x.quantity}</td><td>${esc(people[x.employee_id]||"—")}</td><td>${esc(projects[x.project_id]||"—")}</td><td>${esc(activities[x.activity_id]||"—")}</td><td>${esc(x.reason||"—")}</td></tr>`).join("");
- return `<div class="toolbar"><div><b>${arr.length}</b> mouvement(s)</div><button class="secondary" id="backToStock">← Retour au stock</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Article</th><th>Type</th><th>Qté</th><th>Responsable</th><th>Projet</th><th>Activité</th><th>Motif</th></tr></thead><tbody>${rows||`<tr><td colspan="8"><div class="empty">Aucun mouvement enregistré.</div></td></tr>`}</tbody></table></div>`;
-}
-
-function members(){
- const arr=state.db.profiles||[];
- const rows=arr.map(x=>`<tr><td><b>${esc(x.full_name||"Sans nom")}</b></td><td>${esc(x.phone||"—")}</td><td>${state.role==="admin"?`<select data-role data-id="${x.id}">${["admin","manager","employee"].map(r=>`<option ${x.role===r?"selected":""}>${r}</option>`).join("")}</select>`:x.role}</td><td>${state.role==="admin"?`<label class="switch"><input type="checkbox" data-toggle-active data-id="${x.id}" ${x.active!==false?"checked":""}><span></span></label>`:(x.active!==false?"Actif":"Inactif")}</td></tr>`).join("");
- const create=state.role==="admin"?`<button class="primary" data-create-employee>+ Créer un compte employé</button>`:"";
- const intro=state.role==="admin"?"Créez les comptes de connexion et gérez les rôles des membres.":"Consultez les membres et leurs rôles. La gestion des comptes est réservée à l’administrateur.";
- return `<div class="card"><div class="toolbar"><div><h3 style="margin:0">Membres</h3><p class="muted" style="margin:.35rem 0 0">${intro}</p></div>${create}</div>
- <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Téléphone</th><th>Rôle</th><th>État</th></tr></thead><tbody>${rows||`<tr><td colspan="4"><div class="empty">Aucun membre.</div></td></tr>`}</tbody></table></div></div>`;
-}
-
-function openEmployeeForm(){
- if(state.role!=="admin")return toast("Action réservée à l’administrateur.");
- document.getElementById("modalTitle").textContent="Créer un compte employé";
- document.getElementById("recordForm").innerHTML=`<div class="form-grid">
- <label>Nom complet<input name="full_name" required placeholder="Nom et prénom"></label>
- <label>Téléphone<input name="phone" type="tel" placeholder="01 XX XX XX XX"></label>
- <label class="full">E-mail de connexion<input name="email" type="email" required placeholder="employe@lucbricotech.com"></label>
- <label>Mot de passe initial<input name="password" type="password" minlength="8" required placeholder="8 caractères minimum"></label>
- <label>Confirmation<input name="password_confirm" type="password" minlength="8" required placeholder="Retaper le mot de passe"></label>
- <div class="full"><div class="hint">Le nouveau compte sera créé avec le rôle <b>Employé</b>. L’administrateur pourra ensuite modifier son rôle depuis la liste des membres.</div></div>
- <div class="full actions"><button type="button" class="secondary" id="cancelForm">Annuler</button><button class="primary">Créer le compte</button></div></div>`;
- document.getElementById("cancelForm").onclick=closeModal;
- document.getElementById("recordForm").onsubmit=createEmployee;
- document.getElementById("modal").classList.remove("hidden");
-}
-
-async function createEmployee(e){
- e.preventDefault();
- const p=Object.fromEntries(new FormData(e.target).entries());
- if(p.password!==p.password_confirm)return toast("Les deux mots de passe ne correspondent pas.");
- if(p.password.length<8)return toast("Le mot de passe doit contenir au moins 8 caractères.");
- try{
-   if(!state.cloud){
-     const exists=(state.db.profiles||[]).some(x=>(x.email||"").toLowerCase()===p.email.toLowerCase());
-     if(exists)throw new Error("Cette adresse e-mail existe déjà dans le mode démo.");
-     const x={id:uid(),full_name:p.full_name,phone:p.phone||"",email:p.email,role:"employee",active:true,created_at:now()};
-     state.db.profiles.unshift(x);saveLocal();await audit("create_employee","profiles",x.id,{email:p.email,role:"employee"});
-   }else{
-     const {data,error}=await sb.functions.invoke("create-employee",{body:{full_name:p.full_name,email:p.email,password:p.password,phone:p.phone||""}});
-     if(error)throw error;
-     if(!data?.success)throw new Error(data?.error||"Impossible de créer le compte.");
-     await syncCloud();
-   }
-   closeModal();render();toast("Compte employé créé avec succès.");
- }catch(err){console.error(err);toast(err.message||"Erreur lors de la création du compte.");}
-}
-
-async function toggleMember(id,active){
- if(state.role!=="admin")return toast("Action réservée à l’administrateur.");
- try{await update("profiles",id,{active});await audit(active?"activate_member":"deactivate_member","profiles",id,{active});toast(active?"Compte activé.":"Compte désactivé.");render()}catch(e){toast(e.message)}
-}
-
-async function changeRole(id,role){
- if(state.role!=="admin")return toast("Action réservée à l’administrateur.");
- try{await update("profiles",id,{role});await audit("update_role","profiles",id,{role});toast("Rôle mis à jour.");render()}catch(e){toast(e.message)}
-}
-
-function reports(){
- const sum=t=>(state.db[t]||[]).reduce((a,x)=>a+Number(x.amount||0),0);
- const sales=sum("sales"), purchases=sum("purchases"), expenses=sum("expenses");
- return `<div class="grid cards"><div class="card"><h3>Chiffre des ventes</h3><strong>${money(sales)}</strong></div><div class="card"><h3>Total achats</h3><strong>${money(purchases)}</strong></div><div class="card"><h3>Total dépenses</h3><strong>${money(expenses)}</strong></div></div><div class="card" style="margin-top:16px"><h3>Résultat simplifié</h3><p>Ventes − achats − dépenses</p><strong>${money(sales-purchases-expenses)}</strong></div><div class="toolbar" style="margin-top:16px"><button class="secondary" id="exportSalesCsv">Exporter les ventes CSV</button><button class="secondary" id="exportAllCsv">Exporter tout en CSV</button><button class="secondary" id="backupBtn">Sauvegarder toutes les données</button></div>`;
-}
-
-function auditPage(){
- if(state.role!=="admin")return `<div class="card"><h3>Accès réservé</h3><p class="muted">Le journal des actions est réservé à l’administrateur.</p></div>`;
- const arr=state.db.audit_logs||[];
- return `<div class="toolbar"><div class="muted">${arr.length} action(s) enregistrée(s)</div><button class="secondary" id="exportAuditCsv">Exporter le journal CSV</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Action</th><th>Entité</th><th>Détails</th></tr></thead><tbody>${arr.map(x=>`<tr><td>${x.created_at?new Date(x.created_at).toLocaleString("fr-FR"):""}</td><td>${esc(x.action)}</td><td>${esc(x.entity)}</td><td>${esc(safeJson(x.details||{}))}</td></tr>`).join("")||`<tr><td colspan="4"><div class="empty">Aucune action enregistrée.</div></td></tr>`}</tbody></table></div>`;
-}
-
-function settings(){
- const s=state.db.settings.find(x=>x.user_id===state.user.id)||{};
- return `<div class="card"><h3>Informations de l’entreprise</h3><form id="settingsForm" class="form-grid">
- <label>Nom<input name="company_name" value="${esc(s.company_name||"LUC BRICO-TECH")}"></label>
- <label>Adresse<input name="address" value="${esc(s.address||"Hévié Hounzévié, Abomey-Calavi")}"></label>
- <label>Téléphone<input name="phone" value="${esc(s.phone||"01 67 02 84 91")}"></label>
- <label>Email<input name="email" value="${esc(s.email||"")}"></label>
- <div class="full"><button class="primary">Enregistrer</button></div></form></div>`;
-}
-async function saveSettings(e){
- e.preventDefault();
- const f=new FormData(e.target), p=Object.fromEntries(f.entries());
- try{
-  if(!state.cloud){
-   const arr=state.db.settings||[];
-   const existing=arr.find(x=>x.user_id===state.user.id);
-   if(existing) Object.assign(existing,p,{updated_at:now()});
-   else arr.unshift({id:uid(),user_id:state.user.id,created_at:now(),updated_at:now(),...p});
-   state.db.settings=arr;
-   saveLocal();
-  }else{
-   const {data,error}=await sb.from("settings")
-     .upsert({user_id:state.user.id,...p,updated_at:now()},{onConflict:"user_id"})
-     .select()
-     .single();
-   if(error)throw error;
-   const arr=state.db.settings||[];
-   const i=arr.findIndex(x=>x.user_id===state.user.id);
-   if(i>=0)arr[i]=data; else arr.unshift(data);
-   state.db.settings=arr;
   }
-  await audit("update","settings",state.user.id,p);
-  toast("Paramètres enregistrés.");
-  render();
- }catch(err){console.error(err);toast(err.message||"Erreur lors de l’enregistrement.")}
-}
 
-function openForm(table,id=null){
- const schema=schemas[table];if(!schema)return;
- const old=id?(state.db[table]||[]).find(x=>x.id===id):null;
- document.getElementById("modalTitle").textContent=id?"Modifier":schema.title;
- document.getElementById("recordForm").innerHTML=`<div class="form-grid">${schema.fields.map(f=>{
-  const [name,label,type,req,opts]=f,v=old?.[name]??"";
-  if(type==="textarea")return `<label class="full">${label}<textarea name="${name}">${esc(v)}</textarea></label>`;
-  if(type==="select"){let options=opts;if(opts==="clients")options=(state.db.clients||[]).map(o=>o.id+"|"+(o.company_name||o.full_name||"Client"));if(opts==="invoices")options=(state.db.invoices||[]).map(o=>o.id+"|"+(o.invoice_number||"Facture"));return `<label>${label}<select name="${name}">${options.map(o=>{const [val,...rest]=String(o).split("|");return `<option value="${esc(val)}" ${v===val?"selected":""}>${esc(rest.join("|"))}</option>`}).join("")}</select></label>`;}
-  return `<label>${label}<input name="${name}" type="${type}" value="${esc(v)}" ${req?"required":""}></label>`;
- }).join("")}<div class="full actions"><button type="button" class="secondary" id="cancelForm">Annuler</button><button class="primary">Enregistrer</button></div></div>`;
- document.getElementById("cancelForm").onclick=closeModal;
- document.getElementById("recordForm").onsubmit=async e=>{
-  e.preventDefault();const p=Object.fromEntries(new FormData(e.target).entries());
-  for(const f of schema.fields)if(f[2]==="number"&&p[f[0]]!=="")p[f[0]]=Number(p[f[0]]);
-  if(table==="quotes")p.total=Math.max(0,Number(p.subtotal||0)-Number(p.discount||0)+Number(p.tax||0));
-  if(table==="invoices"){p.total=Math.max(0,Number(p.subtotal||0)-Number(p.discount||0)+Number(p.tax||0));p.amount_paid=Number(p.amount_paid||0);if(p.amount_paid>=p.total&&p.total>0)p.status="paid";else if(p.amount_paid>0)p.status="partial";else if(p.status==="paid"||p.status==="partial")p.status="unpaid";}
-  
-  try{if(id)await update(table,id,p);else await insert(table,p);await audit(id?"update":"insert",table,id||null,p);toast("Enregistré.");closeModal();render()}catch(err){toast(err.message)}
- };
- document.getElementById("modal").classList.remove("hidden");
-}
-let documentLineDraft=[];
-let documentLineTable="";
-let documentLineParentId=null;
+  function saveLocal() {
+    localStorage.setItem("lbt_pro_v2",JSON.stringify(state.db));
+  }
 
-function lineAmount(line){return Math.max(0,Number(line.quantity||0)*Number(line.unit_price||0));}
-function documentLinesEditor(){
- return `<div class="full document-lines-box">
-   <div class="document-lines-head"><div><h3>Lignes détaillées</h3><span class="muted">Ajoutez les produits, matériaux, services et main-d'œuvre.</span></div><button type="button" class="secondary" id="addDocumentLine">+ Ajouter une ligne</button></div>
-   <div class="document-lines-table-wrap"><table class="document-lines-table"><thead><tr><th>Désignation</th><th>Description</th><th>Qté</th><th>Unité</th><th>Prix unitaire</th><th>Total</th><th></th></tr></thead><tbody id="documentLinesBody"></tbody></table></div>
-   <div class="document-totals"><div><span>Sous-total</span><strong id="documentSubtotal">0 FCFA</strong></div><div><span>Remise</span><strong id="documentDiscount">0 FCFA</strong></div><div><span>Taxe</span><strong id="documentTax">0 FCFA</strong></div><div class="grand"><span>Total</span><strong id="documentGrandTotal">0 FCFA</strong></div></div>
- </div>`;
-}
-function renderDocumentLines(){
- const body=document.getElementById("documentLinesBody"); if(!body)return;
- body.innerHTML=documentLineDraft.map((line,i)=>`<tr>
-  <td><input data-line="description" data-index="${i}" value="${esc(line.description)}" placeholder="Ex. Câble électrique"></td>
-  <td><input data-line="details" data-index="${i}" value="${esc(line.details||"")}" placeholder="Optionnel"></td>
-  <td><input data-line="quantity" data-index="${i}" type="number" min="0" step="0.01" value="${esc(line.quantity)}"></td>
-  <td><select data-line="unit" data-index="${i}">${["pièce","m","kg","h","forfait","lot","service"].map(u=>`<option ${line.unit===u?"selected":""}>${u}</option>`).join("")}</select></td>
-  <td><input data-line="unit_price" data-index="${i}" type="number" min="0" step="1" value="${esc(line.unit_price)}"></td>
-  <td><strong data-line-total="${i}">${money(lineAmount(line))}</strong></td>
-  <td><button type="button" class="danger ghost" data-remove-line="${i}">✕</button></td>
- </tr>`).join("");
- document.querySelectorAll("[data-line]").forEach(el=>el.oninput=()=>{const i=Number(el.dataset.index);documentLineDraft[i][el.dataset.line]=el.type==="number"?Number(el.value||0):el.value;updateDocumentTotals();});
- document.querySelectorAll("[data-remove-line]").forEach(b=>b.onclick=()=>{documentLineDraft.splice(Number(b.dataset.removeLine),1);if(!documentLineDraft.length)documentLineDraft.push({description:"",details:"",quantity:1,unit:"pièce",unit_price:0});renderDocumentLines();});
- updateDocumentTotals();
-}
-function updateDocumentTotals(){
- const subtotal=documentLineDraft.reduce((a,l)=>a+lineAmount(l),0);
- const discount=Number(document.querySelector('[name="discount"]')?.value||0);
- const tax=Number(document.querySelector('[name="tax"]')?.value||0);
- const total=Math.max(0,subtotal-discount+tax);
- const s=document.querySelector('[name="subtotal"]');const t=document.querySelector('[name="total"]');
- if(s)s.value=Math.round(subtotal); if(t)t.value=Math.round(total);
- document.getElementById("documentSubtotal")?.replaceChildren(document.createTextNode(money(subtotal)));
- document.getElementById("documentDiscount")?.replaceChildren(document.createTextNode(money(discount)));
- document.getElementById("documentTax")?.replaceChildren(document.createTextNode(money(tax)));
- document.getElementById("documentGrandTotal")?.replaceChildren(document.createTextNode(money(total)));
- documentLineDraft.forEach((l,i)=>document.querySelector(`[data-line-total="${i}"]`)?.replaceChildren(document.createTextNode(money(lineAmount(l)))));
-}
-async function saveDocumentLines(table,parentId){
- const lineTable=table==="quotes"?"quote_items":"invoice_items";
- const key=table==="quotes"?"quote_id":"invoice_id";
- if(state.cloud){
-   const {error:delError}=await sb.from(lineTable).delete().eq(key,parentId); if(delError)throw delError;
-   const rows=documentLineDraft.filter(l=>String(l.description||"").trim()).map(l=>({[key]:parentId,description:String(l.description).trim(),quantity:Number(l.quantity||0),unit:l.unit||"pièce",unit_price:Number(l.unit_price||0),amount:lineAmount(l)}));
-   if(rows.length){const {data,error}=await sb.from(lineTable).insert(rows).select();if(error)throw error;state.db[lineTable]=(state.db[lineTable]||[]).filter(x=>x[key]!==parentId).concat(data||[]);}
- }else{
-   state.db[lineTable]=(state.db[lineTable]||[]).filter(x=>x[key]!==parentId);
-   documentLineDraft.filter(l=>String(l.description||"").trim()).forEach(l=>state.db[lineTable].push({id:uid(),[key]:parentId,description:String(l.description).trim(),quantity:Number(l.quantity||0),unit:l.unit||"pièce",unit_price:Number(l.unit_price||0),amount:lineAmount(l),details:l.details||"",created_at:now()}));
-   saveLocal();
- }
-}
-function openDocumentForm(table,id=null){
- const schema=schemas[table]; if(!schema)return;
- const old=id?(state.db[table]||[]).find(x=>x.id===id):null;
- documentLineTable=table;documentLineParentId=id;documentLineDraft=id?documentLines(table,id).map(x=>({description:x.description||"",details:x.details||"",quantity:Number(x.quantity||1),unit:x.unit||"pièce",unit_price:Number(x.unit_price||0)})):[{description:"",details:"",quantity:1,unit:"pièce",unit_price:0}];
- document.getElementById("modalTitle").textContent=id?`Modifier ${table==="quotes"?"le devis":"la facture"}`:`Nouveau ${table==="quotes"?"devis":"facture"}`;
- const normalFields=schema.fields.filter(f=>!["subtotal","total"].includes(f[0]));
- document.getElementById("recordForm").innerHTML=`<div class="form-grid">${normalFields.map(f=>{const [name,label,type,req,opts]=f,v=old?.[name]??(name==="issue_date"?new Date().toISOString().slice(0,10):"");if(type==="textarea")return `<label class="full">${label}<textarea name="${name}">${esc(v)}</textarea></label>`;if(type==="select"){let options=opts;if(opts==="clients")options=(state.db.clients||[]).map(o=>o.id+"|"+(o.company_name||o.full_name||"Client"));return `<label>${label}<select name="${name}">${options.map(o=>{const [val,...rest]=String(o).split("|");return `<option value="${esc(val)}" ${v===val?"selected":""}>${esc(rest.join("|"))}</option>`}).join("")}</select></label>`;}return `<label>${label}<input name="${name}" type="${type}" value="${esc(v)}" ${req?"required":""}></label>`;}).join("")}
- <label>Remise (FCFA)<input name="discount" type="number" min="0" value="${esc(old?.discount??0)}"></label>
- <label>Taxe (FCFA)<input name="tax" type="number" min="0" value="${esc(old?.tax??0)}"></label>
- ${table==="invoices"?`<label>Montant déjà payé (FCFA)<input name="amount_paid" type="number" min="0" value="${esc(old?.amount_paid??0)}"></label>`:""}
- ${documentLinesEditor()}
- <label class="full">Notes<textarea name="notes">${esc(old?.notes||"")}</textarea></label>
- <div class="full actions"><button type="button" class="secondary" id="cancelForm">Annuler</button><button class="primary">Enregistrer le ${table==="quotes"?"devis":"la facture"}</button></div></div>`;
- document.getElementById("cancelForm").onclick=closeModal;
- document.getElementById("addDocumentLine").onclick=()=>{documentLineDraft.push({description:"",details:"",quantity:1,unit:"pièce",unit_price:0});renderDocumentLines();};
- document.querySelector('[name="discount"]')?.addEventListener("input",updateDocumentTotals);document.querySelector('[name="tax"]')?.addEventListener("input",updateDocumentTotals);
- renderDocumentLines();
- document.getElementById("recordForm").onsubmit=async e=>{e.preventDefault();const p=Object.fromEntries(new FormData(e.target).entries());p.subtotal=Math.round(documentLineDraft.reduce((a,l)=>a+lineAmount(l),0));p.discount=Number(p.discount||0);p.tax=Number(p.tax||0);p.total=Math.max(0,p.subtotal-p.discount+p.tax);if(table==="invoices"){p.amount_paid=Number(p.amount_paid||0);p.status=p.amount_paid>=p.total&&p.total>0?"paid":p.amount_paid>0?"partial":(p.status||"unpaid");}
- try{let saved;if(id){await update(table,id,p);saved=(state.db[table]||[]).find(x=>x.id===id);}else{saved=await insert(table,p);}await saveDocumentLines(table,saved.id);await audit(id?"update":"insert",table,saved.id,{...p,lines:documentLineDraft});toast("Document et lignes enregistrés.");closeModal();render();}catch(err){console.error(err);toast(err.message||"Erreur lors de l’enregistrement.");}};
- document.getElementById("modal").classList.remove("hidden");
-}
+  async function secureBoot() {
+    if (!hasCloud) {
+      loadLocal();
 
-function closeModal(){document.getElementById("modal").classList.add("hidden")}
-async function del(table,id){
- if(state.role!=="admin"){toast("La suppression est réservée à l’administrateur.");return}
- if(!confirm("Supprimer cet enregistrement ?"))return;
- try{const before=table==="payments"?(state.db.payments||[]).find(x=>x.id===id):null;await remove(table,id);if(before?.invoice_id)await recalcInvoicePaid(before.invoice_id);await audit("delete",table,id);toast("Supprimé.");render()}catch(e){toast(e.message)}
-}
+      state.cloud = false;
+      state.profile = {
+        id:"demo-admin",
+        full_name:"Administrateur",
+        role:"admin",
+        active:true
+      };
 
-function safeJson(value){try{return JSON.stringify(value);}catch{return String(value??"");}}
-function csvCell(value){let text=value==null?"":(typeof value==="object"?safeJson(value):String(value));if(/^[=+\-@]/.test(text))text="'"+text;return `"${text.replace(/"/g,'""')}"`;}
-function rowsToCsv(headers,rows){return [headers.map(csvCell).join(","),...rows.map(r=>headers.map(h=>csvCell(r[h])).join(","))].join("\r\n");}
-function exportSalesCsv(){const rows=(state.db.sales||[]).map(x=>({Client:x.customer||"",Article:x.item||"",Quantité:x.quantity??"",Montant:x.amount??0,Paiement:x.payment_method||"",Statut:x.status||"",Notes:x.notes||"",Date:x.created_at||""}));downloadFile("luc-bricotech-ventes.csv",rowsToCsv(["Client","Article","Quantité","Montant","Paiement","Statut","Notes","Date"],rows),"text/csv;charset=utf-8");}
-function exportAllCsv(){const sections=[];const add=(title,table,headers,map)=>{sections.push(`### ${title}`);sections.push(headers.map(csvCell).join(","));(state.db[table]||[]).forEach(x=>{const r=map(x);sections.push(headers.map(h=>csvCell(r[h])).join(","));});sections.push("");};add("Ventes","sales",["Client","Article","Quantité","Montant","Paiement","Statut","Notes","Date"],x=>({Client:x.customer||"",Article:x.item||"",Quantité:x.quantity??"",Montant:x.amount??0,Paiement:x.payment_method||"",Statut:x.status||"",Notes:x.notes||"",Date:x.created_at||""}));add("Achats","purchases",["Fournisseur","Article","Quantité","Montant","Statut","Notes","Date"],x=>({Fournisseur:x.supplier||"",Article:x.item||"",Quantité:x.quantity??"",Montant:x.amount??0,Statut:x.status||"",Notes:x.notes||"",Date:x.created_at||""}));add("Dépenses","expenses",["Catégorie","Libellé","Montant","Bénéficiaire","Notes","Date"],x=>({Catégorie:x.category||"",Libellé:x.label||"",Montant:x.amount??0,Bénéficiaire:x.beneficiary||"",Notes:x.notes||"",Date:x.created_at||""}));add("Activités","activities",["Titre","Catégorie","Description","Lieu","Statut","Montant","Date"],x=>({Titre:x.title||"",Catégorie:x.category||"",Description:x.description||"",Lieu:x.location||"",Statut:x.status||"",Montant:x.amount??0,Date:x.created_at||""}));add("Projets","projects",["Nom","Client","Description","Statut","Progression","Budget","Date"],x=>({Nom:x.name||"",Client:x.client||"",Description:x.description||"",Statut:x.status||"",Progression:x.progress??"",Budget:x.budget??0,Date:x.created_at||""}));add("Innovations","innovations",["Titre","Description","Étape","Budget","Progression","Date"],x=>({Titre:x.title||"",Description:x.description||"",Étape:x.stage||"",Budget:x.budget??0,Progression:x.progress??"",Date:x.created_at||""}));add("Stock","stock_items",["Article","Catégorie","Unité","Quantité","Seuil minimum","Emplacement","Date"],x=>({Article:x.name||"",Catégorie:x.category||"",Unité:x.unit||"",Quantité:x.quantity??"","Seuil minimum":x.min_quantity??"",Emplacement:x.location||"",Date:x.created_at||""}));downloadFile("luc-bricotech-export-complet.csv",sections.join("\\r\\n"),"text/csv;charset=utf-8");}
-function exportAuditCsv(){if(state.role!=="admin")return toast("Export du journal réservé à l’administrateur.");const rows=(state.db.audit_logs||[]).map(x=>({Date:x.created_at||"",Action:x.action||"",Entité:x.entity||"","ID entité":x.entity_id||"",Détails:safeJson(x.details||{})}));downloadFile("luc-bricotech-journal.csv",rowsToCsv(["Date","Action","Entité","ID entité","Détails"],rows),"text/csv;charset=utf-8");}
-function backupAllData(){downloadFile("luc-bricotech-backup.json",JSON.stringify({application:"LUC BRICO-TECH",exported_at:now(),role:state.role,user_id:state.user?.id||null,data:state.db},null,2),"application/json;charset=utf-8");}
-function downloadFile(name,data,mime="text/plain;charset=utf-8"){try{const blob=new Blob([data],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast(`Export terminé : ${name}`);}catch(error){console.error("Erreur export :",error);toast("Erreur pendant la génération du fichier.");}}
-document.addEventListener("click",e=>{const button=e.target.closest?.("#exportSalesCsv, #exportAllCsv, #exportAuditCsv, #backupBtn");if(!button)return;if(button.id==="exportSalesCsv")exportSalesCsv();else if(button.id==="exportAllCsv")exportAllCsv();else if(button.id==="exportAuditCsv")exportAuditCsv();else if(button.id==="backupBtn")backupAllData();});
+      render();
+      return;
+    }
 
-boot();
+    const { data,error } = await sb.auth.getSession();
+
+    if (error) {
+      document.body.innerHTML =
+        `<div style="padding:40px;font-family:Arial">
+          <h2>Erreur de connexion</h2>
+          <p>${esc(error.message)}</p>
+        </div>`;
+      return;
+    }
+
+    if (!data.session) {
+      window.location.href = "./login.html";
+      return;
+    }
+
+    state.user = data.session.user;
+
+    const profileResult = await sb
+      .from("profiles")
+      .select("*")
+      .eq("id",state.user.id)
+      .single();
+
+    if (profileResult.error || !profileResult.data) {
+      document.body.innerHTML =
+        `<div style="padding:40px;font-family:Arial">
+          <h2>Profil introuvable</h2>
+          <p>Le compte est authentifié mais aucun profil actif n'a été trouvé.</p>
+        </div>`;
+      return;
+    }
+
+    state.profile = profileResult.data;
+
+    if (state.profile.active === false) {
+      await sb.auth.signOut();
+      window.location.href = "./login.html";
+      return;
+    }
+
+    await syncCloud();
+    applyRoleNavigation();
+    render();
+  }
+
+  async function syncCloud() {
+    if (!hasCloud) return;
+
+    for (const table of TABLES) {
+      let query = sb.from(table).select("*");
+
+      if (table === "settings") {
+        query = query.eq("user_id",userId());
+      } else if (table === "profiles") {
+        query = query.order("created_at",{ascending:true});
+      } else if (table === "audit_logs") {
+        query = query.order("created_at",{ascending:false});
+      } else if (
+        [
+          "sales","purchases","expenses","activities","projects",
+          "innovations","clients","quotes","quote_items",
+          "invoices","invoice_items","payments","stock_items",
+          "stock_movements"
+        ].includes(table)
+      ) {
+        if (
+          [
+            "sales","purchases","expenses","activities",
+            "quotes","invoices","payments"
+          ].includes(table)
+        ) {
+          query = query.order("created_at",{ascending:false});
+        } else {
+          query = query.order("created_at",{ascending:true});
+        }
+      }
+
+      const { data,error } = await query;
+
+      if (!error && data) {
+        state.db[table] = data;
+      } else if (!Array.isArray(state.db[table])) {
+        state.db[table] = [];
+      }
+    }
+  }
+
+  async function insert(table,payload) {
+    const data = {...payload};
+
+    if (TABLES_WITH_USER_ID.includes(table) && !data.user_id) {
+      data.user_id = userId();
+    }
+
+    if (!hasCloud) {
+      data.id ||= crypto.randomUUID();
+      data.created_at ||= now();
+      data.updated_at ||= now();
+
+      state.db[table].push(data);
+      saveLocal();
+
+      return data;
+    }
+
+    const { data:row,error } = await sb
+      .from(table)
+      .insert(data)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    state.db[table].push(row);
+
+    return row;
+  }
+
+  async function update(table,id,payload) {
+    if (!hasCloud) {
+      const index = state.db[table].findIndex(x => x.id === id);
+
+      if (index >= 0) {
+        state.db[table][index] = {
+          ...state.db[table][index],
+          ...payload,
+          updated_at:now()
+        };
+      }
+
+      saveLocal();
+      return state.db[table][index];
+    }
+
+    const { data,error } = await sb
+      .from(table)
+      .update({
+        ...payload,
+        updated_at:now()
+      })
+      .eq("id",id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const index = state.db[table].findIndex(x => x.id === id);
+
+    if (index >= 0) {
+      state.db[table][index] = data;
+    }
+
+    return data;
+  }
+
+  async function remove(table,id) {
+    if (!hasCloud) {
+      state.db[table] =
+        state.db[table].filter(x => x.id !== id);
+
+      saveLocal();
+      return;
+    }
+
+    const { error } = await sb
+      .from(table)
+      .delete()
+      .eq("id",id);
+
+    if (error) throw error;
+
+    state.db[table] =
+      state.db[table].filter(x => x.id !== id);
+  }
+
+  async function audit(action,table,recordId = null,details = {}) {
+    try {
+      await insert("audit_logs",{
+        action,
+        table_name:table,
+        record_id:recordId,
+        details
+      });
+    } catch (error) {
+      console.warn("Audit non enregistré:",error);
+    }
+  }
+
+  function applyRoleNavigation() {
+    const allowed =
+      ROLE_PAGES[role()] || ROLE_PAGES.employee;
+
+    document.querySelectorAll("[data-page]").forEach(button => {
+      const page = button.dataset.page;
+      button.style.display =
+        allowed.includes(page) ? "" : "none";
+    });
+
+    document.body.dataset.role = role();
+  }
+
+  function closeMobileMenu() {
+    document.querySelector(".sidebar")?.classList.remove("open");
+    document.querySelector(".mobile-overlay")?.classList.remove("open");
+  }
+
+  function toggleMobileMenu() {
+    document.querySelector(".sidebar")?.classList.toggle("open");
+    document.querySelector(".mobile-overlay")?.classList.toggle("open");
+  }
+
+  function openModal(html) {
+    let modal = document.getElementById("lbt-modal");
+
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "lbt-modal";
+
+      modal.innerHTML =
+        `<div class="lbt-modal-backdrop"></div>
+         <div class="lbt-modal-box"></div>`;
+
+      document.body.appendChild(modal);
+
+      modal.querySelector(".lbt-modal-backdrop").onclick =
+        closeModal;
+    }
+
+    modal.querySelector(".lbt-modal-box").innerHTML = html;
+    modal.style.display = "flex";
+  }
+
+  function closeModal() {
+    const modal = document.getElementById("lbt-modal");
+
+    if (modal) {
+      modal.style.display = "none";
+    }
+
+    state.modal = null;
+  }
+
+  function render() {
+    const content = document.getElementById("content");
+
+    if (!content) return;
+
+    applyRoleNavigation();
+
+    if (!canSee(state.page)) {
+      state.page = "dashboard";
+    }
+
+    const pages = {
+      dashboard:dashboardPage,
+      members:membersPage,
+      clients:() => tablePage("clients"),
+      quotes:quotesPage,
+      invoices:invoicesPage,
+      payments:paymentsPage,
+      sales:() => tablePage("sales"),
+      purchases:() => tablePage("purchases"),
+      expenses:() => tablePage("expenses"),
+      stock:stockPage,
+      activities:() => tablePage("activities"),
+      projects:() => tablePage("projects"),
+      innovations:() => tablePage("innovations"),
+      reports:reportsPage,
+      audit:auditPage,
+      settings:settingsPage
+    };
+
+    content.innerHTML =
+      pages[state.page]
+        ? pages[state.page]()
+        : dashboardPage();
+
+    bindPage();
+  }
+
+  function dashboardPage() {
+    const sales =
+      state.db.sales.reduce(
+        (a,x) => a + Number(x.amount || 0),
+        0
+      );
+
+    const purchases =
+      state.db.purchases.reduce(
+        (a,x) => a + Number(x.amount || 0),
+        0
+      );
+
+    const expenses =
+      state.db.expenses.reduce(
+        (a,x) => a + Number(x.amount || 0),
+        0
+      );
+
+    const invoices = state.db.invoices || [];
+
+    const unpaid = invoices
+      .map(invoiceStatus)
+      .filter(s => ["unpaid","partial","overdue"].includes(s))
+      .length;
+
+    const lowStock =
+      (state.db.stock_items || []).filter(
+        x =>
+          Number(x.quantity || 0) <=
+          Number(x.min_quantity || 0)
+      ).length;
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Bienvenue ${esc(state.profile?.full_name || "")}</h1>
+          <p>Supervision de l'activité de LUC BRICO-TECH.</p>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span>Ventes</span>
+          <strong>${money(sales)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Achats</span>
+          <strong>${money(purchases)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Dépenses</span>
+          <strong>${money(expenses)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Factures à suivre</span>
+          <strong>${unpaid}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Stock faible</span>
+          <strong>${lowStock}</strong>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <section class="card">
+          <h3>Accès rapide</h3>
+
+          <div class="quick-actions">
+            ${canSee("clients")
+              ? `<button data-action="add" data-table="clients">+ Client</button>`
+              : ""}
+
+            ${canSee("quotes")
+              ? `<button data-action="add" data-table="quotes">+ Devis</button>`
+              : ""}
+
+            ${canSee("invoices")
+              ? `<button data-action="add" data-table="invoices">+ Facture</button>`
+              : ""}
+
+            ${canSee("sales")
+              ? `<button data-action="add" data-table="sales">+ Vente</button>`
+              : ""}
+
+            ${canSee("stock")
+              ? `<button data-action="add" data-table="stock_items">+ Article</button>`
+              : ""}
+          </div>
+        </section>
+
+        <section class="card">
+          <h3>Dernières activités</h3>
+
+          ${
+            (state.db.activities || [])
+              .slice(0,5)
+              .map(x => `
+                <div class="list-row">
+                  <span>${esc(x.title || x.description || "Activité")}</span>
+                  <small>${esc(x.date || "")}</small>
+                </div>
+              `)
+              .join("")
+            || "<p>Aucune activité.</p>"
+          }
+        </section>
+      </div>
+    `;
+  }
+
+  function tablePage(table) {
+    const schema = schemas[table];
+    const rows = state.db[table] || [];
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>${esc(schema.title)}</h1>
+          <p>${rows.length} élément(s)</p>
+        </div>
+
+        <button
+          data-action="add"
+          data-table="${table}"
+          class="primary">
+          + Ajouter
+        </button>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              ${schema.fields
+                .slice(0,5)
+                .map(f => `<th>${esc(f[1])}</th>`)
+                .join("")}
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(row => `
+                <tr>
+                  ${schema.fields
+                    .slice(0,5)
+                    .map(f => `<td>${displayField(f,row)}</td>`)
+                    .join("")}
+
+                  <td>
+                    <button
+                      data-action="edit"
+                      data-table="${table}"
+                      data-id="${row.id}">
+                      Modifier
+                    </button>
+
+                    <button
+                      data-action="delete"
+                      data-table="${table}"
+                      data-id="${row.id}">
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              `)
+              .join("")
+              || `<tr><td colspan="10">Aucune donnée.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function displayField(field,row) {
+    const [key] = field;
+    const value = row[key];
+
+    if (key === "client_id") {
+      const client =
+        (state.db.clients || []).find(
+          x => x.id === value
+        );
+
+      return esc(
+        client?.company_name ||
+        client?.full_name ||
+        "—"
+      );
+    }
+
+    if (key === "quote_id") {
+      const quote =
+        (state.db.quotes || []).find(
+          x => x.id === value
+        );
+
+      return esc(
+        quote?.quote_number || "—"
+      );
+    }
+
+    if (
+      key === "amount" ||
+      key === "total" ||
+      key === "amount_paid" ||
+      key === "amount_due"
+    ) {
+      return money(value);
+    }
+
+    if (key === "status") {
+      return `<span class="badge">
+        ${esc(labels[value] || value || "—")}
+      </span>`;
+    }
+
+    if (key === "payment_method") {
+      return esc(
+        labels[value] ||
+        value ||
+        "—"
+      );
+    }
+
+    if (typeof value === "boolean") {
+      return value ? "Oui" : "Non";
+    }
+
+    return esc(value || "—");
+  }
+
+  function quotesPage() {
+    const rows = state.db.quotes || [];
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Devis</h1>
+          <p>${rows.length} devis</p>
+        </div>
+
+        <button
+          data-action="add"
+          data-table="quotes"
+          class="primary">
+          + Nouveau devis
+        </button>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Statut</th>
+              <th>Lignes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(q => {
+                const client =
+                  (state.db.clients || []).find(
+                    c => c.id === q.client_id
+                  );
+
+                const lines =
+                  (state.db.quote_items || []).filter(
+                    x => x.quote_id === q.id
+                  );
+
+                return `
+                  <tr>
+                    <td>${esc(q.quote_number || "—")}</td>
+
+                    <td>
+                      ${esc(
+                        client?.company_name ||
+                        client?.full_name ||
+                        "—"
+                      )}
+                    </td>
+
+                    <td>${esc(q.issue_date || "—")}</td>
+
+                    <td>${money(q.total)}</td>
+
+                    <td>
+                      <span class="badge">
+                        ${esc(
+                          labels[q.status] ||
+                          q.status ||
+                          "Brouillon"
+                        )}
+                      </span>
+                    </td>
+
+                    <td>${lines.length}</td>
+
+                    <td>
+                      <button
+                        data-action="details"
+                        data-table="quotes"
+                        data-id="${q.id}">
+                        Détails
+                      </button>
+
+                      <button
+                        data-action="edit"
+                        data-table="quotes"
+                        data-id="${q.id}">
+                        Modifier
+                      </button>
+
+                      <button
+                        data-action="delete"
+                        data-table="quotes"
+                        data-id="${q.id}">
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              })
+              .join("")
+              || `<tr><td colspan="7">Aucun devis.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function invoiceStatus(inv) {
+    if (!inv) return "unpaid";
+
+    if (inv.status === "cancelled") {
+      return "cancelled";
+    }
+
+    const total = Number(inv.total || 0);
+    const paid = Number(inv.amount_paid || 0);
+
+    if (total > 0 && paid >= total) {
+      return "paid";
+    }
+
+    if (paid > 0) {
+      return "partial";
+    }
+
+    if (
+      inv.due_date &&
+      inv.due_date < today() &&
+      !["paid","cancelled"].includes(inv.status)
+    ) {
+      return "overdue";
+    }
+
+    return inv.status || "unpaid";
+  }
+
+  function invoicesPage() {
+    const rows = state.db.invoices || [];
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Factures</h1>
+          <p>${rows.length} facture(s)</p>
+        </div>
+
+        <button
+          data-action="add"
+          data-table="invoices"
+          class="primary">
+          + Nouvelle facture
+        </button>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Échéance</th>
+              <th>Total</th>
+              <th>Payé</th>
+              <th>Reste</th>
+              <th>Statut</th>
+              <th>Lignes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(inv => {
+                const client =
+                  (state.db.clients || []).find(
+                    c => c.id === inv.client_id
+                  );
+
+                const lines =
+                  (state.db.invoice_items || []).filter(
+                    x => x.invoice_id === inv.id
+                  );
+
+                const status = invoiceStatus(inv);
+                const total = Number(inv.total || 0);
+                const paid = Number(inv.amount_paid || 0);
+                const due = Math.max(0,total-paid);
+
+                return `
+                  <tr>
+                    <td>${esc(inv.invoice_number || "—")}</td>
+
+                    <td>
+                      ${esc(
+                        client?.company_name ||
+                        client?.full_name ||
+                        "—"
+                      )}
+                    </td>
+
+                    <td>${esc(inv.issue_date || "—")}</td>
+                    <td>${esc(inv.due_date || "—")}</td>
+
+                    <td>${money(total)}</td>
+                    <td>${money(paid)}</td>
+                    <td>${money(due)}</td>
+
+                    <td>
+                      <span class="badge status-${esc(status)}">
+                        ${esc(labels[status] || status)}
+                      </span>
+                    </td>
+
+                    <td>${lines.length}</td>
+
+                    <td>
+                      <button
+                        data-action="details"
+                        data-table="invoices"
+                        data-id="${inv.id}">
+                        Détails
+                      </button>
+
+                      <button
+                        data-action="payment"
+                        data-id="${inv.id}">
+                        Paiement
+                      </button>
+
+                      <button
+                        data-action="edit"
+                        data-table="invoices"
+                        data-id="${inv.id}">
+                        Modifier
+                      </button>
+
+                      <button
+                        data-action="delete"
+                        data-table="invoices"
+                        data-id="${inv.id}">
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              })
+              .join("")
+              || `<tr><td colspan="10">Aucune facture.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function paymentsPage() {
+    const rows = state.db.payments || [];
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Paiements</h1>
+          <p>${rows.length} paiement(s)</p>
+        </div>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Facture</th>
+              <th>Montant</th>
+              <th>Mode</th>
+              <th>Référence</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(p => {
+                const inv =
+                  (state.db.invoices || []).find(
+                    x => x.id === p.invoice_id
+                  );
+
+                return `
+                  <tr>
+                    <td>${esc(p.payment_date || "—")}</td>
+                    <td>${esc(inv?.invoice_number || "—")}</td>
+                    <td>${money(p.amount)}</td>
+                    <td>${esc(labels[p.payment_method] || p.payment_method || "—")}</td>
+                    <td>${esc(p.reference || "—")}</td>
+                    <td>
+                      <button
+                        data-action="delete-payment"
+                        data-id="${p.id}">
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                `;
+              })
+              .join("")
+              || `<tr><td colspan="6">Aucun paiement.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function membersPage() {
+    const rows = state.db.profiles || [];
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Membres</h1>
+          <p>Gestion des utilisateurs et des rôles.</p>
+        </div>
+
+        ${
+          isAdmin()
+            ? `<button data-action="create-employee" class="primary">
+                + Créer un compte employé
+              </button>`
+            : ""
+        }
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Téléphone</th>
+              <th>Rôle</th>
+              <th>Actif</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(p => `
+                <tr>
+                  <td>${esc(p.full_name || "—")}</td>
+                  <td>${esc(p.email || "—")}</td>
+                  <td>${esc(p.phone || "—")}</td>
+                  <td>${esc(p.role || "employee")}</td>
+                  <td>${p.active === false ? "Non" : "Oui"}</td>
+
+                  <td>
+                    ${
+                      isAdmin()
+                        ? `
+                          <button
+                            data-action="change-role"
+                            data-id="${p.id}">
+                            Rôle
+                          </button>
+
+                          <button
+                            data-action="toggle-member"
+                            data-id="${p.id}">
+                            ${p.active === false ? "Activer" : "Désactiver"}
+                          </button>
+                        `
+                        : "Lecture seule"
+                    }
+                  </td>
+                </tr>
+              `)
+              .join("")
+              || `<tr><td colspan="6">Aucun membre.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function stockPage() {
+    const rows = state.db.stock_items || [];
+
+    const low = rows.filter(
+      x =>
+        Number(x.quantity || 0) <=
+        Number(x.min_quantity || 0)
+    );
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Stock & matériel</h1>
+          <p>
+            ${rows.length} article(s) ·
+            ${low.length} niveau(x) faible(s)
+          </p>
+        </div>
+
+        ${
+          isManagerOrAdmin()
+            ? `<button
+                data-action="add"
+                data-table="stock_items"
+                class="primary">
+                + Article
+              </button>`
+            : ""
+        }
+      </div>
+
+      ${
+        low.length
+          ? `<div class="alert-box">
+              ⚠️ ${low.length}
+              article(s) atteignent leur seuil minimum.
+            </div>`
+          : ""
+      }
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Désignation</th>
+              <th>Référence</th>
+              <th>Quantité</th>
+              <th>Seuil</th>
+              <th>Unité</th>
+              <th>Emplacement</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(x => `
+                <tr>
+                  <td>${esc(x.name)}</td>
+                  <td>${esc(x.sku || "—")}</td>
+                  <td>${esc(x.quantity ?? 0)}</td>
+                  <td>${esc(x.min_quantity ?? 0)}</td>
+                  <td>${esc(x.unit || "—")}</td>
+                  <td>${esc(x.location || "—")}</td>
+
+                  <td>
+                    <button
+                      data-action="stock-movement"
+                      data-id="${x.id}">
+                      Mouvement
+                    </button>
+
+                    ${
+                      isManagerOrAdmin()
+                        ? `<button
+                            data-action="edit"
+                            data-table="stock_items"
+                            data-id="${x.id}">
+                            Modifier
+                          </button>`
+                        : ""
+                    }
+                  </td>
+                </tr>
+              `)
+              .join("")
+              || `<tr><td colspan="7">Aucun article.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function reportsPage() {
+    const sales =
+      state.db.sales.reduce(
+        (a,x) => a + Number(x.amount || 0),
+        0
+      );
+
+    const purchases =
+      state.db.purchases.reduce(
+        (a,x) => a + Number(x.amount || 0),
+        0
+      );
+
+    const expenses =
+      state.db.expenses.reduce(
+        (a,x) => a + Number(x.amount || 0),
+        0
+      );
+
+    const invoices = state.db.invoices || [];
+
+    const invoiceTotal =
+      invoices.reduce(
+        (a,x) => a + Number(x.total || 0),
+        0
+      );
+
+    const invoicePaid =
+      invoices.reduce(
+        (a,x) => a + Number(x.amount_paid || 0),
+        0
+      );
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Rapports</h1>
+          <p>Synthèse de l'activité.</p>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span>Ventes</span>
+          <strong>${money(sales)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Achats</span>
+          <strong>${money(purchases)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Dépenses</span>
+          <strong>${money(expenses)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Factures</span>
+          <strong>${money(invoiceTotal)}</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span>Factures encaissées</span>
+          <strong>${money(invoicePaid)}</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Exports</h3>
+
+        <div class="quick-actions">
+          <button data-action="export-all">
+            Exporter les données CSV
+          </button>
+
+          <button data-action="backup">
+            Sauvegarde JSON
+          </button>
+
+          ${
+            isAdmin()
+              ? `<button data-action="export-audit">
+                  Exporter l'audit
+                </button>`
+              : ""
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  function auditPage() {
+    const rows = state.db.audit_logs || [];
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Journal d'audit</h1>
+          <p>Traçabilité des opérations.</p>
+        </div>
+
+        <button data-action="export-audit">
+          Exporter
+        </button>
+      </div>
+
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Action</th>
+              <th>Table</th>
+              <th>Utilisateur</th>
+              <th>Détails</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.map(x => {
+                const p =
+                  (state.db.profiles || []).find(
+                    u => u.id === x.user_id
+                  );
+
+                return `
+                  <tr>
+                    <td>${esc(x.created_at || "—")}</td>
+                    <td>${esc(x.action || "—")}</td>
+                    <td>${esc(x.table_name || "—")}</td>
+                    <td>${esc(p?.full_name || x.user_id || "—")}</td>
+                    <td>${esc(JSON.stringify(x.details || {}))}</td>
+                  </tr>
+                `;
+              })
+              .join("")
+              || `<tr><td colspan="5">Aucune opération enregistrée.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function settingsPage() {
+    const current =
+      (state.db.settings || []).find(
+        x => x.user_id === userId()
+      ) || {};
+
+    return `
+      <div class="page-head">
+        <div>
+          <h1>Paramètres</h1>
+          <p>Configuration de votre espace.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <form id="settings-form">
+          <label>
+            Nom de l'entreprise
+            <input
+              name="company_name"
+              value="${esc(current.company_name || "LUC BRICO-TECH")}"
+            >
+          </label>
+
+          <label>
+            Adresse
+            <input
+              name="company_address"
+              value="${esc(current.company_address || "Hévié Hounzévié, Abomey-Calavi")}"
+            >
+          </label>
+
+          <label>
+            Téléphone
+            <input
+              name="company_phone"
+              value="${esc(current.company_phone || "01 67 02 84 91 / 01 41 56 02 24 / 01 58 38 46 72")}"
+            >
+          </label>
+
+          <button class="primary" type="submit">
+            Enregistrer
+          </button>
+        </form>
+      </div>
+    `;
+  }
+
+  function fieldInput(field,value) {
+    const [key,label,type,required,options] = field;
+    const v = value ?? "";
+
+    if (type === "textarea") {
+      return `
+        <label>
+          ${esc(label)}
+          <textarea
+            name="${esc(key)}"
+            ${required ? "required" : ""}
+          >${esc(v)}</textarea>
+        </label>
+      `;
+    }
+
+    if (type === "checkbox") {
+      return `
+        <label class="check-row">
+          <input
+            type="checkbox"
+            name="${esc(key)}"
+            ${v ? "checked" : ""}
+          >
+          ${esc(label)}
+        </label>
+      `;
+    }
+
+    if (type === "client") {
+      return `
+        <label>
+          ${esc(label)}
+          <select
+            name="${esc(key)}"
+            ${required ? "required" : ""}
+          >
+            <option value="">Sélectionner</option>
+
+            ${(state.db.clients || []).map(c => `
+              <option
+                value="${c.id}"
+                ${c.id === v ? "selected" : ""}
+              >
+                ${esc(c.company_name || c.full_name)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+      `;
+    }
+
+    if (type === "quote") {
+      return `
+        <label>
+          ${esc(label)}
+          <select name="${esc(key)}">
+            <option value="">Aucun</option>
+
+            ${(state.db.quotes || []).map(q => `
+              <option
+                value="${q.id}"
+                ${q.id === v ? "selected" : ""}
+              >
+                ${esc(q.quote_number || q.id)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+      `;
+    }
+
+    if (type === "invoice_status") {
+      const opts = [
+        "unpaid",
+        "partial",
+        "paid",
+        "cancelled",
+        "overdue"
+      ];
+
+      return `
+        <label>
+          ${esc(label)}
+          <select name="${esc(key)}">
+            ${opts.map(o => `
+              <option
+                value="${o}"
+                ${o === v ? "selected" : ""}
+              >
+                ${esc(labels[o])}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+      `;
+    }
+
+    if (type === "payment_method") {
+      return `
+        <label>
+          ${esc(label)}
+          <select name="${esc(key)}">
+            <option value="">Sélectionner</option>
+
+            ${paymentMethods.map(([k,l]) => `
+              <option
+                value="${k}"
+                ${k === v ? "selected" : ""}
+              >
+                ${esc(l)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+      `;
+    }
+
+    if (type === "select") {
+      return `
+        <label>
+          ${esc(label)}
+          <select
+            name="${esc(key)}"
+            ${required ? "required" : ""}
+          >
+            ${options.map(o => `
+              <option
+                value="${esc(o)}"
+                ${o === v ? "selected" : ""}
+              >
+                ${esc(labels[o] || o)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+      `;
+    }
+
+    return `
+      <label>
+        ${esc(label)}
+        <input
+          type="${esc(type)}"
+          name="${esc(key)}"
+          value="${esc(v)}"
+          ${required ? "required" : ""}
+        >
+      </label>
+    `;
+  }
+
+  async function openForm(table,id = null) {
+    if (["quotes","invoices"].includes(table)) {
+      return openDocumentForm(table,id);
+    }
+
+    const schema = schemas[table];
+    if (!schema) return;
+
+    const existing = id
+      ? (state.db[table] || []).find(x => x.id === id)
+      : {};
+
+    openModal(`
+      <div class="modal-header">
+        <h2>
+          ${id ? "Modifier" : "Ajouter"}
+          — ${esc(schema.title)}
+        </h2>
+
+        <button data-action="close-modal">×</button>
+      </div>
+
+      <form id="generic-form">
+        ${schema.fields
+          .map(f => fieldInput(f,existing[f[0]]))
+          .join("")}
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            data-action="close-modal">
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            class="primary">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    `);
+
+    const form =
+      document.getElementById("generic-form");
+
+    form.onsubmit = async e => {
+      e.preventDefault();
+
+      const fd = new FormData(form);
+      const payload = {};
+
+      schema.fields.forEach(f => {
+        const key = f[0];
+        const type = f[2];
+
+        if (type === "checkbox") {
+          payload[key] = fd.has(key);
+        } else if (type === "number") {
+          payload[key] = Number(fd.get(key) || 0);
+        } else {
+          payload[key] = fd.get(key) || null;
+        }
+      });
+
+      try {
+        if (id) {
+          await update(table,id,payload);
+          await audit("update",table,id,payload);
+        } else {
+          const row =
+            await insert(table,payload);
+
+          await audit(
+            "insert",
+            table,
+            row.id,
+            payload
+          );
+        }
+
+        closeModal();
+        await syncCloud();
+        render();
+
+        toast(
+          "Enregistrement effectué.",
+          "success"
+        );
+      } catch (error) {
+        toast(
+          error.message ||
+          "Erreur d'enregistrement.",
+          "error"
+        );
+      }
+    };
+  }
+
+  function documentLineRows() {
+    return state.lineDraft.map((line,index) => `
+      <tr>
+        <td>
+          <input
+            data-line="${index}"
+            data-field="description"
+            value="${esc(line.description || "")}"
+            placeholder="Désignation"
+          >
+        </td>
+
+        <td>
+          <input
+            data-line="${index}"
+            data-field="quantity"
+            type="number"
+            min="0"
+            step="0.01"
+            value="${Number(line.quantity || 1)}"
+          >
+        </td>
+
+        <td>
+          <select
+            data-line="${index}"
+            data-field="unit">
+            ${
+              ["pièce","m","kg","h","forfait","lot","service"]
+                .map(u => `
+                  <option
+                    value="${u}"
+                    ${u === (line.unit || "pièce") ? "selected" : ""}
+                  >
+                    ${u}
+                  </option>
+                `)
+                .join("")
+            }
+          </select>
+        </td>
+
+        <td>
+          <input
+            data-line="${index}"
+            data-field="unit_price"
+            type="number"
+            min="0"
+            step="1"
+            value="${Number(line.unit_price || 0)}"
+          >
+        </td>
+
+        <td class="line-total">
+          ${money(
+            Number(line.quantity || 0) *
+            Number(line.unit_price || 0)
+          )}
+        </td>
+
+        <td>
+          <button
+            type="button"
+            data-remove-line="${index}">
+            ×
+          </button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function calculateLines() {
+    return state.lineDraft.reduce(
+      (sum,line) =>
+        sum +
+        Number(line.quantity || 0) *
+        Number(line.unit_price || 0),
+      0
+    );
+  }
+
+  function documentTotals(discount,tax) {
+    const subtotal = calculateLines();
+    const d = Number(discount || 0);
+    const t = Number(tax || 0);
+    const base = Math.max(0,subtotal-d);
+
+    return {
+      subtotal,
+      discount:d,
+      tax:t,
+      total:base+t
+    };
+  }
+
+  async function openDocumentForm(table,id = null) {
+    const schema = schemas[table];
+
+    const existing = id
+      ? (state.db[table] || []).find(x => x.id === id)
+      : {};
+
+    const isInvoice = table === "invoices";
+
+    state.selectedDocument = {
+      table,
+      id
+    };
+
+    if (id) {
+      const itemTable =
+        isInvoice
+          ? "invoice_items"
+          : "quote_items";
+
+      const foreignKey =
+        isInvoice
+          ? "invoice_id"
+          : "quote_id";
+
+      state.lineDraft =
+        (state.db[itemTable] || [])
+          .filter(x => x[foreignKey] === id)
+          .map(x => ({
+            description:x.description || "",
+            quantity:Number(x.quantity || 1),
+            unit:x.unit || "pièce",
+            unit_price:Number(x.unit_price || 0)
+          }));
+    } else {
+      state.lineDraft = [];
+    }
+
+    const status =
+      isInvoice
+        ? invoiceStatus(existing)
+        : (existing.status || "draft");
+
+    const defaultData = {
+      ...existing,
+      issue_date:existing.issue_date || today(),
+      status
+    };
+
+    openModal(`
+      <div class="modal-header">
+        <h2>
+          ${id ? "Modifier" : "Créer"}
+          — ${isInvoice ? "Facture" : "Devis"}
+        </h2>
+
+        <button data-action="close-modal">×</button>
+      </div>
+
+      <form id="document-form">
+        <div class="form-grid">
+          ${schema.fields
+            .map(f => fieldInput(f,defaultData[f[0]]))
+            .join("")}
+        </div>
+
+        <hr>
+
+        <h3>Lignes détaillées</h3>
+
+        <div class="table-wrap">
+          <table class="document-lines">
+            <thead>
+              <tr>
+                <th>Désignation</th>
+                <th>Qté</th>
+                <th>Unité</th>
+                <th>Prix unitaire</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody id="document-lines-body">
+              ${documentLineRows()}
+            </tbody>
+          </table>
+        </div>
+
+        <button
+          type="button"
+          id="add-document-line">
+          + Ajouter une ligne
+        </button>
+
+        <div class="document-totals">
+          <div>
+            Sous-total :
+            <strong id="doc-subtotal">
+              ${money(existing.subtotal || 0)}
+            </strong>
+          </div>
+
+          <div>
+            Remise :
+            <strong id="doc-discount">
+              ${money(existing.discount || 0)}
+            </strong>
+          </div>
+
+          <div>
+            Taxe :
+            <strong id="doc-tax">
+              ${money(existing.tax || 0)}
+            </strong>
+          </div>
+
+          <div>
+            Total :
+            <strong id="doc-total">
+              ${money(existing.total || 0)}
+            </strong>
+          </div>
+
+          ${
+            isInvoice
+              ? `
+                <div>
+                  Déjà payé :
+                  <strong id="doc-paid">
+                    ${money(existing.amount_paid || 0)}
+                  </strong>
+                </div>
+
+                <div>
+                  Reste dû :
+                  <strong id="doc-due">
+                    ${money(
+                      Math.max(
+                        0,
+                        Number(existing.total || 0) -
+                        Number(existing.amount_paid || 0)
+                      )
+                    )}
+                  </strong>
+                </div>
+              `
+              : ""
+          }
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            data-action="close-modal">
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            class="primary">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    `);
+
+    const form =
+      document.getElementById("document-form");
+
+    const body =
+      document.getElementById("document-lines-body");
+
+    function refreshLineUI() {
+      body.innerHTML = documentLineRows();
+
+      const discount =
+        form.elements.discount?.value || 0;
+
+      const tax =
+        form.elements.tax?.value || 0;
+
+      const totals =
+        documentTotals(discount,tax);
+
+      document.getElementById("doc-subtotal")
+        .textContent = money(totals.subtotal);
+
+      document.getElementById("doc-discount")
+        .textContent = money(totals.discount);
+
+      document.getElementById("doc-tax")
+        .textContent = money(totals.tax);
+
+      document.getElementById("doc-total")
+        .textContent = money(totals.total);
+
+      if (isInvoice) {
+        const paid =
+          Number(
+            form.elements.amount_paid?.value || 0
+          );
+
+        document.getElementById("doc-paid")
+          .textContent = money(paid);
+
+        document.getElementById("doc-due")
+          .textContent =
+            money(
+              Math.max(0,totals.total-paid)
+            );
+      }
+
+      body.querySelectorAll("[data-line]")
+        .forEach(input => {
+          input.oninput = () => {
+            const index =
+              Number(input.dataset.line);
+
+            const field =
+              input.dataset.field;
+
+            state.lineDraft[index][field] =
+              field === "quantity" ||
+              field === "unit_price"
+                ? Number(input.value || 0)
+                : input.value;
+
+            refreshLineUI();
+          };
+
+          input.onchange = input.oninput;
+        });
+
+      body.querySelectorAll("[data-remove-line]")
+        .forEach(button => {
+          button.onclick = () => {
+            state.lineDraft.splice(
+              Number(button.dataset.removeLine),
+              1
+            );
+
+            refreshLineUI();
+          };
+        });
+    }
+
+    document.getElementById("add-document-line").onclick = () => {
+      state.lineDraft.push({
+        description:"",
+        quantity:1,
+        unit:"pièce",
+        unit_price:0
+      });
+
+      refreshLineUI();
+    };
+
+    form.elements.discount?.addEventListener(
+      "input",
+      refreshLineUI
+    );
+
+    form.elements.tax?.addEventListener(
+      "input",
+      refreshLineUI
+    );
+
+    form.elements.amount_paid?.addEventListener(
+      "input",
+      refreshLineUI
+    );
+
+    refreshLineUI();
+
+    form.onsubmit = async e => {
+      e.preventDefault();
+
+      const fd = new FormData(form);
+      const payload = {};
+
+      schema.fields.forEach(f => {
+        const key = f[0];
+        const type = f[2];
+
+        if (type === "checkbox") {
+          payload[key] = fd.has(key);
+        } else if (type === "number") {
+          payload[key] =
+            Number(fd.get(key) || 0);
+        } else {
+          payload[key] =
+            fd.get(key) || null;
+        }
+      });
+
+      const totals =
+        documentTotals(
+          payload.discount,
+          payload.tax
+        );
+
+      payload.subtotal = totals.subtotal;
+      payload.discount = totals.discount;
+      payload.tax = totals.tax;
+      payload.total = totals.total;
+
+      if (!payload.quote_number && table === "quotes") {
+        payload.quote_number =
+          `DEV-${Date.now()}`;
+      }
+
+      if (!payload.invoice_number && table === "invoices") {
+        payload.invoice_number =
+          `FAC-${Date.now()}`;
+      }
+
+      if (isInvoice) {
+        const paid =
+          Number(payload.amount_paid || 0);
+
+        if (payload.status === "cancelled") {
+          payload.amount_due = 0;
+        } else if (
+          paid >= totals.total &&
+          totals.total > 0
+        ) {
+          payload.status = "paid";
+          payload.amount_due = 0;
+        } else if (paid > 0) {
+          payload.status = "partial";
+          payload.amount_due =
+            Math.max(0,totals.total-paid);
+        } else if (
+          payload.due_date &&
+          payload.due_date < today()
+        ) {
+          payload.status = "overdue";
+          payload.amount_due = totals.total;
+        } else {
+          payload.status = "unpaid";
+          payload.amount_due = totals.total;
+        }
+      }
+
+      try {
+        let row;
+
+        if (id) {
+          row =
+            await update(table,id,payload);
+        } else {
+          row =
+            await insert(table,payload);
+        }
+
+        await saveDocumentLines(
+          table,
+          row.id,
+          state.lineDraft
+        );
+
+        await audit(
+          id ? "update" : "insert",
+          table,
+          row.id,
+          {
+            ...payload,
+            lines:state.lineDraft
+          }
+        );
+
+        closeModal();
+
+        await syncCloud();
+
+        render();
+
+        toast(
+          `${isInvoice ? "Facture" : "Devis"} enregistré(e).`,
+          "success"
+        );
+      } catch (error) {
+        console.error(error);
+
+        toast(
+          error.message ||
+          "Erreur lors de l'enregistrement.",
+          "error"
+        );
+      }
+    };
+  }
+
+  async function saveDocumentLines(table,id,lines) {
+    const itemTable =
+      table === "invoices"
+        ? "invoice_items"
+        : "quote_items";
+
+    const foreignKey =
+      table === "invoices"
+        ? "invoice_id"
+        : "quote_id";
+
+    if (!hasCloud) {
+      state.db[itemTable] =
+        state.db[itemTable].filter(
+          x => x[foreignKey] !== id
+        );
+
+      lines.forEach(line => {
+        state.db[itemTable].push({
+          id:crypto.randomUUID(),
+          [foreignKey]:id,
+          description:line.description,
+          quantity:Number(line.quantity || 0),
+          unit:line.unit || "pièce",
+          unit_price:Number(line.unit_price || 0),
+          amount:
+            Number(line.quantity || 0) *
+            Number(line.unit_price || 0),
+          created_at:now()
+        });
+      });
+
+      saveLocal();
+      return;
+    }
+
+    const del =
+      await sb
+        .from(itemTable)
+        .delete()
+        .eq(foreignKey,id);
+
+    if (del.error) throw del.error;
+
+    if (!lines.length) return;
+
+    const rows = lines.map(line => ({
+      [foreignKey]:id,
+      description:line.description,
+      quantity:Number(line.quantity || 0),
+      unit:line.unit || "pièce",
+      unit_price:Number(line.unit_price || 0),
+      amount:
+        Number(line.quantity || 0) *
+        Number(line.unit_price || 0)
+    }));
+
+    const ins =
+      await sb
+        .from(itemTable)
+        .insert(rows);
+
+    if (ins.error) throw ins.error;
+
+    await syncCloud();
+  }
+
+  async function openPaymentForm(invoiceId) {
+    const invoice =
+      (state.db.invoices || []).find(
+        x => x.id === invoiceId
+      );
+
+    if (!invoice) return;
+
+    openModal(`
+      <div class="modal-header">
+        <h2>Enregistrer un paiement</h2>
+        <button data-action="close-modal">×</button>
+      </div>
+
+      <p>
+        Facture :
+        <strong>
+          ${esc(invoice.invoice_number || "—")}
+        </strong>
+      </p>
+
+      <p>
+        Total :
+        <strong>${money(invoice.total)}</strong>
+      </p>
+
+      <form id="payment-form">
+        <label>
+          Montant
+          <input
+            type="number"
+            name="amount"
+            min="1"
+            required
+          >
+        </label>
+
+        <label>
+          Mode de paiement
+          <select
+            name="payment_method"
+            required>
+            ${paymentMethods.map(([k,l]) => `
+              <option value="${k}">
+                ${esc(l)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Date
+          <input
+            type="date"
+            name="payment_date"
+            value="${today()}"
+            required
+          >
+        </label>
+
+        <label>
+          Référence
+          <input
+            name="reference"
+            placeholder="Référence transaction / chèque / virement"
+          >
+        </label>
+
+        <label>
+          Notes
+          <textarea name="notes"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            data-action="close-modal">
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            class="primary">
+            Enregistrer le paiement
+          </button>
+        </div>
+      </form>
+    `);
+
+    document.getElementById("payment-form").onsubmit =
+      async e => {
+        e.preventDefault();
+
+        const fd =
+          new FormData(e.currentTarget);
+
+        const payload = {
+          invoice_id:invoiceId,
+          amount:Number(fd.get("amount") || 0),
+          payment_method:fd.get("payment_method"),
+          payment_date:fd.get("payment_date"),
+          reference:fd.get("reference") || null,
+          notes:fd.get("notes") || null
+        };
+
+        if (payload.amount <= 0) {
+          toast(
+            "Le montant doit être supérieur à zéro.",
+            "error"
+          );
+          return;
+        }
+
+        try {
+          const row =
+            await insert("payments",payload);
+
+          await audit(
+            "insert",
+            "payments",
+            row.id,
+            payload
+          );
+
+          await recalcInvoicePaid(invoiceId);
+
+          closeModal();
+
+          await syncCloud();
+
+          render();
+
+          toast(
+            "Paiement enregistré.",
+            "success"
+          );
+        } catch (error) {
+          toast(
+            error.message || "Erreur paiement.",
+            "error"
+          );
+        }
+      };
+  }
+
+  async function recalcInvoicePaid(invoiceId) {
+    const invoice =
+      (state.db.invoices || []).find(
+        x => x.id === invoiceId
+      );
+
+    if (!invoice) return;
+
+    const paid =
+      (state.db.payments || [])
+        .filter(x => x.invoice_id === invoiceId)
+        .reduce(
+          (a,x) =>
+            a + Number(x.amount || 0),
+          0
+        );
+
+    const total =
+      Number(invoice.total || 0);
+
+    let status;
+
+    if (invoice.status === "cancelled") {
+      status = "cancelled";
+    } else if (
+      paid >= total &&
+      total > 0
+    ) {
+      status = "paid";
+    } else if (paid > 0) {
+      status = "partial";
+    } else if (
+      invoice.due_date &&
+      invoice.due_date < today()
+    ) {
+      status = "overdue";
+    } else {
+      status = "unpaid";
+    }
+
+    await update(
+      "invoices",
+      invoiceId,
+      {
+        amount_paid:paid,
+        amount_due:Math.max(0,total-paid),
+        status
+      }
+    );
+  }
+
+  async function deletePayment(id) {
+    const payment =
+      (state.db.payments || []).find(
+        x => x.id === id
+      );
+
+    if (!payment) return;
+
+    if (!confirm("Supprimer ce paiement ?")) {
+      return;
+    }
+
+    try {
+      await remove("payments",id);
+
+      await recalcInvoicePaid(
+        payment.invoice_id
+      );
+
+      await audit(
+        "delete",
+        "payments",
+        id,
+        payment
+      );
+
+      await syncCloud();
+
+      render();
+
+      toast(
+        "Paiement supprimé.",
+        "success"
+      );
+    } catch (error) {
+      toast(
+        error.message || "Erreur.",
+        "error"
+      );
+    }
+  }
+
+  async function stockMovement(stockId) {
+    const item =
+      (state.db.stock_items || []).find(
+        x => x.id === stockId
+      );
+
+    if (!item) return;
+
+    const types =
+      role() === "employee"
+        ? [
+            ["use","Utilisation"],
+            ["return","Retour"]
+          ]
+        : [
+            ["entry","Entrée"],
+            ["exit","Sortie"],
+            ["use","Utilisation"],
+            ["return","Retour"],
+            ["adjustment","Ajustement"]
+          ];
+
+    openModal(`
+      <div class="modal-header">
+        <h2>
+          Mouvement — ${esc(item.name)}
+        </h2>
+
+        <button data-action="close-modal">×</button>
+      </div>
+
+      <form id="stock-movement-form">
+        <label>
+          Type
+          <select name="movement_type">
+            ${types.map(([k,l]) => `
+              <option value="${k}">
+                ${l}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Quantité
+          <input
+            type="number"
+            name="quantity"
+            min="0.01"
+            step="0.01"
+            required
+          >
+        </label>
+
+        <label>
+          Notes
+          <textarea name="notes"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            data-action="close-modal">
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            class="primary">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    `);
+
+    document.getElementById(
+      "stock-movement-form"
+    ).onsubmit = async e => {
+      e.preventDefault();
+
+      const fd =
+        new FormData(e.currentTarget);
+
+      const payload = {
+        stock_item_id:stockId,
+        movement_type:fd.get("movement_type"),
+        quantity:Number(
+          fd.get("quantity") || 0
+        ),
+        notes:fd.get("notes") || null
+      };
+
+      try {
+        if (hasCloud) {
+          const { error } =
+            await sb.rpc(
+              "create_stock_movement",
+              {
+                p_stock_item_id:stockId,
+                p_movement_type:payload.movement_type,
+                p_quantity:payload.quantity,
+                p_project_id:null,
+                p_activity_id:null,
+                p_employee_id:userId(),
+                p_notes:payload.notes
+              }
+            );
+
+          if (error) throw error;
+        } else {
+          const itemIndex =
+            state.db.stock_items.findIndex(
+              x => x.id === stockId
+            );
+
+          const current =
+            Number(
+              state.db.stock_items[itemIndex].quantity || 0
+            );
+
+          let next = current;
+
+          if (
+            ["entry","return"].includes(
+              payload.movement_type
+            )
+          ) {
+            next += payload.quantity;
+          } else if (
+            ["exit","use"].includes(
+              payload.movement_type
+            )
+          ) {
+            next -= payload.quantity;
+          } else {
+            next = payload.quantity;
+          }
+
+          state.db.stock_items[itemIndex].quantity =
+            Math.max(0,next);
+
+          state.db.stock_movements.push({
+            id:crypto.randomUUID(),
+            ...payload,
+            user_id:userId(),
+            created_at:now()
+          });
+
+          saveLocal();
+        }
+
+        await syncCloud();
+
+        closeModal();
+        render();
+
+        toast(
+          "Mouvement enregistré.",
+          "success"
+        );
+      } catch (error) {
+        toast(
+          error.message ||
+          "Erreur de mouvement.",
+          "error"
+        );
+      }
+    };
+  }
+
+  async function createEmployee() {
+    if (!isAdmin()) return;
+
+    openModal(`
+      <div class="modal-header">
+        <h2>Créer un compte employé</h2>
+        <button data-action="close-modal">×</button>
+      </div>
+
+      <form id="employee-form">
+        <label>
+          Nom complet
+          <input name="full_name" required>
+        </label>
+
+        <label>
+          Téléphone
+          <input name="phone">
+        </label>
+
+        <label>
+          E-mail
+          <input
+            type="email"
+            name="email"
+            required
+          >
+        </label>
+
+        <label>
+          Mot de passe initial
+          <input
+            type="password"
+            name="password"
+            minlength="8"
+            required
+          >
+        </label>
+
+        <label>
+          Confirmation
+          <input
+            type="password"
+            name="password2"
+            minlength="8"
+            required
+          >
+        </label>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            data-action="close-modal">
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            class="primary">
+            Créer le compte
+          </button>
+        </div>
+      </form>
+    `);
+
+    document.getElementById(
+      "employee-form"
+    ).onsubmit = async e => {
+      e.preventDefault();
+
+      const fd =
+        new FormData(e.currentTarget);
+
+      const password =
+        fd.get("password");
+
+      const password2 =
+        fd.get("password2");
+
+      if (password !== password2) {
+        toast(
+          "Les mots de passe ne correspondent pas.",
+          "error"
+        );
+        return;
+      }
+
+      if (!hasCloud) {
+        toast(
+          "La création réelle de comptes nécessite Supabase.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        const session =
+          await sb.auth.getSession();
+
+        const token =
+          session.data.session?.access_token;
+
+        const response =
+          await fetch(
+            `${cfg.SUPABASE_URL}/functions/v1/create-employee`,
+            {
+              method:"POST",
+              headers:{
+                "Authorization":`Bearer ${token}`,
+                "Content-Type":"application/json",
+                "apikey":cfg.SUPABASE_ANON_KEY
+              },
+              body:JSON.stringify({
+                full_name:fd.get("full_name"),
+                phone:fd.get("phone"),
+                email:fd.get("email"),
+                password
+              })
+            }
+          );
+
+        const result =
+          await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.error ||
+            "Création du compte impossible."
+          );
+        }
+
+        await syncCloud();
+
+        closeModal();
+        render();
+
+        toast(
+          "Compte employé créé.",
+          "success"
+        );
+      } catch (error) {
+        toast(
+          error.message || "Erreur.",
+          "error"
+        );
+      }
+    };
+  }
+
+  async function changeRole(id) {
+    if (!isAdmin()) return;
+
+    if (id === userId()) {
+      toast(
+        "Vous ne pouvez pas modifier votre propre rôle ici.",
+        "error"
+      );
+      return;
+    }
+
+    const member =
+      (state.db.profiles || []).find(
+        x => x.id === id
+      );
+
+    if (!member) return;
+
+    const selected =
+      prompt(
+        "Nouveau rôle : admin, manager ou employee",
+        member.role || "employee"
+      );
+
+    if (
+      !selected ||
+      !["admin","manager","employee"].includes(selected)
+    ) {
+      return;
+    }
+
+    try {
+      await update(
+        "profiles",
+        id,
+        {role:selected}
+      );
+
+      await audit(
+        "update",
+        "profiles",
+        id,
+        {role:selected}
+      );
+
+      await syncCloud();
+      render();
+
+      toast(
+        "Rôle modifié.",
+        "success"
+      );
+    } catch (error) {
+      toast(
+        error.message || "Erreur.",
+        "error"
+      );
+    }
+  }
+
+  async function toggleMember(id) {
+    if (!isAdmin()) return;
+
+    if (id === userId()) {
+      toast(
+        "Vous ne pouvez pas désactiver votre propre compte.",
+        "error"
+      );
+      return;
+    }
+
+    const member =
+      (state.db.profiles || []).find(
+        x => x.id === id
+      );
+
+    if (!member) return;
+
+    try {
+      await update(
+        "profiles",
+        id,
+        {
+          active:member.active === false
+        }
+      );
+
+      await audit(
+        "update",
+        "profiles",
+        id,
+        {
+          active:member.active === false
+        }
+      );
+
+      await syncCloud();
+      render();
+    } catch (error) {
+      toast(
+        error.message || "Erreur.",
+        "error"
+      );
+    }
+  }
+
+  async function deleteRecord(table,id) {
+    if (!confirm(
+      "Supprimer définitivement cet élément ?"
+    )) {
+      return;
+    }
+
+    try {
+      const old =
+        (state.db[table] || []).find(
+          x => x.id === id
+        );
+
+      await remove(table,id);
+
+      await audit(
+        "delete",
+        table,
+        id,
+        old || {}
+      );
+
+      await syncCloud();
+      render();
+
+      toast(
+        "Élément supprimé.",
+        "success"
+      );
+    } catch (error) {
+      toast(
+        error.message ||
+        "Suppression impossible.",
+        "error"
+      );
+    }
+  }
+
+  function detailsDocument(table,id) {
+    const isInvoice =
+      table === "invoices";
+
+    const parent =
+      (state.db[table] || []).find(
+        x => x.id === id
+      );
+
+    if (!parent) return;
+
+    const itemTable =
+      isInvoice
+        ? "invoice_items"
+        : "quote_items";
+
+    const key =
+      isInvoice
+        ? "invoice_id"
+        : "quote_id";
+
+    const lines =
+      (state.db[itemTable] || []).filter(
+        x => x[key] === id
+      );
+
+    const client =
+      (state.db.clients || []).find(
+        x => x.id === parent.client_id
+      );
+
+    const status =
+      isInvoice
+        ? invoiceStatus(parent)
+        : parent.status;
+
+    openModal(`
+      <div class="modal-header">
+        <h2>
+          ${isInvoice ? "Facture" : "Devis"}
+          ${esc(
+            parent.invoice_number ||
+            parent.quote_number ||
+            ""
+          )}
+        </h2>
+
+        <button data-action="close-modal">×</button>
+      </div>
+
+      <p>
+        <strong>Client :</strong>
+        ${esc(
+          client?.company_name ||
+          client?.full_name ||
+          "—"
+        )}
+      </p>
+
+      <p>
+        <strong>Date :</strong>
+        ${esc(parent.issue_date || "—")}
+      </p>
+
+      ${
+        isInvoice
+          ? `
+            <p>
+              <strong>Échéance :</strong>
+              ${esc(parent.due_date || "—")}
+            </p>
+          `
+          : ""
+      }
+
+      <p>
+        <strong>Statut :</strong>
+        ${esc(labels[status] || status || "—")}
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Désignation</th>
+              <th>Qté</th>
+              <th>Unité</th>
+              <th>PU</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              lines.map(line => `
+                <tr>
+                  <td>${esc(line.description || "—")}</td>
+                  <td>${esc(line.quantity)}</td>
+                  <td>${esc(line.unit || "pièce")}</td>
+                  <td>${money(line.unit_price)}</td>
+                  <td>${money(line.amount)}</td>
+                </tr>
+              `)
+              .join("")
+              || `<tr><td colspan="5">Aucune ligne.</td></tr>`
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="document-totals">
+        <div>
+          Sous-total :
+          <strong>${money(parent.subtotal)}</strong>
+        </div>
+
+        <div>
+          Remise :
+          <strong>${money(parent.discount)}</strong>
+        </div>
+
+        <div>
+          Taxe :
+          <strong>${money(parent.tax)}</strong>
+        </div>
+
+        <div>
+          Total :
+          <strong>${money(parent.total)}</strong>
+        </div>
+
+        ${
+          isInvoice
+            ? `
+              <div>
+                Payé :
+                <strong>${money(parent.amount_paid)}</strong>
+              </div>
+
+              <div>
+                Reste :
+                <strong>
+                  ${money(
+                    Math.max(
+                      0,
+                      Number(parent.total || 0) -
+                      Number(parent.amount_paid || 0)
+                    )
+                  )}
+                </strong>
+              </div>
+            `
+            : ""
+        }
+      </div>
+
+      <div class="modal-actions">
+        <button data-action="close-modal">
+          Fermer
+        </button>
+
+        <button
+          data-action="edit"
+          data-table="${table}"
+          data-id="${id}">
+          Modifier
+        </button>
+      </div>
+    `);
+  }
+
+  function handleAction(e) {
+    const el = e.currentTarget;
+
+    const action =
+      el.dataset.action;
+
+    const table =
+      el.dataset.table;
+
+    const id =
+      el.dataset.id;
+
+    if (action === "close-modal") {
+      return closeModal();
+    }
+
+    if (action === "add") {
+      return openForm(table);
+    }
+
+    if (action === "edit") {
+      return openForm(table,id);
+    }
+
+    if (action === "delete") {
+      return deleteRecord(table,id);
+    }
+
+    if (action === "details") {
+      return detailsDocument(table,id);
+    }
+
+    if (action === "payment") {
+      return openPaymentForm(id);
+    }
+
+    if (action === "delete-payment") {
+      return deletePayment(id);
+    }
+
+    if (action === "create-employee") {
+      return createEmployee();
+    }
+
+    if (action === "change-role") {
+      return changeRole(id);
+    }
+
+    if (action === "toggle-member") {
+      return toggleMember(id);
+    }
+
+    if (action === "stock-movement") {
+      return stockMovement(id);
+    }
+
+    if (action === "export-all") {
+      return exportAllCsv();
+    }
+
+    if (action === "export-audit") {
+      return exportAuditCsv();
+    }
+
+    if (action === "backup") {
+      return backupAllData();
+    }
+  }
+
+  function csvCell(value) {
+    let text =
+      value == null
+        ? ""
+        : String(value);
+
+    if (typeof value === "object") {
+      try {
+        text = JSON.stringify(value);
+      } catch {
+        text = String(value);
+      }
+    }
+
+    return `"${text.replaceAll('"','""')}"`;
+  }
+
+  function rowsToCsv(rows,columns) {
+    const header =
+      columns
+        .map(c => csvCell(c.label))
+        .join(";");
+
+    const body =
+      rows.map(row =>
+        columns
+          .map(c => csvCell(row[c.key]))
+          .join(";")
+      );
+
+    return "\uFEFF" +
+      [header,...body].join("\r\n");
+  }
+
+  function downloadFile(
+    filename,
+    content,
+    type = "text/plain;charset=utf-8"
+  ) {
+    const blob =
+      new Blob([content],{type});
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const a =
+      document.createElement("a");
+
+    a.href = url;
+    a.download = filename;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  function exportAllCsv() {
+    const sections = [];
+
+    const configs = {
+      clients:[
+        "id","full_name","company_name",
+        "phone","email","address","city","active"
+      ],
+
+      quotes:[
+        "id","quote_number","client_id",
+        "issue_date","valid_until","status",
+        "subtotal","discount","tax","total"
+      ],
+
+      invoices:[
+        "id","invoice_number","client_id",
+        "quote_id","issue_date","due_date",
+        "status","subtotal","discount",
+        "tax","total","amount_paid","amount_due"
+      ],
+
+      payments:[
+        "id","invoice_id","amount",
+        "payment_method","payment_date",
+        "reference","notes"
+      ],
+
+      sales:[
+        "id","date","description",
+        "amount","payment_method",
+        "client_id","notes"
+      ],
+
+      purchases:[
+        "id","date","description",
+        "amount","supplier","notes"
+      ],
+
+      expenses:[
+        "id","date","category",
+        "description","amount",
+        "payment_method","notes"
+      ],
+
+      stock_items:[
+        "id","name","sku","quantity",
+        "min_quantity","unit",
+        "location","notes"
+      ],
+
+      activities:[
+        "id","date","title",
+        "description","status"
+      ],
+
+      projects:[
+        "id","name","client_id",
+        "start_date","end_date",
+        "status","description"
+      ],
+
+      innovations:[
+        "id","title",
+        "description","status"
+      ]
+    };
+
+    Object.entries(configs).forEach(
+      ([table,keys]) => {
+        const rows =
+          state.db[table] || [];
+
+        if (!rows.length) return;
+
+        sections.push(
+          `\r\n### ${table.toUpperCase()}\r\n`
+        );
+
+        sections.push(
+          rowsToCsv(
+            rows,
+            keys.map(key => ({
+              key,
+              label:key
+            }))
+          )
+        );
+      }
+    );
+
+    downloadFile(
+      `luc-bricotech-export-${today()}.csv`,
+      sections.join("\r\n"),
+      "text/csv;charset=utf-8"
+    );
+
+    toast(
+      "Export CSV généré.",
+      "success"
+    );
+  }
+
+  function exportAuditCsv() {
+    const rows =
+      state.db.audit_logs || [];
+
+    const columns = [
+      {key:"created_at",label:"Date"},
+      {key:"user_id",label:"Utilisateur"},
+      {key:"action",label:"Action"},
+      {key:"table_name",label:"Table"},
+      {key:"record_id",label:"ID"},
+      {key:"details",label:"Détails"}
+    ];
+
+    downloadFile(
+      `luc-bricotech-audit-${today()}.csv`,
+      rowsToCsv(rows,columns),
+      "text/csv;charset=utf-8"
+    );
+  }
+
+  function backupAllData() {
+    const content =
+      JSON.stringify(
+        {
+          exported_at:now(),
+          company:"LUC BRICO-TECH",
+          data:state.db
+        },
+        null,
+        2
+      );
+
+    downloadFile(
+      `luc-bricotech-backup-${today()}.json`,
+      content,
+      "application/json;charset=utf-8"
+    );
+
+    toast(
+      "Sauvegarde JSON générée.",
+      "success"
+    );
+  }
+
+  async function saveSettings() {
+    const form =
+      document.getElementById(
+        "settings-form"
+      );
+
+    if (!form) return;
+
+    const fd =
+      new FormData(form);
+
+    const payload = {
+      company_name:
+        fd.get("company_name") || "",
+
+      company_address:
+        fd.get("company_address") || "",
+
+      company_phone:
+        fd.get("company_phone") || ""
+    };
+
+    try {
+      if (!hasCloud) {
+        const current =
+          state.db.settings.find(
+            x => x.user_id === userId()
+          );
+
+        if (current) {
+          Object.assign(
+            current,
+            payload,
+            {updated_at:now()}
+          );
+        } else {
+          state.db.settings.push({
+            id:crypto.randomUUID(),
+            user_id:userId(),
+            ...payload,
+            updated_at:now()
+          });
+        }
+
+        saveLocal();
+      } else {
+        const { data,error } =
+          await sb
+            .from("settings")
+            .upsert(
+              {
+                user_id:userId(),
+                ...payload,
+                updated_at:now()
+              },
+              {
+                onConflict:"user_id"
+              }
+            )
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        state.db.settings =
+          state.db.settings.filter(
+            x => x.user_id !== userId()
+          );
+
+        state.db.settings.push(data);
+      }
+
+      await audit(
+        "update",
+        "settings",
+        null,
+        payload
+      );
+
+      toast(
+        "Paramètres enregistrés.",
+        "success"
+      );
+
+      render();
+    } catch (error) {
+      toast(
+        error.message ||
+        "Erreur lors de l'enregistrement.",
+        "error"
+      );
+    }
+  }
+
+  async function logout() {
+    if (hasCloud) {
+      await sb.auth.signOut();
+    }
+
+    window.location.href =
+      "./login.html";
+  }
+
+  function bindPage() {
+    document.querySelectorAll(
+      "[data-page]"
+    ).forEach(button => {
+      button.onclick = () => {
+        const page =
+          button.dataset.page;
+
+        if (!canSee(page)) return;
+
+        state.page = page;
+
+        closeMobileMenu();
+
+        render();
+      };
+    });
+
+    document.querySelectorAll(
+      "[data-action]"
+    ).forEach(el => {
+      el.onclick = handleAction;
+    });
+
+    const menuBtn =
+      document.getElementById(
+        "menuBtn"
+      );
+
+    if (menuBtn) {
+      menuBtn.onclick =
+        toggleMobileMenu;
+    }
+
+    const overlay =
+      document.querySelector(
+        ".mobile-overlay"
+      );
+
+    if (overlay) {
+      overlay.onclick =
+        closeMobileMenu;
+    }
+
+    const logoutBtn =
+      document.getElementById(
+        "logoutBtn"
+      );
+
+    if (logoutBtn) {
+      logoutBtn.onclick =
+        logout;
+    }
+
+    const settingsForm =
+      document.getElementById(
+        "settings-form"
+      );
+
+    if (settingsForm) {
+      settingsForm.onsubmit =
+        e => {
+          e.preventDefault();
+          saveSettings();
+        };
+    }
+  }
+
+  function boot() {
+    secureBoot()
+      .then(() => {
+        bindPage();
+      })
+      .catch(error => {
+        console.error(error);
+
+        if (!hasCloud) {
+          loadLocal();
+          render();
+          bindPage();
+        } else {
+          document.body.innerHTML =
+            `<div style="padding:40px;font-family:Arial">
+              <h2>Erreur de démarrage</h2>
+              <p>${esc(error.message || error)}</p>
+            </div>`;
+        }
+      });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      boot
+    );
+  } else {
+    boot();
+  }
+
 })();
