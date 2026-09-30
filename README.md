@@ -49,3 +49,11 @@ supabase functions deploy create-employee
 Les secrets Supabase nécessaires à la fonction doivent être disponibles côté serveur. **Ne mettez jamais `SUPABASE_SERVICE_ROLE_KEY` dans `config.js`, GitHub ou le navigateur.**
 
 Après avoir exécuté `supabase/schema.sql`, connectez-vous avec le compte administrateur, ouvrez **Membres → Créer un compte employé**, puis renseignez le nom, l'e-mail, le téléphone et le mot de passe initial.
+
+## Accès selon le rôle
+
+- **Administrateur** : accès complet, gestion des membres, rôles, journal et paramètres.
+- **Manager** : accès aux opérations, au stock et à la consultation des membres ; pas de création de comptes ni d'accès au journal/paramètres.
+- **Employé** : accès au tableau de bord, ventes, achats, dépenses, stock en consultation, activités, projets, innovations et rapports. Les menus Membres, Journal et Paramètres sont masqués.
+
+La restriction de l'interface est complétée par les politiques RLS Supabase : masquer un menu n'est pas considéré comme une mesure de sécurité suffisante à lui seul.
