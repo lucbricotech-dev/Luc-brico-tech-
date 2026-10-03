@@ -9,7 +9,10 @@ const hasCloud = !!(
 );
 
 const sb = hasCloud
-  ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY)
+  ? window.supabase.createClient(
+      CFG.SUPABASE_URL,
+      CFG.SUPABASE_ANON_KEY
+    )
   : null;
 
 const DBKEY = "lbt_v3_demo";
@@ -18,96 +21,132 @@ const schemas = {
   sales: {
     title: "Nouvelle vente",
     fields: [
-      ["customer","Client","text",true],
-      ["item","Article / service","text",true],
-      ["quantity","Quantité","number",true],
-      ["amount","Montant (FCFA)","number",true],
-      ["payment_method","Paiement","select",false,["cash","mobile_money","bank","credit"]],
-      ["status","Statut","select",false,["paid","pending","cancelled"]],
-      ["notes","Notes","textarea",false]
+      ["customer", "Client", "text", true],
+      ["item", "Article / service", "text", true],
+      ["quantity", "Quantité", "number", true],
+      ["amount", "Montant (FCFA)", "number", true],
+      [
+        "payment_method",
+        "Paiement",
+        "select",
+        false,
+        ["cash", "mobile_money", "bank", "credit"]
+      ],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["paid", "pending", "cancelled"]
+      ],
+      ["notes", "Notes", "textarea", false]
     ]
   },
 
   purchases: {
     title: "Nouvel achat",
     fields: [
-      ["supplier","Fournisseur","text",true],
-      ["item","Article","text",true],
-      ["quantity","Quantité","number",true],
-      ["amount","Montant (FCFA)","number",true],
-      ["status","Statut","select",false,["received","pending","cancelled"]],
-      ["notes","Notes","textarea",false]
+      ["supplier", "Fournisseur", "text", true],
+      ["item", "Article", "text", true],
+      ["quantity", "Quantité", "number", true],
+      ["amount", "Montant (FCFA)", "number", true],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["received", "pending", "cancelled"]
+      ],
+      ["notes", "Notes", "textarea", false]
     ]
   },
 
   expenses: {
     title: "Nouvelle dépense",
     fields: [
-      ["category","Catégorie","text",true],
-      ["label","Libellé","text",true],
-      ["amount","Montant (FCFA)","number",true],
-      ["beneficiary","Bénéficiaire","text",false],
-      ["notes","Notes","textarea",false]
+      ["category", "Catégorie", "text", true],
+      ["label", "Libellé", "text", true],
+      ["amount", "Montant (FCFA)", "number", true],
+      ["beneficiary", "Bénéficiaire", "text", false],
+      ["notes", "Notes", "textarea", false]
     ]
   },
 
   activities: {
     title: "Nouvelle activité",
     fields: [
-      ["title","Titre","text",true],
-      ["category","Catégorie","text",false],
-      ["description","Description","textarea",false],
-      ["location","Lieu","text",false],
-      ["status","Statut","select",false,["open","in_progress","done","cancelled"]],
-      ["amount","Montant (FCFA)","number",false]
+      ["title", "Titre", "text", true],
+      ["category", "Catégorie", "text", false],
+      ["description", "Description", "textarea", false],
+      ["location", "Lieu", "text", false],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["open", "in_progress", "done", "cancelled"]
+      ],
+      ["amount", "Montant (FCFA)", "number", false]
     ]
   },
 
   projects: {
     title: "Nouveau projet",
     fields: [
-      ["name","Nom du projet","text",true],
-      ["client","Client","text",false],
-      ["description","Description","textarea",false],
-      ["status","Statut","select",false,["planned","active","completed","paused"]],
-      ["progress","Progression (%)","number",false],
-      ["budget","Budget (FCFA)","number",false]
+      ["name", "Nom du projet", "text", true],
+      ["client", "Client", "text", false],
+      ["description", "Description", "textarea", false],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["planned", "active", "completed", "paused"]
+      ],
+      ["progress", "Progression (%)", "number", false],
+      ["budget", "Budget (FCFA)", "number", false]
     ]
   },
 
   innovations: {
     title: "Nouvelle innovation",
     fields: [
-      ["title","Titre","text",true],
-      ["description","Description","textarea",false],
-      ["stage","Étape","select",false,["idea","prototype","test","production"]],
-      ["budget","Budget (FCFA)","number",false],
-      ["progress","Progression (%)","number",false]
+      ["title", "Titre", "text", true],
+      ["description", "Description", "textarea", false],
+      [
+        "stage",
+        "Étape",
+        "select",
+        false,
+        ["idea", "prototype", "test", "production"]
+      ],
+      ["budget", "Budget (FCFA)", "number", false],
+      ["progress", "Progression (%)", "number", false]
     ]
   },
 
   stock_items: {
     title: "Nouvel article de stock",
     fields: [
-      ["name","Article","text",true],
-      ["category","Catégorie","text",false],
-      ["unit","Unité","text",false],
-      ["quantity","Quantité","number",true],
-      ["min_quantity","Seuil minimum","number",false],
-      ["location","Emplacement","text",false]
+      ["name", "Article", "text", true],
+      ["category", "Catégorie", "text", false],
+      ["unit", "Unité", "text", false],
+      ["quantity", "Quantité", "number", true],
+      ["min_quantity", "Seuil minimum", "number", false],
+      ["location", "Emplacement", "text", false]
     ]
   },
 
   clients: {
     title: "Nouveau client",
     fields: [
-      ["full_name","Nom complet","text",true],
-      ["company_name","Entreprise / société","text",false],
-      ["phone","Téléphone","tel",false],
-      ["email","E-mail","email",false],
-      ["address","Adresse","text",false],
-      ["city","Ville","text",false],
-      ["notes","Notes","textarea",false]
+      ["full_name", "Nom complet", "text", true],
+      ["company_name", "Entreprise / société", "text", false],
+      ["phone", "Téléphone", "tel", false],
+      ["email", "E-mail", "email", false],
+      ["address", "Adresse", "text", false],
+      ["city", "Ville", "text", false],
+      ["notes", "Notes", "textarea", false]
     ]
   }
 };
@@ -116,6 +155,7 @@ const state = {
   page: "dashboard",
   role: "admin",
   user: null,
+  profile: null,
   cloud: hasCloud,
   db: loadLocal()
 };
@@ -140,23 +180,20 @@ const TABLES = [
   "payments"
 ];
 
-function loadLocal() {
-  try {
-    const d = JSON.parse(localStorage.getItem(DBKEY)) || seed();
-
-    TABLES.forEach(t => {
-      if (!Array.isArray(d[t])) d[t] = [];
-    });
-
-    return d;
-  } catch {
-    return seed();
-  }
-}
-
-function saveLocal() {
-  localStorage.setItem(DBKEY, JSON.stringify(state.db));
-}
+const TABLES_WITH_USER_ID = [
+  "sales",
+  "purchases",
+  "expenses",
+  "stock_movements",
+  "activities",
+  "projects",
+  "innovations",
+  "audit_logs",
+  "clients",
+  "quotes",
+  "invoices",
+  "payments"
+];
 
 function seed() {
   return {
@@ -187,44 +224,98 @@ function seed() {
   };
 }
 
+function loadLocal() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DBKEY)) || seed();
+
+    TABLES.forEach(table => {
+      if (!Array.isArray(d[table])) {
+        d[table] = [];
+      }
+    });
+
+    return d;
+  } catch {
+    return seed();
+  }
+}
+
+function saveLocal() {
+  localStorage.setItem(DBKEY, JSON.stringify(state.db));
+}
+
 function toast(message) {
-  const e = document.getElementById("toast");
-  if (!e) return;
+  const element = document.getElementById("toast");
+  if (!element) return;
 
-  e.textContent = message;
-  e.classList.add("show");
+  element.textContent = message;
+  element.classList.add("show");
 
-  setTimeout(() => {
-    e.classList.remove("show");
+  clearTimeout(window.__lbtToastTimer);
+
+  window.__lbtToastTimer = setTimeout(() => {
+    element.classList.remove("show");
   }, 2400);
 }
 
-function esc(v) {
-  return String(v ?? "").replace(/[&<>"']/g, m => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[m]));
+function esc(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    char =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[char]
+  );
 }
 
-function money(n) {
-  return new Intl.NumberFormat("fr-FR").format(Number(n || 0)) + " FCFA";
+function money(value) {
+  return (
+    new Intl.NumberFormat("fr-FR").format(Number(value || 0)) +
+    " FCFA"
+  );
 }
 
 function uid() {
   return crypto.randomUUID
     ? crypto.randomUUID()
-    : "demo-" + Date.now() + "-" + Math.random();
+    : "demo-" +
+        Date.now() +
+        "-" +
+        Math.random().toString(36).slice(2);
 }
 
 function now() {
   return new Date().toISOString();
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
+function safeJson(value) {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value ?? "");
+  }
+}
+
+function normalizeDate(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleDateString("fr-FR");
+  } catch {
+    return String(value);
+  }
+}
+
+function formatDateTime(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleString("fr-FR");
+  } catch {
+    return String(value);
+  }
 }
 
 async function cloudSession() {
@@ -243,7 +334,9 @@ async function boot() {
       const session = await cloudSession();
 
       if (!session) {
-        if (location.pathname.endsWith("login.html")) return;
+        if (location.pathname.endsWith("login.html")) {
+          return;
+        }
 
         location.href = "login.html";
         return;
@@ -251,19 +344,25 @@ async function boot() {
 
       state.user = session.user;
 
-      const { data: p } = await sb
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
+      const { data: profile, error: profileError } =
+        await sb
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
 
-      state.profile = p || {
-        id: session.user.id,
-        full_name: session.user.email,
-        email: session.user.email,
-        role: "employee",
-        active: true
-      };
+      if (profileError) {
+        console.warn(profileError);
+      }
+
+      state.profile =
+        profile || {
+          id: session.user.id,
+          full_name: session.user.email,
+          email: session.user.email,
+          role: "employee",
+          active: true
+        };
 
       if (state.profile.active === false) {
         await sb.auth.signOut();
@@ -276,37 +375,53 @@ async function boot() {
         return;
       }
 
-      state.role = state.profile.role;
+      state.role = state.profile.role || "employee";
 
       await syncCloud();
-      applyRoleNavigation();
 
+      applyRoleNavigation();
     } else {
       state.user = {
         id: "demo-admin",
         email: "demo@lucbricotech.local"
       };
 
-      state.profile = state.db.profiles[0];
-      state.role = "admin";
+      state.profile =
+        state.db.profiles[0] || {
+          id: "demo-admin",
+          full_name: "Lucien BESSAN",
+          role: "admin",
+          active: true
+        };
+
+      state.role = state.profile.role || "admin";
     }
 
-    document.getElementById("userName").textContent =
-      state.profile.full_name ||
-      state.user.email ||
-      "Utilisateur";
+    const userName = document.getElementById("userName");
+    const userRole = document.getElementById("userRole");
+    const modeBadge = document.getElementById("modeBadge");
 
-    document.getElementById("userRole").textContent =
-      state.role.toUpperCase();
+    if (userName) {
+      userName.textContent =
+        state.profile.full_name ||
+        state.user.email ||
+        "Utilisateur";
+    }
 
-    document.getElementById("modeBadge").textContent =
-      state.cloud ? "SUPABASE" : "MODE DÉMO";
+    if (userRole) {
+      userRole.textContent = state.role.toUpperCase();
+    }
+
+    if (modeBadge) {
+      modeBadge.textContent = state.cloud
+        ? "SUPABASE"
+        : "MODE DÉMO";
+    }
 
     bind();
     render();
-
-  } catch (err) {
-    console.error("Erreur de démarrage:", err);
+  } catch (error) {
+    console.error("Erreur de démarrage :", error);
 
     if (hasCloud) {
       const content = document.getElementById("content");
@@ -323,7 +438,11 @@ async function boot() {
               Réessayer
             </button>
 
-            <button class="secondary" id="goLogin" style="margin-left:8px">
+            <button
+              class="secondary"
+              id="goLogin"
+              style="margin-left:8px"
+            >
               Retour à la connexion
             </button>
           </div>
@@ -332,15 +451,20 @@ async function boot() {
 
       document
         .getElementById("retryConnection")
-        ?.addEventListener("click", () => location.reload());
+        ?.addEventListener("click", () =>
+          location.reload()
+        );
 
       document
         .getElementById("goLogin")
-        ?.addEventListener("click", () => {
-          location.href = "login.html";
-        });
+        ?.addEventListener("click", () =>
+          (location.href = "login.html")
+        );
 
-      toast("Erreur de connexion sécurisée à Supabase.");
+      toast(
+        "Erreur de connexion sécurisée à Supabase."
+      );
+
       return;
     }
 
@@ -361,14 +485,22 @@ async function boot() {
 
     state.role = state.profile.role || "admin";
 
-    document.getElementById("userName").textContent =
-      state.profile.full_name || "Utilisateur";
+    const userName = document.getElementById("userName");
+    const userRole = document.getElementById("userRole");
+    const modeBadge = document.getElementById("modeBadge");
 
-    document.getElementById("userRole").textContent =
-      state.role.toUpperCase();
+    if (userName) {
+      userName.textContent =
+        state.profile.full_name || "Utilisateur";
+    }
 
-    document.getElementById("modeBadge").textContent =
-      "MODE DÉMO";
+    if (userRole) {
+      userRole.textContent = state.role.toUpperCase();
+    }
+
+    if (modeBadge) {
+      modeBadge.textContent = "MODE DÉMO";
+    }
 
     bind();
     render();
@@ -378,85 +510,92 @@ async function boot() {
 }
 
 async function syncCloud() {
-  for (const t of TABLES) {
+  for (const table of TABLES) {
     try {
-      const query = sb.from(t).select("*");
+      let query = sb.from(table).select("*");
 
-      const result =
-        t === "settings"
-          ? await query
-          : await query.order("created_at", {
-              ascending: false
-            });
+      if (table !== "settings") {
+        query = query.order("created_at", {
+          ascending: false
+        });
+      }
 
-      const { data, error } = result;
+      const { data, error } = await query;
 
       if (!error && data) {
-        state.db[t] = data;
-      } else if (!Array.isArray(state.db[t])) {
-        state.db[t] = [];
+        state.db[table] = data;
+      } else {
+        console.warn(
+          `Impossible de charger ${table}:`,
+          error
+        );
+
+        if (!Array.isArray(state.db[table])) {
+          state.db[table] = [];
+        }
       }
     } catch (error) {
-      console.warn("Erreur chargement", t, error);
+      console.warn(
+        `Erreur lors du chargement de ${table}:`,
+        error
+      );
 
-      if (!Array.isArray(state.db[t])) {
-        state.db[t] = [];
+      if (!Array.isArray(state.db[table])) {
+        state.db[table] = [];
       }
     }
   }
 }
 
-const TABLES_WITH_USER_ID = [
-  "sales",
-  "purchases",
-  "expenses",
-  "stock_movements",
-  "activities",
-  "projects",
-  "innovations",
-  "audit_logs",
-  "clients",
-  "quotes",
-  "invoices",
-  "payments"
-];
-
 async function insert(table, payload) {
-  const hasUserId = TABLES_WITH_USER_ID.includes(table);
+  const hasUserId =
+    TABLES_WITH_USER_ID.includes(table);
 
   if (!state.cloud) {
-    const x = {
+    const item = {
       id: uid(),
       created_at: now(),
       ...payload
     };
 
     if (hasUserId) {
-      x.user_id = state.user.id;
+      item.user_id = state.user.id;
     }
 
-    (state.db[table] ??= []).unshift(x);
+    if (!Array.isArray(state.db[table])) {
+      state.db[table] = [];
+    }
 
+    state.db[table].unshift(item);
     saveLocal();
 
-    return x;
+    return item;
   }
 
-  const x = {
+  const item = {
     ...payload
   };
 
   if (hasUserId) {
-    x.user_id = state.user.id;
+    item.user_id = state.user.id;
   }
 
-  const { data, error } = await sb
+  const {
+    data,
+    error
+  } = await sb
     .from(table)
-    .insert(x)
+    .insert(item)
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
+  if (!Array.isArray(state.db[table])) {
+    state.db[table] = [];
+  }
 
   state.db[table].unshift(data);
 
@@ -465,12 +604,14 @@ async function insert(table, payload) {
 
 async function update(table, id, payload) {
   if (!state.cloud) {
-    const arr = state.db[table] || [];
-    const i = arr.findIndex(x => x.id === id);
+    const array = state.db[table] || [];
+    const index = array.findIndex(
+      item => item.id === id
+    );
 
-    if (i >= 0) {
-      arr[i] = {
-        ...arr[i],
+    if (index >= 0) {
+      array[index] = {
+        ...array[index],
         ...payload
       };
     }
@@ -479,27 +620,35 @@ async function update(table, id, payload) {
     return;
   }
 
-  const { data, error } = await sb
+  const {
+    data,
+    error
+  } = await sb
     .from(table)
     .update(payload)
     .eq("id", id)
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
-  const arr = state.db[table] || [];
-  const i = arr.findIndex(x => x.id === id);
+  const array = state.db[table] || [];
+  const index = array.findIndex(
+    item => item.id === id
+  );
 
-  if (i >= 0) {
-    arr[i] = data;
+  if (index >= 0) {
+    array[index] = data;
   }
 }
 
 async function remove(table, id) {
   if (!state.cloud) {
-    state.db[table] = (state.db[table] || [])
-      .filter(x => x.id !== id);
+    state.db[table] = (
+      state.db[table] || []
+    ).filter(item => item.id !== id);
 
     saveLocal();
     return;
@@ -510,13 +659,21 @@ async function remove(table, id) {
     .delete()
     .eq("id", id);
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
-  state.db[table] = (state.db[table] || [])
-    .filter(x => x.id !== id);
+  state.db[table] = (
+    state.db[table] || []
+  ).filter(item => item.id !== id);
 }
 
-async function audit(action, entity, id, details = {}) {
+async function audit(
+  action,
+  entity,
+  id,
+  details = {}
+) {
   try {
     await insert("audit_logs", {
       action,
@@ -524,8 +681,8 @@ async function audit(action, entity, id, details = {}) {
       entity_id: id,
       details
     });
-  } catch (e) {
-    console.warn(e);
+  } catch (error) {
+    console.warn("Audit :", error);
   }
 }
 
@@ -534,10 +691,10 @@ const ROLE_PAGES = {
     "dashboard",
     "members",
     "clients",
-    "sales",
     "quotes",
     "invoices",
     "payments",
+    "sales",
     "purchases",
     "expenses",
     "stock",
@@ -553,10 +710,10 @@ const ROLE_PAGES = {
     "dashboard",
     "members",
     "clients",
-    "sales",
     "quotes",
     "invoices",
     "payments",
+    "sales",
     "purchases",
     "expenses",
     "stock",
@@ -569,10 +726,10 @@ const ROLE_PAGES = {
   employee: [
     "dashboard",
     "clients",
-    "sales",
     "quotes",
     "invoices",
     "payments",
+    "sales",
     "purchases",
     "expenses",
     "stock",
@@ -584,26 +741,36 @@ const ROLE_PAGES = {
 };
 
 function allowedPages() {
-  return ROLE_PAGES[state.role] || ROLE_PAGES.employee;
+  return (
+    ROLE_PAGES[state.role] ||
+    ROLE_PAGES.employee
+  );
 }
 
 function canManageStock() {
-  return state.role === "admin" ||
-         state.role === "manager";
+  return (
+    state.role === "admin" ||
+    state.role === "manager"
+  );
 }
 
 function applyRoleNavigation() {
   const allowed = allowedPages();
 
-  document.querySelectorAll("#nav button").forEach(b => {
-    const visible = allowed.includes(b.dataset.page);
+  document
+    .querySelectorAll("#nav button")
+    .forEach(button => {
+      const visible = allowed.includes(
+        button.dataset.page
+      );
 
-    b.hidden = !visible;
-    b.setAttribute(
-      "aria-hidden",
-      String(!visible)
-    );
-  });
+      button.hidden = !visible;
+
+      button.setAttribute(
+        "aria-hidden",
+        String(!visible)
+      );
+    });
 
   if (!allowed.includes(state.page)) {
     state.page = "dashboard";
@@ -615,123 +782,144 @@ function bind() {
 
   document
     .querySelectorAll("#nav button:not([hidden])")
-    .forEach(b => {
-      b.onclick = function(e) {
-        e.preventDefault();
+    .forEach(button => {
+      button.onclick = function (event) {
+        event.preventDefault();
 
         const page = this.dataset.page;
 
-        if (!allowedPages().includes(page)) return;
+        if (!allowedPages().includes(page)) {
+          return;
+        }
 
         state.page = page;
 
         closeMenu();
+
         render();
       };
     });
 
-  const menuBtn = document.getElementById("menuBtn");
-  const sidebar = document.getElementById("sidebar");
+  const menuButton =
+    document.getElementById("menuBtn");
 
-  if (menuBtn && sidebar) {
-    menuBtn.onclick = null;
+  const sidebar =
+    document.getElementById("sidebar");
 
-    menuBtn.addEventListener("click", function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+  if (menuButton && sidebar) {
+    menuButton.onclick = null;
 
-      sidebar.classList.toggle("open");
+    menuButton.addEventListener(
+      "click",
+      event => {
+        event.preventDefault();
+        event.stopPropagation();
 
-      menuBtn.setAttribute(
-        "aria-expanded",
-        String(
-          sidebar.classList.contains("open")
-        )
-      );
-    });
+        sidebar.classList.toggle("open");
+      }
+    );
 
-    if (!document.body.dataset.lbtOutsideMenu) {
-      document.body.dataset.lbtOutsideMenu = "1";
-
-      document.addEventListener("click", function(e) {
+    document.addEventListener(
+      "click",
+      event => {
         if (
-          sidebar.classList.contains("open") &&
-          !sidebar.contains(e.target) &&
-          !menuBtn.contains(e.target)
+          !sidebar.classList.contains("open")
         ) {
-          closeMenu();
+          return;
         }
-      });
-    }
+
+        if (
+          sidebar.contains(event.target) ||
+          menuButton.contains(event.target)
+        ) {
+          return;
+        }
+
+        closeMenu();
+      }
+    );
   }
 
-  const closeModalBtn =
+  const closeModalButton =
     document.getElementById("closeModal");
 
-  if (closeModalBtn) {
-    closeModalBtn.onclick = closeModal;
+  if (closeModalButton) {
+    closeModalButton.onclick = closeModal;
   }
 
-  const logoutBtn =
+  const modal =
+    document.getElementById("modal");
+
+  if (modal) {
+    modal.addEventListener(
+      "click",
+      event => {
+        if (event.target === modal) {
+          closeModal();
+        }
+      }
+    );
+  }
+
+  const logoutButton =
     document.getElementById("logoutBtn");
 
-  if (logoutBtn) {
-    logoutBtn.onclick = logout;
+  if (logoutButton) {
+    logoutButton.onclick = logout;
   }
 }
 
 function closeMenu() {
-  const sidebar =
-    document.getElementById("sidebar");
-
-  const menuBtn =
-    document.getElementById("menuBtn");
-
-  if (sidebar) {
-    sidebar.classList.remove("open");
-  }
-
-  if (menuBtn) {
-    menuBtn.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-  }
+  document
+    .getElementById("sidebar")
+    ?.classList.remove("open");
 }
 
 async function logout() {
-  if (sb) {
-    await sb.auth.signOut();
+  try {
+    if (state.cloud && sb) {
+      await sb.auth.signOut();
+    }
+  } finally {
+    location.href = "login.html";
   }
-
-  location.href = "login.html";
 }
 
-function setHeader(title, sub) {
-  document.getElementById("pageTitle").textContent =
-    title;
+function setHeader(title, subtitle) {
+  const titleElement =
+    document.getElementById("pageTitle");
 
-  document.getElementById("pageSub").textContent =
-    sub;
+  const subtitleElement =
+    document.getElementById("pageSub");
+
+  if (titleElement) {
+    titleElement.textContent = title;
+  }
+
+  if (subtitleElement) {
+    subtitleElement.textContent = subtitle;
+  }
 }
 
 function render() {
   applyRoleNavigation();
 
-  if (!allowedPages().includes(state.page)) {
+  const allowed = allowedPages();
+
+  if (!allowed.includes(state.page)) {
     state.page = "dashboard";
   }
 
   document
     .querySelectorAll("#nav button")
-    .forEach(b =>
-      b.classList.toggle(
+    .forEach(button => {
+      button.classList.toggle(
         "active",
-        b.dataset.page === state.page
-      )
-    );
+        button.dataset.page === state.page
+      );
+    });
 
-  const map = {
+  const headers = {
     dashboard: [
       "Tableau de bord",
       "Vue générale de l’activité."
@@ -744,22 +932,22 @@ function render() {
 
     clients: [
       "Clients",
-      "Gestion et historique des clients."
+      "Gestion de la clientèle."
     ],
 
     quotes: [
       "Devis",
-      "Création et suivi des devis."
+      "Préparation et suivi des devis."
     ],
 
     invoices: [
       "Factures",
-      "Facturation et suivi des échéances."
+      "Facturation et suivi des règlements."
     ],
 
     payments: [
       "Paiements",
-      "Enregistrement et suivi des règlements."
+      "Enregistrement des règlements."
     ],
 
     sales: [
@@ -813,1145 +1001,680 @@ function render() {
     ]
   };
 
-  setHeader(
-    ...(map[state.page] || map.dashboard)
-  );
+  const header =
+    headers[state.page] ||
+    headers.dashboard;
 
-  const fn = {
-    dashboard: dashboard,
-    members: members,
+  setHeader(header[0], header[1]);
+
+  const pageFunctions = {
+    dashboard,
+    members,
     clients: clientsPage,
     quotes: quotesPage,
     invoices: invoicesPage,
     payments: paymentsPage,
-    sales: tablePage,
-    purchases: tablePage,
-    expenses: tablePage,
-    stock: stock,
-    activities: tablePage,
-    projects: tablePage,
-    innovations: tablePage,
-    reports: reports,
+    sales: page => tablePage(page),
+    purchases: page => tablePage(page),
+    expenses: page => tablePage(page),
+    stock,
+    activities: page => tablePage(page),
+    projects: page => tablePage(page),
+    innovations: page => tablePage(page),
+    reports,
     audit: auditPage,
-    settings: settings
-  }[state.page];
+    settings
+  };
 
-  if (typeof fn !== "function") {
+  let pageFunction =
+    pageFunctions[state.page];
+
+  if (typeof pageFunction !== "function") {
     state.page = "dashboard";
-
     setHeader(
-      "Tableau de bord",
-      "Vue générale de l’activité."
+      headers.dashboard[0],
+      headers.dashboard[1]
     );
-
-    document.getElementById("content").innerHTML =
-      dashboard();
-
-    bindPage();
-    return;
+    pageFunction = dashboard;
   }
 
-  const out = fn(state.page);
+  const content =
+    document.getElementById("content");
 
-  document.getElementById("content").innerHTML =
-    out;
+  if (!content) return;
+
+  try {
+    content.innerHTML = pageFunction(
+      state.page
+    );
+  } catch (error) {
+    console.error(
+      "Erreur de rendu de la page :",
+      error
+    );
+
+    content.innerHTML = `
+      <div class="card">
+        <h3>Erreur d’affichage</h3>
+        <p class="muted">
+          Une erreur est survenue lors du chargement de cette page.
+        </p>
+        <button
+          class="primary"
+          onclick="location.reload()"
+        >
+          Recharger
+        </button>
+      </div>
+    `;
+
+    toast(
+      "Erreur d’affichage de la page."
+    );
+
+    return;
+  }
 
   bindPage();
 }
 
-function bindPage() {
-  document
-    .querySelectorAll("[data-add]")
-    .forEach(b => {
-      b.onclick = () =>
-        openForm(b.dataset.add);
-    });
-
-  document
-    .querySelectorAll("[data-delete]")
-    .forEach(b => {
-      b.onclick = () =>
-        del(
-          b.dataset.delete,
-          b.dataset.id
-        );
-    });
-
-  document
-    .querySelectorAll("[data-edit]")
-    .forEach(b => {
-      b.onclick = () =>
-        openForm(
-          b.dataset.edit,
-          b.dataset.id
-        );
-    });
-
-  document
-    .querySelectorAll("[data-role]")
-    .forEach(s => {
-      s.onchange = () =>
-        changeRole(
-          s.dataset.id,
-          s.value
-        );
-    });
-
-  document
-    .querySelectorAll("[data-create-employee]")
-    .forEach(b => {
-      b.onclick = openEmployeeForm;
-    });
-
-  document
-    .querySelectorAll("[data-toggle-active]")
-    .forEach(s => {
-      s.onchange = () =>
-        toggleMember(
-          s.dataset.id,
-          s.checked
-        );
-    });
-
-  document
-    .querySelectorAll("[data-edit-stock]")
-    .forEach(b => {
-      b.onclick = () =>
-        openForm(
-          "stock_items",
-          b.dataset.editStock
-        );
-    });
-
-  document
-    .querySelectorAll("[data-edit-document]")
-    .forEach(b => {
-      b.onclick = () =>
-        openDocumentForm(
-          b.dataset.editDocument,
-          b.dataset.id
-        );
-    });
-
-  document
-    .querySelectorAll("[data-details-document]")
-    .forEach(b => {
-      b.onclick = () =>
-        openDocumentForm(
-          b.dataset.detailsDocument,
-          b.dataset.id,
-          true
-        );
-    });
-
-  document
-    .querySelectorAll("[data-add-document]")
-    .forEach(b => {
-      b.onclick = () =>
-        openDocumentForm(
-          b.dataset.addDocument
-        );
-    });
-
-  document
-    .querySelectorAll("[data-add-payment]")
-    .forEach(b => {
-      b.onclick = () =>
-        openPaymentForm(
-          b.dataset.addPayment
-        );
-    });
-
-  document
-    .querySelectorAll("[data-delete-payment]")
-    .forEach(b => {
-      b.onclick = () =>
-        deletePayment(
-          b.dataset.deletePayment
-        );
-    });
-
-  document
-    .getElementById("settingsForm")
-    ?.addEventListener(
-      "submit",
-      saveSettings
-    );
-}
-
 function dashboard() {
-  const sum = t =>
-    (state.db[t] || []).reduce(
-      (a, x) =>
-        a + Number(x.amount || 0),
+  const sum = table =>
+    (state.db[table] || []).reduce(
+      (total, item) =>
+        total + Number(item.amount || 0),
       0
     );
 
-  const stock =
-    (state.db.stock_items || []).reduce(
-      (a, x) =>
-        a + Number(x.quantity || 0),
-      0
-    );
+  const stock = (
+    state.db.stock_items || []
+  ).reduce(
+    (total, item) =>
+      total + Number(item.quantity || 0),
+    0
+  );
 
-  return `
-<section class="welcome-hero">
+  const lowStock = (
+    state.db.stock_items || []
+  ).filter(
+    item =>
+      Number(item.quantity || 0) <=
+      Number(item.min_quantity || 0)
+  ).length;
 
-  <div class="hero-glow hero-glow-one"></div>
-  <div class="hero-glow hero-glow-two"></div>
+  const invoiceTotal = (
+    state.db.invoices || []
+  ).reduce(
+    (total, invoice) =>
+      total + Number(invoice.total || 0),
+    0
+  );
 
-  <div class="hero-copy">
-    <span class="hero-kicker">
-      ESPACE DE GESTION
-    </span>
+  const invoicePaid = (
+    state.db.invoices || []
+  ).reduce(
+    (total, invoice) =>
+      total +
+      Number(
+        invoice.amount_paid || 0
+      ),
+    0
+  );
 
-    <h2>
-      Bienvenue chez<br>
-      <strong>LUC BRICO-TECH</strong>
-    </h2>
+  const invoiceDue = Math.max(
+    0,
+    invoiceTotal - invoicePaid
+  );
 
-    <p>
-      La technologie au service de vos projets.
-    </p>
+  const paymentsTotal = (
+    state.db.payments || []
+  ).reduce(
+    (total, payment) =>
+      total + Number(payment.amount || 0),
+    0
+  );
 
-    <div class="hero-tags">
-      <span>Électricité</span>
-      <span>Maintenance</span>
-      <span>Informatique</span>
-      <span>Innovation</span>
-    </div>
-  </div>
-
-  <div class="hero-logo">
-    <img
-      src="./logo-luc-bricotech.png"
-      alt="Logo LUC BRICO-TECH"
-    >
-  </div>
-
-</section>
-
-<div class="grid kpis">
-
-  <div class="card kpi">
-    <small>Ventes</small>
-    <strong>${money(sum("sales"))}</strong>
-  </div>
-
-  <div class="card kpi">
-    <small>Achats</small>
-    <strong>${money(sum("purchases"))}</strong>
-  </div>
-
-  <div class="card kpi">
-    <small>Dépenses</small>
-    <strong>${money(sum("expenses"))}</strong>
-  </div>
-
-  <div class="card kpi">
-    <small>Stock total</small>
-    <strong>${stock}</strong>
-  </div>
-
-</div>
-
-<div class="quick-strip">
-
-  <div>
-    <strong>
-      Votre besoin, notre solution.
-    </strong>
-
-    <span>
-      Centralisez les opérations et gardez une vision claire de l’activité.
-    </span>
-  </div>
-
-  <div class="quick-actions">
-
-    <button
-      class="primary"
-      data-add="sales"
-    >
-      + Vente
-    </button>
-
-    <button
-      class="secondary"
-      data-add="activities"
-    >
-      + Activité
-    </button>
-
-    <button
-      class="secondary"
-      data-add="projects"
-    >
-      + Projet
-    </button>
-
-  </div>
-
-</div>
-
-<div
-  class="grid cards"
-  style="margin-top:16px"
->
-
-  <div class="card">
-    <h3>Activités récentes</h3>
-    ${recent("activities","title")}
-  </div>
-
-  <div class="card">
-    <h3>Projets</h3>
-    ${recent("projects","name")}
-  </div>
-
-  <div class="card">
-    <h3>Innovations</h3>
-    ${recent("innovations","title")}
-  </div>
-
-</div>
-`;
-}
-
-function recent(t, key) {
-  const a = (state.db[t] || []).slice(0, 5);
-
-  return a.length
-    ? a.map(x => `
+  const recentActivities = (
+    state.db.activities || []
+  )
+    .slice(0, 5)
+    .map(
+      item => `
         <p>
-          <strong>${esc(x[key])}</strong><br>
+          <strong>${esc(
+            item.title || "Activité"
+          )}</strong>
+          <br>
           <span class="muted">
-            ${
-              x.created_at
-                ? new Date(
-                    x.created_at
-                  ).toLocaleString("fr-FR")
-                : ""
-            }
+            ${formatDateTime(
+              item.created_at
+            )}
           </span>
         </p>
-      `).join("")
-    : `<div class="empty">Aucun élément.</div>`;
+      `
+    )
+    .join("");
+
+  const recentProjects = (
+    state.db.projects || []
+  )
+    .slice(0, 5)
+    .map(
+      item => `
+        <p>
+          <strong>${esc(
+            item.name || "Projet"
+          )}</strong>
+          <br>
+          <span class="muted">
+            ${esc(item.status || "")}
+          </span>
+        </p>
+      `
+    )
+    .join("");
+
+  const recentInnovations = (
+    state.db.innovations || []
+  )
+    .slice(0, 5)
+    .map(
+      item => `
+        <p>
+          <strong>${esc(
+            item.title || "Innovation"
+          )}</strong>
+          <br>
+          <span class="muted">
+            ${esc(item.stage || "")}
+          </span>
+        </p>
+      `
+    )
+    .join("");
+
+  return `
+    <section class="welcome-hero">
+      <div class="hero-glow hero-glow-one"></div>
+      <div class="hero-glow hero-glow-two"></div>
+
+      <div class="hero-copy">
+        <span class="hero-kicker">
+          ESPACE DE GESTION
+        </span>
+
+        <h2>
+          Bienvenue chez<br>
+          <strong>LUC BRICO-TECH</strong>
+        </h2>
+
+        <p>
+          La technologie au service de vos projets.
+        </p>
+
+        <div class="hero-tags">
+          <span>Électricité</span>
+          <span>Maintenance</span>
+          <span>Informatique</span>
+          <span>Innovation</span>
+        </div>
+      </div>
+
+      <div class="hero-logo">
+        <img
+          src="./logo-luc-bricotech.png"
+          alt="Logo LUC BRICO-TECH"
+        >
+      </div>
+    </section>
+
+    <div class="grid kpis">
+
+      <div class="card kpi">
+        <small>Ventes</small>
+        <strong>${money(
+          sum("sales")
+        )}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Paiements reçus</small>
+        <strong>${money(
+          paymentsTotal
+        )}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Factures à recevoir</small>
+        <strong>${money(
+          invoiceDue
+        )}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Dépenses</small>
+        <strong>${money(
+          sum("expenses")
+        )}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Stock total</small>
+        <strong>${stock}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Alertes stock</small>
+        <strong>${lowStock}</strong>
+      </div>
+    </div>
+
+    <div class="quick-strip">
+      <div>
+        <strong>
+          Votre besoin, notre solution.
+        </strong>
+
+        <span>
+          Centralisez les opérations et gardez une vision claire de l’activité.
+        </span>
+      </div>
+
+      <div class="quick-actions">
+        <button
+          class="primary"
+          data-add="sales"
+        >
+          + Vente
+        </button>
+
+        <button
+          class="secondary"
+          data-add="activities"
+        >
+          + Activité
+        </button>
+
+        <button
+          class="secondary"
+          data-add="projects"
+        >
+          + Projet
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="grid cards"
+      style="margin-top:16px"
+    >
+
+      <div class="card">
+        <h3>Activités récentes</h3>
+
+        ${
+          recentActivities ||
+          '<div class="empty">Aucune activité.</div>'
+        }
+      </div>
+
+      <div class="card">
+        <h3>Projets</h3>
+
+        ${
+          recentProjects ||
+          '<div class="empty">Aucun projet.</div>'
+        }
+      </div>
+
+      <div class="card">
+        <h3>Innovations</h3>
+
+        ${
+          recentInnovations ||
+          '<div class="empty">Aucune innovation.</div>'
+        }
+      </div>
+
+    </div>
+  `;
 }
 
-function tablePage(t) {
-  const labels = {
-    sales: [
-      "Client",
-      "Article",
-      "Montant",
-      "Statut"
-    ],
+function recent(table, key) {
+  const array = (
+    state.db[table] || []
+  ).slice(0, 5);
 
-    purchases: [
-      "Fournisseur",
-      "Article",
-      "Montant",
-      "Statut"
-    ],
-
-    expenses: [
-      "Catégorie",
-      "Libellé",
-      "Montant",
-      "Bénéficiaire"
-    ],
-
-    activities: [
-      "Titre",
-      "Catégorie",
-      "Statut",
-      "Montant"
-    ],
-
-    projects: [
-      "Nom",
-      "Client",
-      "Statut",
-      "Progression"
-    ],
-
-    innovations: [
-      "Titre",
-      "Étape",
-      "Progression",
-      "Budget"
-    ]
-  };
-
-  const l = labels[t] || [];
-  const arr = state.db[t] || [];
-
-  const rows = arr.map(x => {
-    const vals =
-      t === "sales"
-        ? [
-            x.customer,
-            x.item,
-            money(x.amount),
-            x.status
-          ]
-        : t === "purchases"
-        ? [
-            x.supplier,
-            x.item,
-            money(x.amount),
-            x.status
-          ]
-        : t === "expenses"
-        ? [
-            x.category,
-            x.label,
-            money(x.amount),
-            x.beneficiary
-          ]
-        : t === "activities"
-        ? [
-            x.title,
-            x.category,
-            x.status,
-            money(x.amount)
-          ]
-        : t === "projects"
-        ? [
-            x.name,
-            x.client,
-            x.status,
-            (x.progress || 0) + " %"
-          ]
-        : [
-            x.title,
-            x.stage,
-            (x.progress || 0) + " %",
-            money(x.budget)
-          ];
-
-    const action =
-      state.role === "admin"
-        ? `
-          <button
-            class="danger"
-            data-delete="${t}"
-            data-id="${x.id}"
-          >
-            Supprimer
-          </button>
-        `
-        : "—";
-
+  if (!array.length) {
     return `
-      <tr>
-        ${vals.map(v => `<td>${esc(v)}</td>`).join("")}
-        <td>${action}</td>
-      </tr>
+      <div class="empty">
+        Aucun élément.
+      </div>
     `;
-  }).join("");
+  }
 
-  return `
-<div class="toolbar">
-
-  <div class="muted">
-    ${arr.length} enregistrement(s)
-  </div>
-
-  <button
-    class="primary"
-    data-add="${t}"
-  >
-    + Ajouter
-  </button>
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-  ${l.map(x => `<th>${x}</th>`).join("")}
-  <th>Action</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  rows ||
-  `
-  <tr>
-    <td colspan="${l.length + 1}">
-      <div class="empty">
-        Aucun enregistrement.
-      </div>
-    </td>
-  </tr>
-  `
-}
-
-</tbody>
-
-</table>
-
-</div>
-`;
-}
-
-function stock() {
-  const arr = state.db.stock_items || [];
-
-  const rows = arr.map(x => {
-    const action =
-      state.role === "admin"
-        ? `
-          <button
-            class="danger"
-            data-delete="stock_items"
-            data-id="${x.id}"
-          >
-            Supprimer
-          </button>
-        `
-        : "—";
-
-    return `
-<tr>
-
-<td>${esc(x.name)}</td>
-
-<td>${esc(x.category)}</td>
-
-<td>
-  ${x.quantity}
-  ${esc(x.unit || "")}
-</td>
-
-<td>${x.min_quantity ?? 0}</td>
-
-<td>${esc(x.location)}</td>
-
-<td>
-${
-  Number(x.quantity) <=
-  Number(x.min_quantity || 0)
-    ? `<span class="badge warn">Stock faible</span>`
-    : `<span class="badge success">OK</span>`
-}
-</td>
-
-<td>${action}</td>
-
-</tr>
-`;
-  }).join("");
-
-  const add = canManageStock()
-    ? `
-      <button
-        class="primary"
-        data-add="stock_items"
-      >
-        + Ajouter au stock
-      </button>
-    `
-    : "";
-
-  return `
-<div class="toolbar">
-
-  <div class="muted">
-    ${arr.length} article(s)
-  </div>
-
-  ${add}
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>Article</th>
-<th>Catégorie</th>
-<th>Quantité</th>
-<th>Seuil</th>
-<th>Lieu</th>
-<th>État</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  rows ||
-  `
-  <tr>
-    <td colspan="7">
-      <div class="empty">
-        Stock vide.
-      </div>
-    </td>
-  </tr>
-  `
-}
-
-</tbody>
-
-</table>
-
-</div>
-`;
+  return array
+    .map(
+      item => `
+        <p>
+          <strong>${esc(
+            item[key]
+          )}</strong>
+          <br>
+          <span class="muted">
+            ${formatDateTime(
+              item.created_at
+            )}
+          </span>
+        </p>
+      `
+    )
+    .join("");
 }
 
 function members() {
-  const arr = state.db.profiles || [];
-
-  const rows = arr.map(x => `
-<tr>
-
-<td>
-  <b>${esc(x.full_name || "Sans nom")}</b>
-</td>
-
-<td>
-  ${esc(x.phone || "—")}
-</td>
-
-<td>
-
-${
-  state.role === "admin"
-    ? `
-      <select
-        data-role
-        data-id="${x.id}"
-      >
-        ${
-          ["admin","manager","employee"]
-            .map(r => `
-              <option
-                value="${r}"
-                ${
-                  x.role === r
-                    ? "selected"
-                    : ""
-                }
-              >
-                ${r}
-              </option>
-            `)
-            .join("")
-        }
-      </select>
-    `
-    : x.role
-}
-
-</td>
-
-<td>
-
-${
-  state.role === "admin"
-    ? `
-      <label class="switch">
-        <input
-          type="checkbox"
-          data-toggle-active
-          data-id="${x.id}"
-          ${
-            x.active !== false
-              ? "checked"
-              : ""
-          }
-        >
-        <span></span>
-      </label>
-    `
-    : (
-        x.active !== false
-          ? "Actif"
-          : "Inactif"
-      )
-}
-
-</td>
-
-</tr>
-`).join("");
-
-  const create =
-    state.role === "admin"
-      ? `
-        <button
-          class="primary"
-          data-create-employee
-        >
-          + Créer un compte employé
-        </button>
-      `
-      : "";
-
-  const intro =
-    state.role === "admin"
-      ? "Créez les comptes de connexion et gérez les rôles des membres."
-      : "Consultez les membres et leurs rôles. La gestion des comptes est réservée à l’administrateur.";
+  const membersList =
+    state.db.profiles || [];
 
   return `
-<div class="card">
+    <div class="card">
 
-  <div class="toolbar">
-
-    <div>
-      <h3 style="margin:0">
-        Membres
-      </h3>
-
-      <p
-        class="muted"
-        style="margin:.35rem 0 0"
-      >
-        ${intro}
-      </p>
-    </div>
-
-    ${create}
-
-  </div>
-
-  <div class="table-wrap">
-
-    <table>
-
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Téléphone</th>
-          <th>Rôle</th>
-          <th>État</th>
-        </tr>
-      </thead>
-
-      <tbody>
+      <div class="page-actions">
+        <div>
+          <h3>Membres</h3>
+          <p class="muted">
+            Gestion des utilisateurs et des rôles.
+          </p>
+        </div>
 
         ${
-          rows ||
-          `
-          <tr>
-            <td colspan="4">
-              <div class="empty">
-                Aucun membre.
-              </div>
-            </td>
-          </tr>
-          `
+          state.role === "admin"
+            ? `
+              <button
+                class="primary"
+                id="createEmployeeBtn"
+              >
+                + Créer un compte employé
+              </button>
+            `
+            : ""
         }
+      </div>
 
-      </tbody>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Rôle</th>
+              <th>Statut</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-    </table>
+          <tbody>
+            ${
+              membersList.length
+                ? membersList
+                    .map(
+                      member => `
+                        <tr>
+                          <td>
+                            ${esc(
+                              member.full_name ||
+                                "—"
+                            )}
+                          </td>
 
-  </div>
+                          <td>
+                            ${esc(
+                              member.email ||
+                                ""
+                            )}
+                          </td>
 
-</div>
-`;
-}
+                          <td>
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <select
+                                    data-role="${member.id}"
+                                  >
+                                    <option
+                                      value="admin"
+                                      ${
+                                        member.role ===
+                                        "admin"
+                                          ? "selected"
+                                          : ""
+                                      }
+                                    >
+                                      Admin
+                                    </option>
 
-function openEmployeeForm() {
-  if (state.role !== "admin") {
-    return toast(
-      "Action réservée à l’administrateur."
-    );
-  }
+                                    <option
+                                      value="manager"
+                                      ${
+                                        member.role ===
+                                        "manager"
+                                          ? "selected"
+                                          : ""
+                                      }
+                                    >
+                                      Manager
+                                    </option>
 
-  document.getElementById("modalTitle").textContent =
-    "Créer un compte employé";
+                                    <option
+                                      value="employee"
+                                      ${
+                                        member.role ===
+                                        "employee"
+                                          ? "selected"
+                                          : ""
+                                      }
+                                    >
+                                      Employé
+                                    </option>
+                                  </select>
+                                `
+                                : esc(
+                                    member.role ||
+                                      ""
+                                  )
+                            }
+                          </td>
 
-  document.getElementById("recordForm").innerHTML = `
-<div class="form-grid">
+                          <td>
+                            <span
+                              class="badge ${
+                                member.active === false
+                                  ? "danger"
+                                  : "success"
+                              }"
+                            >
+                              ${
+                                member.active === false
+                                  ? "Désactivé"
+                                  : "Actif"
+                              }
+                            </span>
+                          </td>
 
-<label>
-Nom complet
-<input
-  name="full_name"
-  required
-  placeholder="Nom et prénom"
->
-</label>
-
-<label>
-Téléphone
-<input
-  name="phone"
-  type="tel"
-  placeholder="01 XX XX XX XX"
->
-</label>
-
-<label class="full">
-E-mail de connexion
-<input
-  name="email"
-  type="email"
-  required
-  placeholder="employe@lucbricotech.com"
->
-</label>
-
-<label>
-Mot de passe initial
-<input
-  name="password"
-  type="password"
-  minlength="8"
-  required
-  placeholder="8 caractères minimum"
->
-</label>
-
-<label>
-Confirmation
-<input
-  name="password_confirm"
-  type="password"
-  minlength="8"
-  required
-  placeholder="Retaper le mot de passe"
->
-</label>
-
-<div class="full">
-  <div class="hint">
-    Le nouveau compte sera créé avec le rôle
-    <b>Employé</b>.
-  </div>
-</div>
-
-<div class="full actions">
-
-<button
-  type="button"
-  class="secondary"
-  id="cancelForm"
->
-  Annuler
-</button>
-
-<button class="primary">
-  Créer le compte
-</button>
-
-</div>
-
-</div>
-`;
-
-  document.getElementById("cancelForm").onclick =
-    closeModal;
-
-  document.getElementById("recordForm").onsubmit =
-    createEmployee;
-
-  document.getElementById("modal")
-    .classList.remove("hidden");
-}
-
-async function createEmployee(e) {
-  e.preventDefault();
-
-  const p =
-    Object.fromEntries(
-      new FormData(e.target).entries()
-    );
-
-  if (p.password !== p.password_confirm) {
-    return toast(
-      "Les deux mots de passe ne correspondent pas."
-    );
-  }
-
-  if (p.password.length < 8) {
-    return toast(
-      "Le mot de passe doit contenir au moins 8 caractères."
-    );
-  }
-
-  try {
-    if (!state.cloud) {
-      const exists =
-        (state.db.profiles || []).some(
-          x =>
-            (x.email || "").toLowerCase() ===
-            p.email.toLowerCase()
-        );
-
-      if (exists) {
-        throw new Error(
-          "Cette adresse e-mail existe déjà dans le mode démo."
-        );
-      }
-
-      const x = {
-        id: uid(),
-        full_name: p.full_name,
-        phone: p.phone || "",
-        email: p.email,
-        role: "employee",
-        active: true,
-        created_at: now()
-      };
-
-      state.db.profiles.unshift(x);
-
-      saveLocal();
-
-      await audit(
-        "create_employee",
-        "profiles",
-        x.id,
-        {
-          email: p.email,
-          role: "employee"
-        }
-      );
-
-    } else {
-
-      const { data, error } =
-        await sb.functions.invoke(
-          "create-employee",
-          {
-            body: {
-              full_name: p.full_name,
-              email: p.email,
-              password: p.password,
-              phone: p.phone || ""
+                          <td>
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="secondary"
+                                    data-toggle-active="${member.id}"
+                                  >
+                                    ${
+                                      member.active ===
+                                      false
+                                        ? "Activer"
+                                        : "Désactiver"
+                                    }
+                                  </button>
+                                `
+                                : "Lecture seule"
+                            }
+                          </td>
+                        </tr>
+                      `
+                    )
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="5">
+                      <div class="empty">
+                        Aucun membre.
+                      </div>
+                    </td>
+                  </tr>
+                `
             }
-          }
-        );
-
-      if (error) throw error;
-
-      if (!data?.success) {
-        throw new Error(
-          data?.error ||
-          "Impossible de créer le compte."
-        );
-      }
-
-      await syncCloud();
-    }
-
-    closeModal();
-    render();
-
-    toast(
-      "Compte employé créé avec succès."
-    );
-
-  } catch (err) {
-    console.error(err);
-
-    toast(
-      err.message ||
-      "Erreur lors de la création du compte."
-    );
-  }
-}
-
-async function toggleMember(id, active) {
-  if (state.role !== "admin") {
-    return toast(
-      "Action réservée à l’administrateur."
-    );
-  }
-
-  try {
-    await update(
-      "profiles",
-      id,
-      { active }
-    );
-
-    await audit(
-      active
-        ? "activate_member"
-        : "deactivate_member",
-      "profiles",
-      id,
-      { active }
-    );
-
-    toast(
-      active
-        ? "Compte activé."
-        : "Compte désactivé."
-    );
-
-    render();
-
-  } catch (e) {
-    toast(e.message);
-  }
-}
-
-async function changeRole(id, role) {
-  if (state.role !== "admin") {
-    return toast(
-      "Action réservée à l’administrateur."
-    );
-  }
-
-  try {
-    await update(
-      "profiles",
-      id,
-      { role }
-    );
-
-    await audit(
-      "update_role",
-      "profiles",
-      id,
-      { role }
-    );
-
-    toast("Rôle mis à jour.");
-
-    render();
-
-  } catch (e) {
-    toast(e.message);
-  }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
 function clientsPage() {
-  const arr = state.db.clients || [];
-
-  const rows = arr.map(x => `
-<tr>
-
-<td>
-  <strong>
-    ${esc(x.full_name || "")}
-  </strong>
-</td>
-
-<td>
-  ${esc(x.company_name || "—")}
-</td>
-
-<td>
-  ${esc(x.phone || "—")}
-</td>
-
-<td>
-  ${esc(x.email || "—")}
-</td>
-
-<td>
-  ${esc(x.city || "—")}
-</td>
-
-<td>
-
-<button
-  class="secondary"
-  data-edit="clients"
-  data-id="${x.id}"
->
-Modifier
-</button>
-
-${
-  state.role === "admin"
-    ? `
-      <button
-        class="danger"
-        data-delete="clients"
-        data-id="${x.id}"
-      >
-        Supprimer
-      </button>
-    `
-    : ""
-}
-
-</td>
-
-</tr>
-`).join("");
+  const clients =
+    state.db.clients || [];
 
   return `
-<div class="toolbar">
+    <div class="card">
 
-  <div class="muted">
-    ${arr.length} client(s)
-  </div>
+      <div class="page-actions">
+        <div>
+          <h3>Clients</h3>
+          <p class="muted">
+            Base clients de LUC BRICO-TECH.
+          </p>
+        </div>
 
-  <button
-    class="primary"
-    data-add="clients"
-  >
-    + Nouveau client
-  </button>
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>Nom</th>
-<th>Entreprise</th>
-<th>Téléphone</th>
-<th>E-mail</th>
-<th>Ville</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  rows ||
-  `
-  <tr>
-    <td colspan="6">
-      <div class="empty">
-        Aucun client.
+        <button
+          class="primary"
+          data-add="clients"
+        >
+          + Nouveau client
+        </button>
       </div>
-    </td>
-  </tr>
-  `
-}
 
-</tbody>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Entreprise</th>
+              <th>Téléphone</th>
+              <th>E-mail</th>
+              <th>Ville</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
 
-</table>
+          <tbody>
+            ${
+              clients.length
+                ? clients
+                    .map(
+                      client => `
+                        <tr>
+                          <td>
+                            ${esc(
+                              client.full_name
+                            )}
+                          </td>
 
-</div>
-`;
+                          <td>
+                            ${esc(
+                              client.company_name ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              client.phone ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              client.email ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              client.city ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            <button
+                              class="secondary"
+                              data-edit="clients"
+                              data-id="${client.id}"
+                            >
+                              Modifier
+                            </button>
+
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="danger ghost"
+                                    data-delete="clients"
+                                    data-id="${client.id}"
+                                  >
+                                    Supprimer
+                                  </button>
+                                `
+                                : ""
+                            }
+                          </td>
+                        </tr>
+                      `
+                    )
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="6">
+                      <div class="empty">
+                        Aucun client enregistré.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
 function clientName(id) {
-  const c =
-    (state.db.clients || [])
-      .find(x => x.id === id);
+  const client = (
+    state.db.clients || []
+  ).find(item => item.id === id);
+
+  if (!client) return "Client non renseigné";
 
   return (
-    c?.company_name ||
-    c?.full_name ||
+    client.full_name ||
+    client.company_name ||
     "Client"
   );
 }
@@ -1968,977 +1691,3370 @@ function statusLabel(status) {
     partial: "Partiellement payée",
     paid: "Payée",
     cancelled: "Annulée",
-    overdue: "En retard"
+    overdue: "En retard",
+    planned: "Planifié",
+    active: "En cours",
+    completed: "Terminé",
+    paused: "En pause",
+    open: "Ouverte",
+    in_progress: "En cours",
+    done: "Terminée"
   };
 
-  return labels[status] || status || "—";
-}
-
-function invoiceDisplayStatus(inv) {
-  if (!inv) return "unpaid";
-
-  const total =
-    Number(inv.total || 0);
-
-  const paid =
-    Number(inv.amount_paid || 0);
-
-  if (
-    inv.status !== "cancelled" &&
-    inv.status !== "draft"
-  ) {
-    if (paid >= total && total > 0) {
-      return "paid";
-    }
-
-    if (paid > 0) {
-      return "partial";
-    }
-
-    if (
-      inv.due_date &&
-      inv.due_date < today()
-    ) {
-      return "overdue";
-    }
-
-    return "unpaid";
-  }
-
-  return inv.status || "draft";
-}
-
-function invoiceStatusClass(status) {
-  return {
-    paid: "success",
-    partial: "warn",
-    overdue: "danger",
-    unpaid: "warn",
-    cancelled: "danger",
-    draft: "muted",
-    sent: "muted",
-    accepted: "success",
-    rejected: "danger",
-    expired: "danger",
-    converted: "success"
-  }[status] || "muted";
-}
-
-function invoiceStatusBadge(inv) {
-  const status =
-    invoiceDisplayStatus(inv);
-
-  return `
-<span class="badge ${invoiceStatusClass(status)}">
-  ${esc(statusLabel(status))}
-</span>
-`;
-}
-
-function quoteNumber() {
-  const arr =
-    state.db.quotes || [];
-
-  return "DEV-" +
-    new Date().getFullYear() +
-    "-" +
-    String(arr.length + 1).padStart(4, "0");
-}
-
-function invoiceNumber() {
-  const arr =
-    state.db.invoices || [];
-
-  return "FAC-" +
-    new Date().getFullYear() +
-    "-" +
-    String(arr.length + 1).padStart(4, "0");
-}
-
-function quotesPage() {
-  const arr =
-    state.db.quotes || [];
-
-  const rows = arr.map(x => `
-<tr>
-
-<td>
-  <strong>
-    ${esc(x.quote_number || "—")}
-  </strong>
-</td>
-
-<td>
-  ${esc(clientName(x.client_id))}
-</td>
-
-<td>
-  ${esc(x.issue_date || "—")}
-</td>
-
-<td>
-  ${esc(x.valid_until || "—")}
-</td>
-
-<td>
-  ${money(x.total)}
-</td>
-
-<td>
-  <span class="badge ${invoiceStatusClass(x.status)}">
-    ${esc(statusLabel(x.status))}
-  </span>
-</td>
-
-<td>
-
-<button
-  class="secondary"
-  data-details-document="quotes"
-  data-id="${x.id}"
->
-Détails
-</button>
-
-<button
-  class="secondary"
-  data-edit-document="quotes"
-  data-id="${x.id}"
->
-Modifier
-</button>
-
-${
-  state.role === "admin"
-    ? `
-      <button
-        class="danger"
-        data-delete="quotes"
-        data-id="${x.id}"
-      >
-        Supprimer
-      </button>
-    `
-    : ""
-}
-
-</td>
-
-</tr>
-`).join("");
-
-  return `
-<div class="toolbar">
-
-  <div class="muted">
-    ${arr.length} devis
-  </div>
-
-  <button
-    class="primary"
-    data-add-document="quotes"
-  >
-    + Nouveau devis
-  </button>
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>N°</th>
-<th>Client</th>
-<th>Date</th>
-<th>Validité</th>
-<th>Total</th>
-<th>Statut</th>
-<th>Actions</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  rows ||
-  `
-  <tr>
-    <td colspan="7">
-      <div class="empty">
-        Aucun devis.
-      </div>
-    </td>
-  </tr>
-  `
-}
-
-</tbody>
-
-</table>
-
-</div>
-`;
-}
-
-function invoicesPage() {
-  const arr =
-    state.db.invoices || [];
-
-  const rows = arr.map(x => {
-    const status =
-      invoiceDisplayStatus(x);
-
-    return `
-<tr>
-
-<td>
-  <strong>
-    ${esc(x.invoice_number || "—")}
-  </strong>
-</td>
-
-<td>
-  ${esc(clientName(x.client_id))}
-</td>
-
-<td>
-  ${esc(x.issue_date || "—")}
-</td>
-
-<td>
-  ${esc(x.due_date || "—")}
-</td>
-
-<td>
-  ${money(x.total)}
-</td>
-
-<td>
-  ${money(x.amount_paid)}
-</td>
-
-<td>
-  ${money(x.amount_due)}
-</td>
-
-<td>
-  ${invoiceStatusBadge(x)}
-</td>
-
-<td>
-
-<button
-  class="secondary"
-  data-details-document="invoices"
-  data-id="${x.id}"
->
-Détails
-</button>
-
-<button
-  class="secondary"
-  data-edit-document="invoices"
-  data-id="${x.id}"
->
-Modifier
-</button>
-
-<button
-  class="primary"
-  data-add-payment="${x.id}"
->
-+ Paiement
-</button>
-
-${
-  state.role === "admin"
-    ? `
-      <button
-        class="danger"
-        data-delete="invoices"
-        data-id="${x.id}"
-      >
-        Supprimer
-      </button>
-    `
-    : ""
-}
-
-</td>
-
-</tr>
-`;
-  }).join("");
-
-  return `
-<div class="toolbar">
-
-  <div class="muted">
-    ${arr.length} facture(s)
-  </div>
-
-  <button
-    class="primary"
-    data-add-document="invoices"
-  >
-    + Nouvelle facture
-  </button>
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>N°</th>
-<th>Client</th>
-<th>Date</th>
-<th>Échéance</th>
-<th>Total</th>
-<th>Payé</th>
-<th>Reste</th>
-<th>Statut</th>
-<th>Actions</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  rows ||
-  `
-  <tr>
-    <td colspan="9">
-      <div class="empty">
-        Aucune facture.
-      </div>
-    </td>
-  </tr>
-  `
-}
-
-</tbody>
-
-</table>
-
-</div>
-`;
-}
-
-const paymentMethods = {
-  cash: "Espèces",
-  mtn_momo: "MTN MoMo",
-  moov_money: "Moov Money",
-  celtiis_cash: "Celtiis Cash",
-  bank_transfer: "Virement bancaire",
-  card: "Carte bancaire",
-  check: "Chèque bancaire",
-  pi_spi: "PI-SPI / paiement instantané",
-  other: "Autre"
-};
-
-function paymentsPage() {
-  const arr =
-    state.db.payments || [];
-
-  const rows = arr.map(x => `
-<tr>
-
-<td>
-  ${esc(
-    (
-      state.db.invoices || []
-    ).find(i => i.id === x.invoice_id)
-      ?.invoice_number || "—"
-  )}
-</td>
-
-<td>
-  ${money(x.amount)}
-</td>
-
-<td>
-  ${esc(
-    paymentMethods[x.payment_method] ||
-    x.payment_method ||
+  return (
+    labels[status] ||
+    status ||
     "—"
-  )}
-</td>
-
-<td>
-  ${esc(x.payment_date || "—")}
-</td>
-
-<td>
-  ${esc(x.reference || "—")}
-</td>
-
-<td>
-
-${
-  state.role === "admin"
-    ? `
-      <button
-        class="danger"
-        data-delete-payment="${x.id}"
-      >
-        Supprimer
-      </button>
-    `
-    : "—"
-}
-
-</td>
-
-</tr>
-`).join("");
-
-  return `
-<div class="toolbar">
-
-  <div class="muted">
-    ${arr.length} paiement(s)
-  </div>
-
-  <button
-    class="primary"
-    data-add-payment=""
-  >
-    + Enregistrer un paiement
-  </button>
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>Facture</th>
-<th>Montant</th>
-<th>Mode</th>
-<th>Date</th>
-<th>Référence</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  rows ||
-  `
-  <tr>
-    <td colspan="6">
-      <div class="empty">
-        Aucun paiement.
-      </div>
-    </td>
-  </tr>
-  `
-}
-
-</tbody>
-
-</table>
-
-</div>
-`;
-}
-
-function linesSummary(lines) {
-  return (lines || []).reduce(
-    (a, x) =>
-      a + Number(x.amount || 0),
-    0
   );
 }
 
+function invoiceDisplayStatus(invoice) {
+  if (!invoice) return "draft";
+
+  const total = Number(
+    invoice.total || 0
+  );
+
+  const paid = Number(
+    invoice.amount_paid || 0
+  );
+
+  if (
+    invoice.status === "cancelled"
+  ) {
+    return "cancelled";
+  }
+
+  if (
+    total > 0 &&
+    paid >= total
+  ) {
+    return "paid";
+  }
+
+  if (
+    paid > 0 &&
+    paid < total
+  ) {
+    return "partial";
+  }
+
+  if (
+    invoice.due_date &&
+    new Date(invoice.due_date) <
+      new Date() &&
+    total > paid
+  ) {
+    return "overdue";
+  }
+
+  return invoice.status || "unpaid";
+}
+
+function invoiceStatusClass(status) {
+  if (status === "paid") {
+    return "success";
+  }
+
+  if (
+    status === "partial" ||
+    status === "sent"
+  ) {
+    return "warn";
+  }
+
+  if (
+    status === "overdue" ||
+    status === "cancelled" ||
+    status === "rejected"
+  ) {
+    return "danger";
+  }
+
+  return "muted";
+}
+
+function quotesPage() {
+  const quotes =
+    state.db.quotes || [];
+
+  return `
+    <div class="card">
+
+      <div class="page-actions">
+        <div>
+          <h3>Devis</h3>
+          <p class="muted">
+            Création et suivi des devis clients.
+          </p>
+        </div>
+
+        <button
+          class="primary"
+          data-add="quotes"
+        >
+          + Nouveau devis
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>N° devis</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Validité</th>
+              <th>Total</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              quotes.length
+                ? quotes
+                    .map(
+                      quote => `
+                        <tr>
+                          <td>
+                            <strong>
+                              ${esc(
+                                quote.quote_number ||
+                                  "DEVIS"
+                              )}
+                            </strong>
+                          </td>
+
+                          <td>
+                            ${esc(
+                              clientName(
+                                quote.client_id
+                              )
+                            )}
+                          </td>
+
+                          <td>
+                            ${normalizeDate(
+                              quote.issue_date
+                            )}
+                          </td>
+
+                          <td>
+                            ${normalizeDate(
+                              quote.valid_until
+                            )}
+                          </td>
+
+                          <td>
+                            ${money(
+                              quote.total
+                            )}
+                          </td>
+
+                          <td>
+                            <span
+                              class="badge ${invoiceStatusClass(
+                                quote.status
+                              )}"
+                            >
+                              ${statusLabel(
+                                quote.status
+                              )}
+                            </span>
+                          </td>
+
+                          <td>
+                            <button
+                              class="secondary"
+                              data-details-document="quotes"
+                              data-id="${quote.id}"
+                            >
+                              Détails
+                            </button>
+
+                            <button
+                              class="secondary"
+                              data-edit-document="quotes"
+                              data-id="${quote.id}"
+                            >
+                              Modifier
+                            </button>
+
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="danger ghost"
+                                    data-delete="quotes"
+                                    data-id="${quote.id}"
+                                  >
+                                    Supprimer
+                                  </button>
+                                `
+                                : ""
+                            }
+                          </td>
+                        </tr>
+                      `
+                    )
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty">
+                        Aucun devis enregistré.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function invoicesPage() {
+  const invoices =
+    state.db.invoices || [];
+
+  return `
+    <div class="card">
+
+      <div class="page-actions">
+        <div>
+          <h3>Factures</h3>
+          <p class="muted">
+            Suivi des factures et des règlements clients.
+          </p>
+        </div>
+
+        <button
+          class="primary"
+          data-add="invoices"
+        >
+          + Nouvelle facture
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>N° facture</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Échéance</th>
+              <th>Total</th>
+              <th>Payé</th>
+              <th>Reste</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              invoices.length
+                ? invoices
+                    .map(invoice => {
+                      const displayStatus =
+                        invoiceDisplayStatus(
+                          invoice
+                        );
+
+                      const paid = Number(
+                        invoice.amount_paid ||
+                          0
+                      );
+
+                      const total = Number(
+                        invoice.total ||
+                          0
+                      );
+
+                      const due = Math.max(
+                        0,
+                        total - paid
+                      );
+
+                      return `
+                        <tr>
+                          <td>
+                            <strong>
+                              ${esc(
+                                invoice.invoice_number ||
+                                  "FACTURE"
+                              )}
+                            </strong>
+                          </td>
+
+                          <td>
+                            ${esc(
+                              clientName(
+                                invoice.client_id
+                              )
+                            )}
+                          </td>
+
+                          <td>
+                            ${normalizeDate(
+                              invoice.issue_date
+                            )}
+                          </td>
+
+                          <td>
+                            ${normalizeDate(
+                              invoice.due_date
+                            )}
+                          </td>
+
+                          <td>
+                            ${money(total)}
+                          </td>
+
+                          <td>
+                            ${money(paid)}
+                          </td>
+
+                          <td>
+                            ${money(due)}
+                          </td>
+
+                          <td>
+                            <span
+                              class="badge ${invoiceStatusClass(
+                                displayStatus
+                              )}"
+                            >
+                              ${statusLabel(
+                                displayStatus
+                              )}
+                            </span>
+                          </td>
+
+                          <td>
+                            <button
+                              class="secondary"
+                              data-details-document="invoices"
+                              data-id="${invoice.id}"
+                            >
+                              Détails
+                            </button>
+
+                            <button
+                              class="secondary"
+                              data-edit-document="invoices"
+                              data-id="${invoice.id}"
+                            >
+                              Modifier
+                            </button>
+
+                            <button
+                              class="primary"
+                              data-add-payment="${invoice.id}"
+                            >
+                              + Paiement
+                            </button>
+
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="danger ghost"
+                                    data-delete="invoices"
+                                    data-id="${invoice.id}"
+                                  >
+                                    Supprimer
+                                  </button>
+                                `
+                                : ""
+                            }
+                          </td>
+                        </tr>
+                      `;
+                    })
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="9">
+                      <div class="empty">
+                        Aucune facture enregistrée.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function paymentsPage() {
+  const payments =
+    state.db.payments || [];
+
+  return `
+    <div class="card">
+
+      <div class="page-actions">
+        <div>
+          <h3>Paiements</h3>
+          <p class="muted">
+            Enregistrement comptable des règlements.
+          </p>
+        </div>
+
+        <button
+          class="primary"
+          id="newPaymentBtn"
+        >
+          + Nouveau paiement
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Facture</th>
+              <th>Client</th>
+              <th>Montant</th>
+              <th>Mode</th>
+              <th>Date</th>
+              <th>Référence</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              payments.length
+                ? payments
+                    .map(payment => {
+                      const invoice =
+                        (
+                          state.db.invoices ||
+                          []
+                        ).find(
+                          item =>
+                            item.id ===
+                            payment.invoice_id
+                        );
+
+                      return `
+                        <tr>
+                          <td>
+                            ${esc(
+                              invoice?.invoice_number ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              invoice
+                                ? clientName(
+                                    invoice.client_id
+                                  )
+                                : "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${money(
+                              payment.amount
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              paymentMethodLabel(
+                                payment.payment_method
+                              )
+                            )}
+                          </td>
+
+                          <td>
+                            ${normalizeDate(
+                              payment.payment_date
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              payment.reference ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              payment.notes ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="danger ghost"
+                                    data-delete-payment="${payment.id}"
+                                  >
+                                    Supprimer
+                                  </button>
+                                `
+                                : ""
+                            }
+                          </td>
+                        </tr>
+                      `;
+                    })
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="8">
+                      <div class="empty">
+                        Aucun paiement enregistré.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function paymentMethodLabel(method) {
+  const labels = {
+    cash: "Espèces",
+    mtn_momo: "MTN MoMo",
+    moov_money: "Moov Money",
+    celtiis_cash: "Celtiis Cash",
+    bank_transfer: "Virement bancaire",
+    card: "Carte bancaire",
+    check: "Chèque bancaire",
+    pi_spi: "PI-SPI",
+    mobile_money: "Mobile Money",
+    bank: "Banque",
+    credit: "Crédit",
+    other: "Autre"
+  };
+
+  return labels[method] || method || "—";
+}
+
+function tablePage(page) {
+  const table = page;
+
+  const labels = {
+    sales: {
+      title: "Ventes",
+      add: "Nouvelle vente",
+      columns: [
+        ["customer", "Client"],
+        ["item", "Article / service"],
+        ["quantity", "Quantité"],
+        ["amount", "Montant"],
+        ["payment_method", "Paiement"],
+        ["status", "Statut"]
+      ]
+    },
+
+    purchases: {
+      title: "Achats",
+      add: "Nouvel achat",
+      columns: [
+        ["supplier", "Fournisseur"],
+        ["item", "Article"],
+        ["quantity", "Quantité"],
+        ["amount", "Montant"],
+        ["status", "Statut"]
+      ]
+    },
+
+    expenses: {
+      title: "Dépenses",
+      add: "Nouvelle dépense",
+      columns: [
+        ["category", "Catégorie"],
+        ["label", "Libellé"],
+        ["amount", "Montant"],
+        ["beneficiary", "Bénéficiaire"]
+      ]
+    },
+
+    activities: {
+      title: "Activités",
+      add: "Nouvelle activité",
+      columns: [
+        ["title", "Titre"],
+        ["category", "Catégorie"],
+        ["location", "Lieu"],
+        ["status", "Statut"],
+        ["amount", "Montant"]
+      ]
+    },
+
+    projects: {
+      title: "Projets",
+      add: "Nouveau projet",
+      columns: [
+        ["name", "Nom"],
+        ["client", "Client"],
+        ["status", "Statut"],
+        ["progress", "Progression"],
+        ["budget", "Budget"]
+      ]
+    },
+
+    innovations: {
+      title: "Innovations",
+      add: "Nouvelle innovation",
+      columns: [
+        ["title", "Titre"],
+        ["stage", "Étape"],
+        ["progress", "Progression"],
+        ["budget", "Budget"]
+      ]
+    }
+  };
+
+  const config = labels[table];
+
+  if (!config) {
+    return `
+      <div class="card">
+        <h3>Page indisponible</h3>
+      </div>
+    `;
+  }
+
+  const rows =
+    state.db[table] || [];
+
+  return `
+    <div class="card">
+
+      <div class="page-actions">
+        <div>
+          <h3>${config.title}</h3>
+          <p class="muted">
+            Gestion des opérations.
+          </p>
+        </div>
+
+        <button
+          class="primary"
+          data-add="${table}"
+        >
+          + ${config.add}
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              ${config.columns
+                .map(
+                  column =>
+                    `<th>${column[1]}</th>`
+                )
+                .join("")}
+
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              rows.length
+                ? rows
+                    .map(
+                      row => `
+                        <tr>
+                          ${config.columns
+                            .map(
+                              ([key]) => {
+                                let value =
+                                  row[key];
+
+                                if (
+                                  key ===
+                                    "amount" ||
+                                  key ===
+                                    "budget"
+                                ) {
+                                  value =
+                                    money(value);
+                                }
+
+                                if (
+                                  key ===
+                                  "payment_method"
+                                ) {
+                                  value =
+                                    paymentMethodLabel(
+                                      value
+                                    );
+                                }
+
+                                if (
+                                  key ===
+                                  "status" ||
+                                  key ===
+                                  "stage"
+                                ) {
+                                  value =
+                                    statusLabel(
+                                      value
+                                    );
+                                }
+
+                                if (
+                                  key ===
+                                  "progress"
+                                ) {
+                                  value =
+                                    value == null
+                                      ? "—"
+                                      : `${value}%`;
+                                }
+
+                                return `<td>${esc(
+                                  value ??
+                                    "—"
+                                )}</td>`;
+                              }
+                            )
+                            .join("")}
+
+                          <td>
+                            <button
+                              class="secondary"
+                              data-edit="${table}"
+                              data-id="${row.id}"
+                            >
+                              Modifier
+                            </button>
+
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="danger ghost"
+                                    data-delete="${table}"
+                                    data-id="${row.id}"
+                                  >
+                                    Supprimer
+                                  </button>
+                                `
+                                : ""
+                            }
+                          </td>
+                        </tr>
+                      `
+                    )
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="${
+                      config.columns.length +
+                      1
+                    }">
+                      <div class="empty">
+                        Aucun enregistrement.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function stock() {
+  const items =
+    state.db.stock_items || [];
+
+  return `
+    <div class="card">
+
+      <div class="page-actions">
+        <div>
+          <h3>Stock & matériel</h3>
+          <p class="muted">
+            Suivi des articles et du matériel.
+          </p>
+        </div>
+
+        ${
+          canManageStock()
+            ? `
+              <button
+                class="primary"
+                data-add="stock_items"
+              >
+                + Nouvel article
+              </button>
+            `
+            : ""
+        }
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Catégorie</th>
+              <th>Unité</th>
+              <th>Quantité</th>
+              <th>Seuil</th>
+              <th>Emplacement</th>
+              <th>État</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              items.length
+                ? items
+                    .map(item => {
+                      const quantity =
+                        Number(
+                          item.quantity || 0
+                        );
+
+                      const minimum =
+                        Number(
+                          item.min_quantity ||
+                            0
+                        );
+
+                      const low =
+                        quantity <= minimum;
+
+                      return `
+                        <tr>
+                          <td>
+                            <strong>
+                              ${esc(
+                                item.name
+                              )}
+                            </strong>
+                          </td>
+
+                          <td>
+                            ${esc(
+                              item.category ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              item.unit ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            ${quantity}
+                          </td>
+
+                          <td>
+                            ${minimum}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              item.location ||
+                                "—"
+                            )}
+                          </td>
+
+                          <td>
+                            <span
+                              class="badge ${
+                                low
+                                  ? "danger"
+                                  : "success"
+                              }"
+                            >
+                              ${
+                                low
+                                  ? "Stock faible"
+                                  : "Disponible"
+                              }
+                            </span>
+                          </td>
+
+                          <td>
+                            ${
+                              canManageStock()
+                                ? `
+                                  <button
+                                    class="secondary"
+                                    data-edit-stock="${item.id}"
+                                  >
+                                    Modifier
+                                  </button>
+                                `
+                                : ""
+                            }
+
+                            <button
+                              class="primary"
+                              data-stock-move="${item.id}"
+                            >
+                              Mouvement
+                            </button>
+
+                            ${
+                              state.role ===
+                              "admin"
+                                ? `
+                                  <button
+                                    class="danger ghost"
+                                    data-delete="stock_items"
+                                    data-id="${item.id}"
+                                  >
+                                    Supprimer
+                                  </button>
+                                `
+                                : ""
+                            }
+                          </td>
+                        </tr>
+                      `;
+                    })
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="8">
+                      <div class="empty">
+                        Aucun article en stock.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div
+      class="card"
+      style="margin-top:16px"
+    >
+      <h3>Historique des mouvements</h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Article</th>
+              <th>Type</th>
+              <th>Quantité</th>
+              <th>Projet</th>
+              <th>Responsable</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${stockMovementRows()}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function stockMovementRows() {
+  const movements =
+    state.db.stock_movements || [];
+
+  if (!movements.length) {
+    return `
+      <tr>
+        <td colspan="7">
+          <div class="empty">
+            Aucun mouvement enregistré.
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  return movements
+    .slice(0, 50)
+    .map(movement => {
+      const item =
+        (
+          state.db.stock_items ||
+          []
+        ).find(
+          x => x.id === movement.stock_item_id
+        );
+
+      const project =
+        (
+          state.db.projects ||
+          []
+        ).find(
+          x => x.id === movement.project_id
+        );
+
+      const employee =
+        (
+          state.db.profiles ||
+          []
+        ).find(
+          x => x.id === movement.employee_id
+        );
+
+      return `
+        <tr>
+          <td>
+            ${formatDateTime(
+              movement.created_at
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              item?.name || "—"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movement.type || "—"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movement.quantity ?? "—"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              project?.name || "—"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              employee?.full_name ||
+                "—"
+            )}
+          </td>
+
+          <td>
+            ${esc(
+              movement.notes || "—"
+            )}
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function reports() {
+  const sales = (
+    state.db.sales || []
+  ).reduce(
+    (sum, item) =>
+      sum + Number(item.amount || 0),
+    0
+  );
+
+  const purchases = (
+    state.db.purchases || []
+  ).reduce(
+    (sum, item) =>
+      sum + Number(item.amount || 0),
+    0
+  );
+
+  const expenses = (
+    state.db.expenses || []
+  ).reduce(
+    (sum, item) =>
+      sum + Number(item.amount || 0),
+    0
+  );
+
+  const payments = (
+    state.db.payments || []
+  ).reduce(
+    (sum, item) =>
+      sum + Number(item.amount || 0),
+    0
+  );
+
+  const result =
+    sales -
+    purchases -
+    expenses;
+
+  return `
+    <div class="grid kpis">
+
+      <div class="card kpi">
+        <small>Ventes</small>
+        <strong>${money(sales)}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Achats</small>
+        <strong>${money(purchases)}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Dépenses</small>
+        <strong>${money(expenses)}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Paiements reçus</small>
+        <strong>${money(payments)}</strong>
+      </div>
+
+      <div class="card kpi">
+        <small>Résultat estimé</small>
+        <strong>${money(result)}</strong>
+      </div>
+
+    </div>
+
+    <div
+      class="card"
+      style="margin-top:16px"
+    >
+      <h3>Exports</h3>
+
+      <div class="quick-actions">
+        <button
+          class="primary"
+          id="exportSalesCsv"
+        >
+          Exporter les ventes
+        </button>
+
+        <button
+          class="secondary"
+          id="exportAllCsv"
+        >
+          Export complet
+        </button>
+
+        ${
+          state.role === "admin"
+            ? `
+              <button
+                class="secondary"
+                id="backupBtn"
+              >
+                Sauvegarde JSON
+              </button>
+            `
+            : ""
+        }
+      </div>
+    </div>
+  `;
+}
+
+function auditPage() {
+  if (state.role !== "admin") {
+    return `
+      <div class="card">
+        <h3>Accès refusé</h3>
+        <p class="muted">
+          Le journal est réservé à l’administrateur.
+        </p>
+      </div>
+    `;
+  }
+
+  const logs =
+    state.db.audit_logs || [];
+
+  return `
+    <div class="card">
+
+      <div class="page-actions">
+        <div>
+          <h3>Journal d’activité</h3>
+          <p class="muted">
+            Traçabilité des opérations effectuées.
+          </p>
+        </div>
+
+        <button
+          class="secondary"
+          id="exportAuditCsv"
+        >
+          Exporter
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Action</th>
+              <th>Entité</th>
+              <th>Détails</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              logs.length
+                ? logs
+                    .slice(0, 100)
+                    .map(
+                      log => `
+                        <tr>
+                          <td>
+                            ${formatDateTime(
+                              log.created_at
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              log.action
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              log.entity
+                            )}
+                          </td>
+
+                          <td>
+                            ${esc(
+                              safeJson(
+                                log.details ||
+                                  {}
+                              )
+                            )}
+                          </td>
+                        </tr>
+                      `
+                    )
+                    .join("")
+                : `
+                  <tr>
+                    <td colspan="4">
+                      <div class="empty">
+                        Aucune action enregistrée.
+                      </div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function settings() {
+  if (state.role !== "admin") {
+    return `
+      <div class="card">
+        <h3>Accès refusé</h3>
+        <p class="muted">
+          Les paramètres sont réservés à l’administrateur.
+        </p>
+      </div>
+    `;
+  }
+
+  const setting =
+    (
+      state.db.settings || []
+    ).find(
+      item =>
+        item.user_id ===
+        state.user.id
+    ) || {};
+
+  return `
+    <div class="card">
+
+      <h3>
+        Informations de l’entreprise
+      </h3>
+
+      <form
+        id="settingsForm"
+        class="form-grid"
+      >
+
+        <label>
+          Nom
+          <input
+            name="company_name"
+            value="${esc(
+              setting.company_name ||
+                "LUC BRICO-TECH"
+            )}"
+          >
+        </label>
+
+        <label>
+          Adresse
+          <input
+            name="address"
+            value="${esc(
+              setting.address ||
+                "Hévié Hounzévié, Abomey-Calavi"
+            )}"
+          >
+        </label>
+
+        <label>
+          Téléphone
+          <input
+            name="phone"
+            value="${esc(
+              setting.phone ||
+                "01 67 02 84 91"
+            )}"
+          >
+        </label>
+
+        <label>
+          Email
+          <input
+            name="email"
+            value="${esc(
+              setting.email || ""
+            )}"
+          >
+        </label>
+
+        <div class="full">
+          <button class="primary">
+            Enregistrer
+          </button>
+        </div>
+
+      </form>
+    </div>
+  `;
+}
+
+async function saveSettings(event) {
+  event.preventDefault();
+
+  const formData =
+    new FormData(event.target);
+
+  const payload =
+    Object.fromEntries(
+      formData.entries()
+    );
+
+  try {
+    if (!state.cloud) {
+      const array =
+        state.db.settings || [];
+
+      const existing =
+        array.find(
+          item =>
+            item.user_id ===
+            state.user.id
+        );
+
+      if (existing) {
+        Object.assign(
+          existing,
+          payload,
+          {
+            updated_at: now()
+          }
+        );
+      } else {
+        array.unshift({
+          id: uid(),
+          user_id: state.user.id,
+          created_at: now(),
+          updated_at: now(),
+          ...payload
+        });
+      }
+
+      state.db.settings = array;
+
+      saveLocal();
+    } else {
+      const {
+        data,
+        error
+      } = await sb
+        .from("settings")
+        .upsert(
+          {
+            user_id: state.user.id,
+            ...payload,
+            updated_at: now()
+          },
+          {
+            onConflict: "user_id"
+          }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      const array =
+        state.db.settings || [];
+
+      const index =
+        array.findIndex(
+          item =>
+            item.user_id ===
+            state.user.id
+        );
+
+      if (index >= 0) {
+        array[index] = data;
+      } else {
+        array.unshift(data);
+      }
+
+      state.db.settings = array;
+    }
+
+    await audit(
+      "update",
+      "settings",
+      state.user.id,
+      payload
+    );
+
+    toast(
+      "Paramètres enregistrés."
+    );
+
+    render();
+  } catch (error) {
+    console.error(error);
+
+    toast(
+      error.message ||
+        "Erreur lors de l’enregistrement."
+    );
+  }
+}
+
+function openForm(table, id = null) {
+  const schema =
+    schemas[table];
+
+  if (!schema) return;
+
+  const old = id
+    ? (
+        state.db[table] || []
+      ).find(
+        item => item.id === id
+      )
+    : null;
+
+  const modalTitle =
+    document.getElementById(
+      "modalTitle"
+    );
+
+  const recordForm =
+    document.getElementById(
+      "recordForm"
+    );
+
+  if (!modalTitle || !recordForm) {
+    return;
+  }
+
+  modalTitle.textContent = id
+    ? "Modifier"
+    : schema.title;
+
+  recordForm.innerHTML = `
+    <div class="form-grid">
+
+      ${schema.fields
+        .map(field => {
+          const [
+            name,
+            label,
+            type,
+            required,
+            options
+          ] = field;
+
+          const value =
+            old?.[name] ?? "";
+
+          if (type === "textarea") {
+            return `
+              <label class="full">
+                ${label}
+
+                <textarea
+                  name="${name}"
+                >${esc(value)}</textarea>
+              </label>
+            `;
+          }
+
+          if (type === "select") {
+            return `
+              <label>
+                ${label}
+
+                <select
+                  name="${name}"
+                >
+                  ${options
+                    .map(
+                      option => `
+                        <option
+                          value="${esc(
+                            option
+                          )}"
+                          ${
+                            value ===
+                            option
+                              ? "selected"
+                              : ""
+                          }
+                        >
+                          ${esc(
+                            option
+                          )}
+                        </option>
+                      `
+                    )
+                    .join("")}
+                </select>
+              </label>
+            `;
+          }
+
+          return `
+            <label>
+              ${label}
+
+              <input
+                name="${name}"
+                type="${type}"
+                value="${esc(value)}"
+                ${
+                  required
+                    ? "required"
+                    : ""
+                }
+              >
+            </label>
+          `;
+        })
+        .join("")}
+
+      <div class="full actions">
+
+        <button
+          type="button"
+          class="secondary"
+          id="cancelForm"
+        >
+          Annuler
+        </button>
+
+        <button
+          class="primary"
+        >
+          Enregistrer
+        </button>
+
+      </div>
+    </div>
+  `;
+
+  document.getElementById(
+    "cancelForm"
+  ).onclick = closeModal;
+
+  recordForm.onsubmit =
+    async event => {
+      event.preventDefault();
+
+      const payload =
+        Object.fromEntries(
+          new FormData(
+            event.target
+          ).entries()
+        );
+
+      for (const field of schema.fields) {
+        if (
+          field[2] === "number" &&
+          payload[field[0]] !== ""
+        ) {
+          payload[field[0]] =
+            Number(
+              payload[field[0]]
+            );
+        }
+      }
+
+      try {
+        if (id) {
+          await update(
+            table,
+            id,
+            payload
+          );
+        } else {
+          await insert(
+            table,
+            payload
+          );
+        }
+
+        await audit(
+          id ? "update" : "insert",
+          table,
+          id || null,
+          payload
+        );
+
+        toast("Enregistré.");
+
+        closeModal();
+
+        render();
+      } catch (error) {
+        console.error(error);
+
+        toast(
+          error.message ||
+            "Erreur lors de l’enregistrement."
+        );
+      }
+    };
+
+  document
+    .getElementById("modal")
+    .classList.remove("hidden");
+}
+
+function closeModal() {
+  document
+    .getElementById("modal")
+    ?.classList.add("hidden");
+}
+
+async function del(table, id) {
+  if (state.role !== "admin") {
+    toast(
+      "La suppression est réservée à l’administrateur."
+    );
+    return;
+  }
+
+  if (
+    !confirm(
+      "Supprimer cet enregistrement ?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await remove(
+      table,
+      id
+    );
+
+    await audit(
+      "delete",
+      table,
+      id
+    );
+
+    toast("Supprimé.");
+
+    render();
+  } catch (error) {
+    console.error(error);
+
+    toast(
+      error.message ||
+        "Erreur lors de la suppression."
+    );
+  }
+}
+
+function openPaymentForm(
+  invoiceId = null
+) {
+  const invoices =
+    state.db.invoices || [];
+
+  if (!invoices.length) {
+    toast(
+      "Aucune facture disponible."
+    );
+    return;
+  }
+
+  const selectedInvoice =
+    invoices.find(
+      invoice =>
+        invoice.id ===
+        invoiceId
+    ) || invoices[0];
+
+  const invoiceOptions =
+    invoices
+      .map(
+        invoice => `
+          <option
+            value="${invoice.id}"
+            ${
+              invoice.id ===
+              selectedInvoice.id
+                ? "selected"
+                : ""
+            }
+          >
+            ${esc(
+              invoice.invoice_number ||
+                "Facture"
+            )}
+            — 
+            ${esc(
+              clientName(
+                invoice.client_id
+              )
+            )}
+            — 
+            ${money(
+              invoice.total
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  const paymentDate =
+    new Date()
+      .toISOString()
+      .slice(0, 10);
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    "Nouveau paiement";
+
+  document.getElementById(
+    "recordForm"
+  ).innerHTML = `
+    <div class="form-grid">
+
+      <label class="full">
+        Facture
+
+        <select
+          name="invoice_id"
+          id="paymentInvoice"
+          required
+        >
+          ${invoiceOptions}
+        </select>
+      </label>
+
+      <label>
+        Montant (FCFA)
+
+        <input
+          name="amount"
+          id="paymentAmount"
+          type="number"
+          min="0"
+          step="0.01"
+          required
+        >
+      </label>
+
+      <label>
+        Mode de paiement
+
+        <select
+          name="payment_method"
+          required
+        >
+          <option value="cash">
+            Espèces
+          </option>
+
+          <option value="mtn_momo">
+            MTN MoMo
+          </option>
+
+          <option value="moov_money">
+            Moov Money
+          </option>
+
+          <option value="celtiis_cash">
+            Celtiis Cash
+          </option>
+
+          <option value="bank_transfer">
+            Virement bancaire
+          </option>
+
+          <option value="card">
+            Carte bancaire
+          </option>
+
+          <option value="check">
+            Chèque bancaire
+          </option>
+
+          <option value="pi_spi">
+            PI-SPI
+          </option>
+
+          <option value="other">
+            Autre
+          </option>
+        </select>
+      </label>
+
+      <label>
+        Date
+
+        <input
+          name="payment_date"
+          type="date"
+          value="${paymentDate}"
+          required
+        >
+      </label>
+
+      <label>
+        Référence
+
+        <input
+          name="reference"
+          type="text"
+          placeholder="Ex : Momo, chèque, virement..."
+        >
+      </label>
+
+      <label class="full">
+        Notes
+
+        <textarea
+          name="notes"
+          placeholder="Informations complémentaires"
+        ></textarea>
+      </label>
+
+      <div class="full actions">
+
+        <button
+          type="button"
+          class="secondary"
+          id="cancelPayment"
+        >
+          Annuler
+        </button>
+
+        <button
+          class="primary"
+        >
+          Enregistrer
+        </button>
+
+      </div>
+    </div>
+  `;
+
+  document
+    .getElementById("cancelPayment")
+    .onclick = closeModal;
+
+  document
+    .getElementById("paymentInvoice")
+    .addEventListener(
+      "change",
+      event => {
+        const invoice =
+          invoices.find(
+            item =>
+              item.id ===
+              event.target.value
+          );
+
+        if (!invoice) return;
+
+        const total =
+          Number(
+            invoice.total || 0
+          );
+
+        const paid =
+          Number(
+            invoice.amount_paid ||
+              0
+          );
+
+        const remaining =
+          Math.max(
+            0,
+            total - paid
+          );
+
+        const amountInput =
+          document.getElementById(
+            "paymentAmount"
+          );
+
+        if (amountInput) {
+          amountInput.value =
+            remaining || "";
+        }
+      }
+    );
+
+  const amountInput =
+    document.getElementById(
+      "paymentAmount"
+    );
+
+  const initialTotal =
+    Number(
+      selectedInvoice.total || 0
+    );
+
+  const initialPaid =
+    Number(
+      selectedInvoice.amount_paid ||
+        0
+    );
+
+  const initialRemaining =
+    Math.max(
+      0,
+      initialTotal -
+        initialPaid
+    );
+
+  if (amountInput) {
+    amountInput.value =
+      initialRemaining || "";
+  }
+
+  document.getElementById(
+    "recordForm"
+  ).onsubmit =
+    async event => {
+      event.preventDefault();
+
+      const formData =
+        new FormData(
+          event.target
+        );
+
+      const invoiceId =
+        formData.get(
+          "invoice_id"
+        );
+
+      const amount =
+        Number(
+          formData.get(
+            "amount"
+          ) || 0
+        );
+
+      if (!invoiceId) {
+        toast(
+          "Sélectionnez une facture."
+        );
+        return;
+      }
+
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+        toast(
+          "Le montant du paiement doit être supérieur à zéro."
+        );
+        return;
+      }
+
+      const invoice =
+        invoices.find(
+          item =>
+            item.id ===
+            invoiceId
+        );
+
+      if (!invoice) {
+        toast(
+          "Facture introuvable."
+        );
+        return;
+      }
+
+      const total =
+        Number(
+          invoice.total || 0
+        );
+
+      const alreadyPaid =
+        Number(
+          invoice.amount_paid ||
+            0
+        );
+
+      const remaining =
+        Math.max(
+          0,
+          total -
+            alreadyPaid
+        );
+
+      if (
+        remaining > 0 &&
+        amount > remaining
+      ) {
+        toast(
+          `Le montant dépasse le reste à payer : ${money(
+            remaining
+          )}.`
+        );
+        return;
+      }
+
+      const payload = {
+        invoice_id: invoiceId,
+        amount,
+        payment_method:
+          formData.get(
+            "payment_method"
+          ),
+        payment_date:
+          formData.get(
+            "payment_date"
+          ),
+        reference:
+          String(
+            formData.get(
+              "reference"
+            ) || ""
+          ).trim(),
+        notes:
+          String(
+            formData.get(
+              "notes"
+            ) || ""
+          ).trim()
+      };
+
+      try {
+        const payment =
+          await insert(
+            "payments",
+            payload
+          );
+
+        const newPaid =
+          alreadyPaid +
+          amount;
+
+        const newDue =
+          Math.max(
+            0,
+            total -
+              newPaid
+          );
+
+        let newStatus =
+          invoice.status ||
+          "unpaid";
+
+        if (
+          invoice.status !==
+          "cancelled"
+        ) {
+          if (
+            total > 0 &&
+            newPaid >= total
+          ) {
+            newStatus =
+              "paid";
+          } else if (
+            newPaid > 0
+          ) {
+            newStatus =
+              "partial";
+          } else if (
+            invoice.due_date &&
+            new Date(
+              invoice.due_date
+            ) < new Date()
+          ) {
+            newStatus =
+              "overdue";
+          } else {
+            newStatus =
+              "unpaid";
+          }
+        }
+
+        await update(
+          "invoices",
+          invoiceId,
+          {
+            amount_paid:
+              newPaid,
+            amount_due:
+              newDue,
+            status:
+              newStatus,
+            updated_at:
+              now()
+          }
+        );
+
+        await audit(
+          "insert",
+          "payments",
+          payment.id,
+          payload
+        );
+
+        await audit(
+          "update",
+          "invoices",
+          invoiceId,
+          {
+            amount_paid:
+              newPaid,
+            amount_due:
+              newDue,
+            status:
+              newStatus
+          }
+        );
+
+        toast(
+          "Paiement enregistré."
+        );
+
+        closeModal();
+
+        render();
+      } catch (error) {
+        console.error(
+          "Erreur paiement :",
+          error
+        );
+
+        toast(
+          error.message ||
+            "Impossible d’enregistrer le paiement."
+        );
+      }
+    };
+
+  document
+    .getElementById("modal")
+    .classList.remove("hidden");
+}
+
+async function deletePayment(id) {
+  if (state.role !== "admin") {
+    toast(
+      "La suppression est réservée à l’administrateur."
+    );
+    return;
+  }
+
+  if (
+    !confirm(
+      "Supprimer ce paiement ?"
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const payment =
+      (
+        state.db.payments ||
+        []
+      ).find(
+        item => item.id === id
+      );
+
+    if (!payment) {
+      return;
+    }
+
+    await remove(
+      "payments",
+      id
+    );
+
+    const invoice =
+      (
+        state.db.invoices ||
+        []
+      ).find(
+        item =>
+          item.id ===
+          payment.invoice_id
+      );
+
+    if (invoice) {
+      const total =
+        Number(
+          invoice.total || 0
+        );
+
+      const oldPaid =
+        Number(
+          invoice.amount_paid ||
+            0
+        );
+
+      const newPaid =
+        Math.max(
+          0,
+          oldPaid -
+            Number(
+              payment.amount || 0
+            )
+        );
+
+      const newDue =
+        Math.max(
+          0,
+          total -
+            newPaid
+        );
+
+      let status =
+        "unpaid";
+
+      if (
+        invoice.status ===
+        "cancelled"
+      ) {
+        status =
+          "cancelled";
+      } else if (
+        newPaid >= total &&
+        total > 0
+      ) {
+        status =
+          "paid";
+      } else if (
+        newPaid > 0
+      ) {
+        status =
+          "partial";
+      } else if (
+        invoice.due_date &&
+        new Date(
+          invoice.due_date
+        ) < new Date()
+      ) {
+        status =
+          "overdue";
+      }
+
+      await update(
+        "invoices",
+        invoice.id,
+        {
+          amount_paid:
+            newPaid,
+          amount_due:
+            newDue,
+          status,
+          updated_at:
+            now()
+        }
+      );
+    }
+
+    await audit(
+      "delete",
+      "payments",
+      id,
+      payment
+    );
+
+    toast(
+      "Paiement supprimé."
+    );
+
+    render();
+  } catch (error) {
+    console.error(error);
+
+    toast(
+      error.message ||
+        "Impossible de supprimer le paiement."
+    );
+  }
+}
+
+function openStockMovementForm(
+  stockItemId
+) {
+  const item =
+    (
+      state.db.stock_items ||
+      []
+    ).find(
+      stockItem =>
+        stockItem.id ===
+        stockItemId
+    );
+
+  if (!item) {
+    toast(
+      "Article de stock introuvable."
+    );
+    return;
+  }
+
+  const projects =
+    state.db.projects || [];
+
+  const employees =
+    state.db.profiles || [];
+
+  const employeeOptions =
+    employees
+      .filter(
+        employee =>
+          employee.active !== false
+      )
+      .map(
+        employee => `
+          <option
+            value="${employee.id}"
+          >
+            ${esc(
+              employee.full_name ||
+                employee.email ||
+                "Utilisateur"
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  const projectOptions =
+    projects
+      .map(
+        project => `
+          <option
+            value="${project.id}"
+          >
+            ${esc(
+              project.name
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  const movementTypes =
+    state.role === "employee"
+      ? [
+          ["use", "Utilisation"],
+          ["return", "Retour"]
+        ]
+      : [
+          ["entry", "Entrée"],
+          ["exit", "Sortie"],
+          ["use", "Utilisation"],
+          ["return", "Retour"],
+          ["adjustment", "Ajustement"]
+        ];
+
+  document.getElementById(
+    "modalTitle"
+  ).textContent =
+    "Mouvement de stock";
+
+  document.getElementById(
+    "recordForm"
+  ).innerHTML = `
+    <div class="form-grid">
+
+      <div class="card full">
+        <strong>
+          ${esc(item.name)}
+        </strong>
+
+        <p class="muted">
+          Stock actuel :
+          ${Number(
+            item.quantity || 0
+          )}
+          ${esc(
+            item.unit || ""
+          )}
+        </p>
+      </div>
+
+      <label>
+        Type
+
+        <select
+          name="type"
+          required
+        >
+          ${movementTypes
+            .map(
+              option => `
+                <option
+                  value="${option[0]}"
+                >
+                  ${option[1]}
+                </option>
+              `
+            )
+            .join("")}
+        </select>
+      </label>
+
+      <label>
+        Quantité
+
+        <input
+          name="quantity"
+          type="number"
+          min="0.01"
+          step="0.01"
+          required
+        >
+      </label>
+
+      <label>
+        Projet
+
+        <select name="project_id">
+          <option value="">
+            Aucun projet
+          </option>
+
+          ${projectOptions}
+        </select>
+      </label>
+
+      <label>
+        Responsable
+
+        <select
+          name="employee_id"
+        >
+          <option value="">
+            Sélectionner
+          </option>
+
+          ${employeeOptions}
+        </select>
+      </label>
+
+      <label class="full">
+        Notes
+
+        <textarea
+          name="notes"
+        ></textarea>
+      </label>
+
+      <div class="full actions">
+
+        <button
+          type="button"
+          class="secondary"
+          id="cancelStockMovement"
+        >
+          Annuler
+        </button>
+
+        <button
+          class="primary"
+        >
+          Enregistrer
+        </button>
+
+      </div>
+    </div>
+  `;
+
+  document.getElementById(
+    "cancelStockMovement"
+  ).onclick = closeModal;
+
+  document.getElementById(
+    "recordForm"
+  ).onsubmit =
+    async event => {
+      event.preventDefault();
+
+      const formData =
+        new FormData(
+          event.target
+        );
+
+      const type =
+        formData.get("type");
+
+      const quantity =
+        Number(
+          formData.get(
+            "quantity"
+          ) || 0
+        );
+
+      if (
+        !Number.isFinite(
+          quantity
+        ) ||
+        quantity <= 0
+      ) {
+        toast(
+          "La quantité doit être supérieure à zéro."
+        );
+        return;
+      }
+
+      const payload = {
+        stock_item_id:
+          stockItemId,
+        type,
+        quantity,
+        project_id:
+          formData.get(
+            "project_id"
+          ) || null,
+        employee_id:
+          formData.get(
+            "employee_id"
+          ) ||
+          state.user.id,
+        notes:
+          String(
+            formData.get(
+              "notes"
+            ) || ""
+          ).trim()
+      };
+
+      try {
+        if (
+          state.cloud &&
+          sb
+        ) {
+          const {
+            data,
+            error
+          } = await sb.rpc(
+            "create_stock_movement",
+            {
+              p_stock_item_id:
+                stockItemId,
+              p_type: type,
+              p_quantity:
+                quantity,
+              p_project_id:
+                payload.project_id,
+              p_activity_id:
+                null,
+              p_employee_id:
+                payload.employee_id,
+              p_notes:
+                payload.notes
+            }
+          );
+
+          if (error) {
+            throw error;
+          }
+
+          if (data) {
+            await syncCloud();
+          }
+        } else {
+          const current =
+            Number(
+              item.quantity || 0
+            );
+
+          let newQuantity =
+            current;
+
+          if (
+            type ===
+              "entry" ||
+            type === "return"
+          ) {
+            newQuantity +=
+              quantity;
+          }
+
+          if (
+            type ===
+              "exit" ||
+            type === "use"
+          ) {
+            newQuantity -=
+              quantity;
+          }
+
+          if (
+            type ===
+            "adjustment"
+          ) {
+            newQuantity =
+              quantity;
+          }
+
+          if (
+            newQuantity < 0
+          ) {
+            throw new Error(
+              "Stock insuffisant."
+            );
+          }
+
+          item.quantity =
+            newQuantity;
+
+          await insert(
+            "stock_movements",
+            payload
+          );
+        }
+
+        await audit(
+          "insert",
+          "stock_movements",
+          null,
+          payload
+        );
+
+        toast(
+          "Mouvement enregistré."
+        );
+
+        closeModal();
+
+        render();
+      } catch (error) {
+        console.error(error);
+
+        toast(
+          error.message ||
+            "Erreur lors du mouvement de stock."
+        );
+      }
+    };
+
+  document
+    .getElementById("modal")
+    .classList.remove("hidden");
+}
+
 function openDocumentForm(
-  type,
+  table,
   id = null,
   readonly = false
 ) {
-  const isInvoice =
-    type === "invoices";
+  if (
+    table !== "quotes" &&
+    table !== "invoices"
+  ) {
+    return;
+  }
 
-  const old =
+  const existing =
     id
-      ? (state.db[type] || [])
-          .find(x => x.id === id)
+      ? (
+          state.db[table] ||
+          []
+        ).find(
+          item => item.id === id
+        )
       : null;
 
-  const itemsTable =
-    isInvoice
-      ? "invoice_items"
-      : "quote_items";
+  const isInvoice =
+    table === "invoices";
 
-  const foreignKey =
-    isInvoice
-      ? "invoice_id"
-      : "quote_id";
+  const title =
+    readonly
+      ? isInvoice
+        ? "Détails de la facture"
+        : "Détails du devis"
+      : id
+      ? isInvoice
+        ? "Modifier la facture"
+        : "Modifier le devis"
+      : isInvoice
+      ? "Nouvelle facture"
+      : "Nouveau devis";
 
-  let draft =
-    (state.db[itemsTable] || [])
-      .filter(x => x[foreignKey] === id)
-      .map(x => ({
-        description: x.description || "",
-        unit: x.unit || "pièce",
-        quantity: Number(x.quantity || 0),
-        unit_price: Number(x.unit_price || 0),
-        amount: Number(x.amount || 0)
-      }));
-
-  if (!draft.length && !readonly) {
-    draft = [
-      {
-        description: "",
-        unit: "pièce",
-        quantity: 1,
-        unit_price: 0,
-        amount: 0
-      }
-    ];
-  }
+  document.getElementById(
+    "modalTitle"
+  ).textContent = title;
 
   const clients =
     state.db.clients || [];
 
-  const number =
-    old?.invoice_number ||
-    old?.quote_number ||
-    (
-      isInvoice
-        ? invoiceNumber()
-        : quoteNumber()
+  const clientOptions =
+    clients
+      .map(
+        client => `
+          <option
+            value="${client.id}"
+            ${
+              existing?.client_id ===
+              client.id
+                ? "selected"
+                : ""
+            }
+          >
+            ${esc(
+              client.full_name ||
+                client.company_name ||
+                "Client"
+            )}
+          </option>
+        `
+      )
+      .join("");
+
+  const issueDate =
+    existing?.issue_date ||
+    new Date()
+      .toISOString()
+      .slice(0, 10);
+
+  const dueDate =
+    existing?.due_date ||
+    new Date(
+      Date.now() +
+        30 * 86400000
+    )
+      .toISOString()
+      .slice(0, 10);
+
+  const validUntil =
+    existing?.valid_until ||
+    new Date(
+      Date.now() +
+        15 * 86400000
+    )
+      .toISOString()
+      .slice(0, 10);
+
+  const statuses = isInvoice
+    ? [
+        "draft",
+        "unpaid",
+        "partial",
+        "paid",
+        "cancelled",
+        "overdue"
+      ]
+    : [
+        "draft",
+        "sent",
+        "accepted",
+        "rejected",
+        "expired",
+        "converted"
+      ];
+
+  document.getElementById(
+    "recordForm"
+  ).innerHTML = `
+    <div class="form-grid">
+
+      <label>
+        ${
+          isInvoice
+            ? "N° facture"
+            : "N° devis"
+        }
+
+        <input
+          name="${
+            isInvoice
+              ? "invoice_number"
+              : "quote_number"
+          }"
+          value="${esc(
+            existing?.[
+              isInvoice
+                ? "invoice_number"
+                : "quote_number"
+            ] ||
+              ""
+          )}"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >
+      </label>
+
+      <label>
+        Client
+
+        <select
+          name="client_id"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+          required
+        >
+          <option value="">
+            Sélectionner un client
+          </option>
+
+          ${clientOptions}
+        </select>
+      </label>
+
+      <label>
+        Date
+
+        <input
+          type="date"
+          name="issue_date"
+          value="${issueDate}"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+          required
+        >
+      </label>
+
+      <label>
+        ${
+          isInvoice
+            ? "Échéance"
+            : "Valable jusqu’au"
+        }
+
+        <input
+          type="date"
+          name="${
+            isInvoice
+              ? "due_date"
+              : "valid_until"
+          }"
+          value="${
+            isInvoice
+              ? dueDate
+              : validUntil
+          }"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >
+      </label>
+
+      <label class="full">
+        Titre
+
+        <input
+          name="title"
+          value="${esc(
+            existing?.title ||
+              ""
+          )}"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >
+      </label>
+
+      <label class="full">
+        Description
+
+        <textarea
+          name="description"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >${esc(
+          existing?.description ||
+            ""
+        )}</textarea>
+      </label>
+
+      <label>
+        Remise
+
+        <input
+          type="number"
+          name="discount"
+          min="0"
+          step="0.01"
+          value="${Number(
+            existing?.discount ||
+              0
+          )}"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >
+      </label>
+
+      <label>
+        Taxe
+
+        <input
+          type="number"
+          name="tax"
+          min="0"
+          step="0.01"
+          value="${Number(
+            existing?.tax ||
+              0
+          )}"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >
+      </label>
+
+      <label>
+        Statut
+
+        <select
+          name="status"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >
+          ${statuses
+            .map(
+              status => `
+                <option
+                  value="${status}"
+                  ${
+                    (
+                      existing?.status ||
+                      "draft"
+                    ) === status
+                      ? "selected"
+                      : ""
+                  }
+                >
+                  ${statusLabel(
+                    status
+                  )}
+                </option>
+              `
+            )
+            .join("")}
+        </select>
+      </label>
+
+      ${
+        isInvoice
+          ? `
+            <label>
+              Montant payé
+
+              <input
+                type="number"
+                name="amount_paid"
+                min="0"
+                step="0.01"
+                value="${Number(
+                  existing?.amount_paid ||
+                    0
+                )}"
+                ${
+                  readonly
+                    ? "disabled"
+                    : ""
+                }
+              >
+            </label>
+          `
+          : ""
+      }
+
+      <div class="full">
+        <h3>
+          Lignes détaillées
+        </h3>
+
+        <div
+          id="documentLines"
+          class="document-lines"
+        ></div>
+      </div>
+
+      <div class="full">
+        <div
+          id="documentSummary"
+          class="card"
+        ></div>
+      </div>
+
+      <label class="full">
+        Notes
+
+        <textarea
+          name="notes"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >${esc(
+          existing?.notes ||
+            ""
+        )}</textarea>
+      </label>
+
+      <label class="full">
+        Conditions
+
+        <textarea
+          name="terms"
+          ${
+            readonly
+              ? "disabled"
+              : ""
+          }
+        >${esc(
+          existing?.terms ||
+            ""
+        )}</textarea>
+      </label>
+
+      ${
+        readonly
+          ? `
+            <div class="full actions">
+              <button
+                type="button"
+                class="secondary"
+                id="closeDocumentDetails"
+              >
+                Fermer
+              </button>
+            </div>
+          `
+          : `
+            <div class="full actions">
+
+              <button
+                type="button"
+                class="secondary"
+                id="cancelDocument"
+              >
+                Annuler
+              </button>
+
+              <button
+                class="primary"
+              >
+                Enregistrer
+              </button>
+
+            </div>
+          `
+      }
+    </div>
+  `;
+
+  const linesContainer =
+    document.getElementById(
+      "documentLines"
     );
 
-  const title =
-    isInvoice
-      ? "Facture"
-      : "Devis";
+  const existingLines =
+    existing
+      ? (
+          state.db[
+            isInvoice
+              ? "invoice_items"
+              : "quote_items"
+          ] || []
+        ).filter(
+          line =>
+            line[
+              isInvoice
+                ? "invoice_id"
+                : "quote_id"
+            ] === existing.id
+        )
+      : [];
 
-  document.getElementById("modalTitle").textContent =
-    readonly
-      ? `Détails — ${title}`
-      : id
-      ? `Modifier — ${title}`
-      : `Nouveau ${title}`;
-
-  const statusOptions =
-    isInvoice
-      ? [
-          "draft",
-          "unpaid",
-          "partial",
-          "paid",
-          "cancelled",
-          "overdue"
-        ]
+  let lineDrafts =
+    existingLines.length
+      ? existingLines.map(
+          line => ({
+            id: line.id,
+            description:
+              line.description ||
+              "",
+            quantity:
+              Number(
+                line.quantity || 1
+              ),
+            unit_price:
+              Number(
+                line.unit_price ||
+                  0
+              ),
+            amount:
+              Number(
+                line.amount ||
+                  0
+              )
+          })
+        )
       : [
-          "draft",
-          "sent",
-          "accepted",
-          "rejected",
-          "expired",
-          "converted"
+          {
+            description: "",
+            quantity: 1,
+            unit_price: 0,
+            amount: 0
+          }
         ];
 
-  document.getElementById("recordForm").innerHTML = `
-<div class="form-grid">
+  function renderLines() {
+    if (!linesContainer) {
+      return;
+    }
 
-<label>
-Client
+    linesContainer.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Désignation</th>
+              <th>Qté</th>
+              <th>Prix unitaire</th>
+              <th>Total</th>
+              ${
+                readonly
+                  ? ""
+                  : "<th></th>"
+              }
+            </tr>
+          </thead>
 
-<select
-  name="client_id"
-  ${readonly ? "disabled" : "required"}
->
-<option value="">
-Sélectionner
-</option>
+          <tbody>
+            ${lineDrafts
+              .map(
+                (line, index) => `
+                  <tr>
 
-${
-  clients.map(c => `
-<option
-  value="${c.id}"
-  ${
-    old?.client_id === c.id
-      ? "selected"
-      : ""
+                    <td>
+                      <input
+                        type="text"
+                        data-line-description="${index}"
+                        value="${esc(
+                          line.description
+                        )}"
+                        ${
+                          readonly
+                            ? "disabled"
+                            : ""
+                        }
+                      >
+                    </td>
+
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        data-line-quantity="${index}"
+                        value="${Number(
+                          line.quantity ||
+                            0
+                        )}"
+                        ${
+                          readonly
+                            ? "disabled"
+                            : ""
+                        }
+                      >
+                    </td>
+
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        data-line-price="${index}"
+                        value="${Number(
+                          line.unit_price ||
+                            0
+                        )}"
+                        ${
+                          readonly
+                            ? "disabled"
+                            : ""
+                        }
+                      >
+                    </td>
+
+                    <td>
+                      <strong>
+                        ${money(
+                          Number(
+                            line.quantity ||
+                              0
+                          ) *
+                            Number(
+                              line.unit_price ||
+                                0
+                            )
+                        )}
+                      </strong>
+                    </td>
+
+                    ${
+                      readonly
+                        ? ""
+                        : `
+                          <td>
+                            <button
+                              type="button"
+                              class="danger ghost"
+                              data-remove-line="${index}"
+                            >
+                              ×
+                            </button>
+                          </td>
+                        `
+                    }
+
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+
+      ${
+        readonly
+          ? ""
+          : `
+            <button
+              type="button"
+              class="secondary"
+              id="addDocumentLine"
+              style="margin-top:10px"
+            >
+              + Ajouter une ligne
+            </button>
+          `
+      }
+    `;
+
+    updateSummary();
   }
->
-${esc(
-  c.company_name ||
-  c.full_name
-)}
-</option>
-`).join("")
-}
 
-</select>
-
-</label>
-
-<label>
-Numéro
-
-<input
-  name="document_number"
-  value="${esc(number)}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-
-<label>
-Date
-
-<input
-  type="date"
-  name="issue_date"
-  value="${esc(
-    old?.issue_date || today()
-  )}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-
-<label>
-${
-  isInvoice
-    ? "Date d’échéance"
-    : "Valable jusqu’au"
-}
-
-<input
-  type="date"
-  name="${
-    isInvoice
-      ? "due_date"
-      : "valid_until"
-  }"
-  value="${esc(
-    old?.[
-      isInvoice
-        ? "due_date"
-        : "valid_until"
-    ] || ""
-  )}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-
-<label>
-Statut
-
-<select
-  name="status"
-  ${readonly ? "disabled" : ""}
->
-${
-  statusOptions.map(s => `
-<option
-  value="${s}"
-  ${
-    (old?.status || "draft") === s
-      ? "selected"
-      : ""
-  }
->
-${statusLabel(s)}
-</option>
-`).join("")
-}
-</select>
-
-</label>
-
-<label>
-Titre
-
-<input
-  name="title"
-  value="${esc(old?.title || "")}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-
-<label class="full">
-Description
-
-<textarea
-  name="description"
-  ${readonly ? "disabled" : ""}
->${esc(old?.description || "")}</textarea>
-
-</label>
-
-<div class="full">
-
-<h3>
-Lignes détaillées
-</h3>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>Désignation</th>
-<th>Unité</th>
-<th>Qté</th>
-<th>Prix unitaire</th>
-<th>Total</th>
-${readonly ? "" : "<th></th>"}
-</tr>
-</thead>
-
-<tbody id="documentLinesBody"></tbody>
-
-</table>
-
-</div>
-
-${
-  readonly
-    ? ""
-    : `
-      <button
-        type="button"
-        class="secondary"
-        id="addDocumentLine"
-        style="margin-top:10px"
-      >
-        + Ajouter une ligne
-      </button>
-    `
-}
-
-</div>
-
-<label>
-Remise
-
-<input
-  type="number"
-  name="discount"
-  min="0"
-  step="0.01"
-  value="${Number(old?.discount || 0)}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-
-<label>
-Taxe
-
-<input
-  type="number"
-  name="tax"
-  min="0"
-  step="0.01"
-  value="${Number(old?.tax || 0)}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-
-${
-  isInvoice
-    ? `
-<label>
-Montant payé
-
-<input
-  type="number"
-  name="amount_paid"
-  min="0"
-  step="0.01"
-  value="${Number(old?.amount_paid || 0)}"
-  ${readonly ? "disabled" : ""}
->
-</label>
-`
-    : ""
-}
-
-<div class="full card">
-
-<div>
-Sous-total :
-<strong id="docSubtotal">
-${money(old?.subtotal || 0)}
-</strong>
-</div>
-
-<div>
-Total :
-<strong id="docTotal">
-${money(old?.total || 0)}
-</strong>
-</div>
-
-${
-  isInvoice
-    ? `
-<div>
-Reste :
-<strong id="docDue">
-${money(old?.amount_due || 0)}
-</strong>
-</div>
-`
-    : ""
-}
-
-</div>
-
-<label class="full">
-Notes
-
-<textarea
-  name="notes"
-  ${readonly ? "disabled" : ""}
->${esc(old?.notes || "")}</textarea>
-
-</label>
-
-<div class="full actions">
-
-<button
-  type="button"
-  class="secondary"
-  id="cancelForm"
->
-Fermer
-</button>
-
-${
-  readonly
-    ? ""
-    : `
-      <button class="primary">
-        Enregistrer
-      </button>
-    `
-}
-
-</div>
-
-</div>
-`;
-
-  const renderLines = () =>
-    draft.map((line, index) => `
-<tr>
-
-<td>
-<input
-  data-line-desc="${index}"
-  value="${esc(line.description)}"
-  ${readonly ? "disabled" : ""}
->
-</td>
-
-<td>
-
-<select
-  data-line-unit="${index}"
-  ${readonly ? "disabled" : ""}
->
-${
-  [
-    "pièce",
-    "m",
-    "kg",
-    "h",
-    "forfait",
-    "lot",
-    "service"
-  ]
-  .map(unit => `
-<option
-  value="${unit}"
-  ${
-    line.unit === unit
-      ? "selected"
-      : ""
-  }
->
-${unit}
-</option>
-`)
-.join("")
-}
-
-</select>
-
-</td>
-
-<td>
-<input
-  type="number"
-  min="0"
-  step="0.01"
-  data-line-qty="${index}"
-  value="${Number(line.quantity || 0)}"
-  ${readonly ? "disabled" : ""}
->
-</td>
-
-<td>
-<input
-  type="number"
-  min="0"
-  step="0.01"
-  data-line-price="${index}"
-  value="${Number(line.unit_price || 0)}"
-  ${readonly ? "disabled" : ""}
->
-</td>
-
-<td>
-<strong>
-${money(
-  Number(line.quantity || 0) *
-  Number(line.unit_price || 0)
-)}
-</strong>
-</td>
-
-${
-  readonly
-    ? ""
-    : `
-<td>
-<button
-  type="button"
-  class="danger"
-  data-remove-line="${index}"
->
-×
-</button>
-</td>
-`
-}
-
-</tr>
-`).join("");
-
-  const refresh = () => {
-    draft.forEach(line => {
-      line.amount =
-        Number(line.quantity || 0) *
-        Number(line.unit_price || 0);
-    });
-
+  function updateSummary() {
     const subtotal =
-      linesSummary(draft);
+      lineDrafts.reduce(
+        (sum, line) =>
+          sum +
+          Number(
+            line.quantity || 0
+          ) *
+            Number(
+              line.unit_price ||
+                0
+            ),
+        0
+      );
 
     const discount =
       Number(
@@ -2969,178 +5085,272 @@ ${
         )?.value || 0
       );
 
-    document.getElementById(
-      "docSubtotal"
-    ).textContent =
-      money(subtotal);
+    const due =
+      Math.max(
+        0,
+        total - paid
+      );
 
-    document.getElementById(
-      "docTotal"
-    ).textContent =
-      money(total);
-
-    if (
-      document.getElementById("docDue")
-    ) {
+    const summary =
       document.getElementById(
-        "docDue"
-      ).textContent =
-        money(
-          Math.max(
-            0,
-            total - paid
-          )
-        );
-    }
+        "documentSummary"
+      );
 
-    document.getElementById(
-      "documentLinesBody"
-    ).innerHTML =
-      renderLines();
+    if (!summary) return;
 
-    wire();
-  };
+    summary.innerHTML = `
+      <div class="grid kpis">
 
-  const wire = () => {
-    if (readonly) return;
+        <div class="kpi">
+          <small>Sous-total</small>
+          <strong>
+            ${money(subtotal)}
+          </strong>
+        </div>
 
-    document
-      .querySelectorAll(
-        "[data-remove-line]"
-      )
-      .forEach(b => {
-        b.onclick = () => {
-          draft.splice(
-            Number(
-              b.dataset.removeLine
-            ),
-            1
-          );
+        <div class="kpi">
+          <small>Remise</small>
+          <strong>
+            ${money(discount)}
+          </strong>
+        </div>
 
-          refresh();
-        };
-      });
+        <div class="kpi">
+          <small>Taxe</small>
+          <strong>
+            ${money(tax)}
+          </strong>
+        </div>
 
-    document
-      .querySelectorAll(
-        "[data-line-desc]"
-      )
-      .forEach(i => {
-        i.oninput = () => {
-          draft[
-            Number(i.dataset.lineDesc)
-          ].description =
-            i.value;
-        };
-      });
+        <div class="kpi">
+          <small>Total</small>
+          <strong>
+            ${money(total)}
+          </strong>
+        </div>
 
-    document
-      .querySelectorAll(
-        "[data-line-unit]"
-      )
-      .forEach(i => {
-        i.onchange = () => {
-          draft[
-            Number(i.dataset.lineUnit)
-          ].unit =
-            i.value;
+        ${
+          isInvoice
+            ? `
+              <div class="kpi">
+                <small>Reste</small>
+                <strong>
+                  ${money(due)}
+                </strong>
+              </div>
+            `
+            : ""
+        }
 
-          refresh();
-        };
-      });
+      </div>
+    `;
+  }
 
-    document
-      .querySelectorAll(
-        "[data-line-qty]"
-      )
-      .forEach(i => {
-        i.oninput = () => {
-          draft[
-            Number(i.dataset.lineQty)
-          ].quantity =
-            Number(i.value || 0);
-
-          refresh();
-        };
-      });
-
-    document
-      .querySelectorAll(
-        "[data-line-price]"
-      )
-      .forEach(i => {
-        i.oninput = () => {
-          draft[
-            Number(i.dataset.linePrice)
-          ].unit_price =
-            Number(i.value || 0);
-
-          refresh();
-        };
-      });
-  };
-
-  document.getElementById(
-    "documentLinesBody"
-  ).innerHTML =
-    renderLines();
-
-  document.getElementById(
-    "cancelForm"
-  ).onclick =
-    closeModal;
+  renderLines();
 
   if (!readonly) {
     document.getElementById(
       "addDocumentLine"
-    ).onclick = () => {
-      draft.push({
-        description: "",
-        unit: "pièce",
-        quantity: 1,
-        unit_price: 0,
-        amount: 0
-      });
-
-      refresh();
-    };
-
-    wire();
-
-    document.querySelector(
-      '[name="discount"]'
-    ).oninput = refresh;
-
-    document.querySelector(
-      '[name="tax"]'
-    ).oninput = refresh;
-
-    document.querySelector(
-      '[name="amount_paid"]'
     )?.addEventListener(
-      "input",
-      refresh
+      "click",
+      () => {
+        lineDrafts.push({
+          description: "",
+          quantity: 1,
+          unit_price: 0,
+          amount: 0
+        });
+
+        renderLines();
+      }
     );
 
+    linesContainer?.addEventListener(
+      "input",
+      event => {
+        const target =
+          event.target;
+
+        const descriptionIndex =
+          target.dataset
+            .lineDescription;
+
+        const quantityIndex =
+          target.dataset
+            .lineQuantity;
+
+        const priceIndex =
+          target.dataset
+            .linePrice;
+
+        if (
+          descriptionIndex !==
+          undefined
+        ) {
+          lineDrafts[
+            Number(
+              descriptionIndex
+            )
+          ].description =
+            target.value;
+        }
+
+        if (
+          quantityIndex !==
+          undefined
+        ) {
+          lineDrafts[
+            Number(
+              quantityIndex
+            )
+          ].quantity =
+            Number(
+              target.value || 0
+            );
+        }
+
+        if (
+          priceIndex !==
+          undefined
+        ) {
+          lineDrafts[
+            Number(
+              priceIndex
+            )
+          ].unit_price =
+            Number(
+              target.value || 0
+            );
+        }
+
+        renderLines();
+      }
+    );
+
+    linesContainer?.addEventListener(
+      "click",
+      event => {
+        const button =
+          event.target.closest(
+            "[data-remove-line]"
+          );
+
+        if (!button) return;
+
+        const index =
+          Number(
+            button.dataset
+              .removeLine
+          );
+
+        lineDrafts.splice(
+          index,
+          1
+        );
+
+        if (
+          lineDrafts.length === 0
+        ) {
+          lineDrafts.push({
+            description: "",
+            quantity: 1,
+            unit_price: 0,
+            amount: 0
+          });
+        }
+
+        renderLines();
+      }
+    );
+
+    document
+      .querySelector(
+        '[name="discount"]'
+      )
+      ?.addEventListener(
+        "input",
+        updateSummary
+      );
+
+    document
+      .querySelector(
+        '[name="tax"]'
+      )
+      ?.addEventListener(
+        "input",
+        updateSummary
+      );
+
+    document
+      .querySelector(
+        '[name="amount_paid"]'
+      )
+      ?.addEventListener(
+        "input",
+        updateSummary
+      );
+  }
+
+  const cancelButton =
+    document.getElementById(
+      "cancelDocument"
+    );
+
+  if (cancelButton) {
+    cancelButton.onclick =
+      closeModal;
+  }
+
+  const closeDetails =
+    document.getElementById(
+      "closeDocumentDetails"
+    );
+
+  if (closeDetails) {
+    closeDetails.onclick =
+      closeModal;
+  }
+
+  if (!readonly) {
     document.getElementById(
       "recordForm"
-    ).onsubmit = async e => {
-      e.preventDefault();
+    ).onsubmit =
+      async event => {
+        event.preventDefault();
 
-      try {
-        const fd =
-          Object.fromEntries(
-            new FormData(e.target).entries()
+        const formData =
+          new FormData(
+            event.target
           );
 
         const subtotal =
-          linesSummary(draft);
+          lineDrafts.reduce(
+            (sum, line) =>
+              sum +
+              Number(
+                line.quantity ||
+                  0
+              ) *
+                Number(
+                  line.unit_price ||
+                    0
+                ),
+            0
+          );
 
         const discount =
-          Number(fd.discount || 0);
+          Number(
+            formData.get(
+              "discount"
+            ) || 0
+          );
 
         const tax =
-          Number(fd.tax || 0);
+          Number(
+            formData.get(
+              "tax"
+            ) || 0
+          );
 
         const total =
           Math.max(
@@ -3150,1227 +5360,992 @@ ${
               tax
           );
 
-        let status =
-          fd.status || "draft";
-
-        const paid =
+        const amountPaid =
           isInvoice
             ? Number(
-                fd.amount_paid || 0
+                formData.get(
+                  "amount_paid"
+                ) || 0
               )
             : 0;
 
-        if (
-          isInvoice &&
-          status !== "cancelled" &&
-          status !== "draft"
-        ) {
-          status =
-            paid >= total &&
-            total > 0
-              ? "paid"
-              : paid > 0
-              ? "partial"
-              : (
-                  fd.due_date &&
-                  fd.due_date < today()
+        const amountDue =
+          Math.max(
+            0,
+            total -
+              amountPaid
+          );
+
+        let status =
+          formData.get(
+            "status"
+          ) ||
+          "draft";
+
+        if (isInvoice) {
+          if (
+            status !==
+            "cancelled"
+          ) {
+            if (
+              total > 0 &&
+              amountPaid >= total
+            ) {
+              status = "paid";
+            } else if (
+              amountPaid > 0
+            ) {
+              status = "partial";
+            } else if (
+              formData.get(
+                "due_date"
+              ) &&
+              new Date(
+                formData.get(
+                  "due_date"
                 )
-                ? "overdue"
-                : "unpaid";
+              ) < new Date() &&
+              total > amountPaid
+            ) {
+              status = "overdue";
+            } else {
+              status = "unpaid";
+            }
+          }
         }
 
-        const payload = isInvoice
-          ? {
-              user_id: state.user.id,
-              client_id: fd.client_id,
-              invoice_number: number,
-              issue_date: fd.issue_date,
-              due_date: fd.due_date,
-              status,
-              title: fd.title,
-              description: fd.description,
-              subtotal,
-              discount,
-              tax,
-              total,
-              amount_paid: paid,
-              amount_due:
-                Math.max(
-                  0,
-                  total - paid
-                ),
-              notes: fd.notes
-            }
-          : {
-              user_id: state.user.id,
-              client_id: fd.client_id,
-              quote_number: number,
-              issue_date: fd.issue_date,
-              valid_until:
-                fd.valid_until,
-              status,
-              title: fd.title,
-              description: fd.description,
-              subtotal,
-              discount,
-              tax,
-              total,
-              notes: fd.notes
-            };
+        const payload = {
+          client_id:
+            formData.get(
+              "client_id"
+            ) || null,
 
-        let saved;
+          issue_date:
+            formData.get(
+              "issue_date"
+            ),
 
-        if (id) {
-          saved =
-            await updateDocument(
-              type,
+          title:
+            formData.get(
+              "title"
+            ),
+
+          description:
+            formData.get(
+              "description"
+            ),
+
+          subtotal,
+          discount,
+          tax,
+          total,
+
+          status,
+
+          notes:
+            formData.get(
+              "notes"
+            ),
+
+          terms:
+            formData.get(
+              "terms"
+            ),
+
+          updated_at:
+            now()
+        };
+
+        if (isInvoice) {
+          payload.invoice_number =
+            formData.get(
+              "invoice_number"
+            );
+
+          payload.due_date =
+            formData.get(
+              "due_date"
+            );
+
+          payload.amount_paid =
+            amountPaid;
+
+          payload.amount_due =
+            amountDue;
+        } else {
+          payload.quote_number =
+            formData.get(
+              "quote_number"
+            );
+
+          payload.valid_until =
+            formData.get(
+              "valid_until"
+            );
+        }
+
+        try {
+          let documentId =
+            id;
+
+          if (id) {
+            await update(
+              table,
               id,
               payload
             );
-        } else {
-          saved =
-            await insert(
-              type,
-              payload
-            );
-        }
+          } else {
+            const created =
+              await insert(
+                table,
+                payload
+              );
 
-        await saveDocumentLines(
-          type,
-          saved.id,
-          draft
-        );
-
-        await audit(
-          id
-            ? "update"
-            : "insert",
-          type,
-          saved.id,
-          {
-            total,
-            lines: draft.length
+            documentId =
+              created.id;
           }
-        );
 
-        closeModal();
-        render();
+          const itemTable =
+            isInvoice
+              ? "invoice_items"
+              : "quote_items";
 
-        toast(
-          "Document enregistré."
-        );
+          const foreignKey =
+            isInvoice
+              ? "invoice_id"
+              : "quote_id";
 
-      } catch (err) {
-        console.error(err);
+          if (state.cloud) {
+            const {
+              error:
+                deleteError
+            } = await sb
+              .from(itemTable)
+              .delete()
+              .eq(
+                foreignKey,
+                documentId
+              );
 
-        toast(
-          err.message ||
-          "Erreur d’enregistrement."
-        );
-      }
-    };
+            if (deleteError) {
+              throw deleteError;
+            }
+
+            if (lineDrafts.length) {
+              const items =
+                lineDrafts
+                  .filter(
+                    line =>
+                      String(
+                        line.description ||
+                          ""
+                      ).trim() ||
+                      Number(
+                        line.quantity ||
+                          0
+                      ) > 0
+                  )
+                  .map(line => ({
+                    [foreignKey]:
+                      documentId,
+                    description:
+                      String(
+                        line.description ||
+                          ""
+                      ).trim(),
+                    quantity:
+                      Number(
+                        line.quantity ||
+                          0
+                      ),
+                    unit_price:
+                      Number(
+                        line.unit_price ||
+                          0
+                      ),
+                    amount:
+                      Number(
+                        line.quantity ||
+                          0
+                      ) *
+                      Number(
+                        line.unit_price ||
+                          0
+                      )
+                  }));
+
+              if (items.length) {
+                const {
+                  error:
+                    insertError
+                } = await sb
+                  .from(itemTable)
+                  .insert(items);
+
+                if (insertError) {
+                  throw insertError;
+                }
+              }
+            }
+
+            await syncCloud();
+          } else {
+            state.db[
+              itemTable
+            ] = (
+              state.db[
+                itemTable
+              ] || []
+            ).filter(
+              item =>
+                item[
+                  foreignKey
+                ] !== documentId
+            );
+
+            lineDrafts.forEach(
+              line => {
+                state.db[
+                  itemTable
+                ].push({
+                  id: uid(),
+                  [foreignKey]:
+                    documentId,
+                  description:
+                    String(
+                      line.description ||
+                        ""
+                    ).trim(),
+                  quantity:
+                    Number(
+                      line.quantity ||
+                        0
+                    ),
+                  unit_price:
+                    Number(
+                      line.unit_price ||
+                        0
+                    ),
+                  amount:
+                    Number(
+                      line.quantity ||
+                        0
+                    ) *
+                    Number(
+                      line.unit_price ||
+                        0
+                    ),
+                  created_at:
+                    now()
+                });
+              }
+            );
+
+            saveLocal();
+          }
+
+          await audit(
+            id
+              ? "update"
+              : "insert",
+            table,
+            documentId,
+            {
+              ...payload,
+              line_count:
+                lineDrafts.length
+            }
+          );
+
+          toast(
+            isInvoice
+              ? "Facture enregistrée."
+              : "Devis enregistré."
+          );
+
+          closeModal();
+
+          render();
+        } catch (error) {
+          console.error(error);
+
+          toast(
+            error.message ||
+              "Erreur lors de l’enregistrement."
+          );
+        }
+      };
   }
-
-  refresh();
 
   document
     .getElementById("modal")
     .classList.remove("hidden");
 }
 
-async function updateDocument(
-  type,
-  id,
-  payload
-) {
-  if (!state.cloud) {
-    const arr =
-      state.db[type] || [];
+function bindPage() {
+  document
+    .querySelectorAll(
+      "[data-add]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          const table =
+            button.dataset.add;
 
-    const i =
-      arr.findIndex(
-        x => x.id === id
+          if (
+            table ===
+            "quotes"
+          ) {
+            openDocumentForm(
+              "quotes"
+            );
+            return;
+          }
+
+          if (
+            table ===
+            "invoices"
+          ) {
+            openDocumentForm(
+              "invoices"
+            );
+            return;
+          }
+
+          openForm(table);
+        }
       );
-
-    if (i >= 0) {
-      arr[i] = {
-        ...arr[i],
-        ...payload,
-        updated_at: now()
-      };
-    }
-
-    saveLocal();
-
-    return arr[i];
-  }
-
-  const { data, error } =
-    await sb
-      .from(type)
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single();
-
-  if (error) throw error;
-
-  const arr =
-    state.db[type] || [];
-
-  const i =
-    arr.findIndex(
-      x => x.id === id
-    );
-
-  if (i >= 0) {
-    arr[i] = data;
-  }
-
-  return data;
-}
-
-async function saveDocumentLines(
-  type,
-  id,
-  lines
-) {
-  const table =
-    type === "quotes"
-      ? "quote_items"
-      : "invoice_items";
-
-  const key =
-    type === "quotes"
-      ? "quote_id"
-      : "invoice_id";
-
-  if (!state.cloud) {
-    state.db[table] =
-      (state.db[table] || [])
-        .filter(x => x[key] !== id);
-
-    lines.forEach(l => {
-      state.db[table].push({
-        id: uid(),
-        [key]: id,
-        description:
-          l.description || "",
-        unit:
-          l.unit || "pièce",
-        quantity:
-          Number(l.quantity || 0),
-        unit_price:
-          Number(l.unit_price || 0),
-        amount:
-          Number(l.amount || 0),
-        created_at: now()
-      });
     });
 
-    saveLocal();
-    return;
+  document
+    .querySelectorAll(
+      "[data-edit]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openForm(
+            button.dataset.edit,
+            button.dataset.id
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-delete]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          del(
+            button.dataset.delete,
+            button.dataset.id
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-edit-document]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openDocumentForm(
+            button.dataset
+              .editDocument,
+            button.dataset.id,
+            false
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-details-document]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openDocumentForm(
+            button.dataset
+              .detailsDocument,
+            button.dataset.id,
+            true
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-add-payment]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openPaymentForm(
+            button.dataset
+              .addPayment
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-delete-payment]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          deletePayment(
+            button.dataset
+              .deletePayment
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-stock-move]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openStockMovementForm(
+            button.dataset
+              .stockMove
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-edit-stock]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        () => {
+          openForm(
+            "stock_items",
+            button.dataset
+              .editStock
+          );
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-role]"
+    )
+    .forEach(select => {
+      select.addEventListener(
+        "change",
+        async event => {
+          if (
+            state.role !==
+            "admin"
+          ) {
+            return;
+          }
+
+          const userId =
+            event.target.dataset
+              .role;
+
+          const role =
+            event.target.value;
+
+          try {
+            await update(
+              "profiles",
+              userId,
+              {
+                role,
+                updated_at:
+                  now()
+              }
+            );
+
+            await audit(
+              "update",
+              "profiles",
+              userId,
+              { role }
+            );
+
+            toast(
+              "Rôle modifié."
+            );
+
+            if (
+              userId ===
+              state.user.id
+            ) {
+              state.role =
+                role;
+            }
+
+            render();
+          } catch (error) {
+            console.error(
+              error
+            );
+
+            toast(
+              error.message ||
+                "Impossible de modifier le rôle."
+            );
+          }
+        }
+      );
+    });
+
+  document
+    .querySelectorAll(
+      "[data-toggle-active]"
+    )
+    .forEach(button => {
+      button.addEventListener(
+        "click",
+        async () => {
+          if (
+            state.role !==
+            "admin"
+          ) {
+            return;
+          }
+
+          const userId =
+            button.dataset
+              .toggleActive;
+
+          const user =
+            (
+              state.db.profiles ||
+              []
+            ).find(
+              profile =>
+                profile.id ===
+                userId
+            );
+
+          if (!user) {
+            return;
+          }
+
+          try {
+            await update(
+              "profiles",
+              userId,
+              {
+                active:
+                  user.active ===
+                  false
+                    ? true
+                    : false,
+                updated_at:
+                  now()
+              }
+            );
+
+            await audit(
+              "update",
+              "profiles",
+              userId,
+              {
+                active:
+                  user.active ===
+                  false
+                    ? true
+                    : false
+              }
+            );
+
+            toast(
+              "Statut du compte modifié."
+            );
+
+            render();
+          } catch (error) {
+            console.error(
+              error
+            );
+
+            toast(
+              error.message ||
+                "Impossible de modifier le compte."
+            );
+          }
+        }
+      );
+    });
+
+  const createEmployeeButton =
+    document.getElementById(
+      "createEmployeeBtn"
+    );
+
+  if (createEmployeeButton) {
+    createEmployeeButton.addEventListener(
+      "click",
+      openCreateEmployeeForm
+    );
   }
 
-  const {
-    error: delErr
-  } = await sb
-    .from(table)
-    .delete()
-    .eq(key, id);
+  const newPaymentButton =
+    document.getElementById(
+      "newPaymentBtn"
+    );
 
-  if (delErr) throw delErr;
+  if (newPaymentButton) {
+    newPaymentButton.addEventListener(
+      "click",
+      () =>
+        openPaymentForm()
+    );
+  }
 
-  if (lines.length) {
-    const payload =
-      lines.map(l => ({
-        [key]: id,
-        description:
-          l.description || "",
-        quantity:
-          Number(l.quantity || 0),
-        unit_price:
-          Number(l.unit_price || 0),
-        amount:
-          Number(l.amount || 0)
-      }));
+  const settingsForm =
+    document.getElementById(
+      "settingsForm"
+    );
 
-    const {
-      data,
-      error
-    } = await sb
-      .from(table)
-      .insert(payload)
-      .select();
-
-    if (error) throw error;
-
-    state.db[table] =
-      (state.db[table] || [])
-        .filter(x => x[key] !== id)
-        .concat(data);
-
-  } else {
-    state.db[table] =
-      (state.db[table] || [])
-        .filter(x => x[key] !== id);
+  if (settingsForm) {
+    settingsForm.addEventListener(
+      "submit",
+      saveSettings
+    );
   }
 }
 
-function openPaymentForm(
-  invoiceId = ""
-) {
-  const invoices =
-    state.db.invoices || [];
+function openCreateEmployeeForm() {
+  if (state.role !== "admin") {
+    toast(
+      "Seul l’administrateur peut créer un compte employé."
+    );
+    return;
+  }
 
   document.getElementById(
     "modalTitle"
   ).textContent =
-    "Enregistrer un paiement";
+    "Créer un compte employé";
 
   document.getElementById(
     "recordForm"
   ).innerHTML = `
-<div class="form-grid">
+    <div class="form-grid">
 
-<label class="full">
-Facture
+      <label>
+        Nom complet
 
-<select
-  name="invoice_id"
-  required
->
-<option value="">
-Sélectionner
-</option>
+        <input
+          name="full_name"
+          required
+        >
+      </label>
 
-${
-  invoices.map(i => `
-<option
-  value="${i.id}"
-  ${
-    invoiceId === i.id
-      ? "selected"
-      : ""
-  }
->
-${esc(
-  i.invoice_number ||
-  i.id
-)}
-—
-${esc(
-  clientName(i.client_id)
-)}
-—
-${money(i.total)}
-</option>
-`).join("")
-}
+      <label>
+        Téléphone
 
-</select>
+        <input
+          name="phone"
+          type="tel"
+        >
+      </label>
 
-</label>
+      <label>
+        E-mail
 
-<label>
-Montant
+        <input
+          name="email"
+          type="email"
+          required
+        >
+      </label>
 
-<input
-  type="number"
-  name="amount"
-  min="0.01"
-  step="0.01"
-  required
->
-</label>
+      <label>
+        Mot de passe initial
 
-<label>
-Mode de paiement
+        <input
+          name="password"
+          type="password"
+          minlength="8"
+          required
+        >
+      </label>
 
-<select
-  name="payment_method"
->
-${
-  Object.entries(paymentMethods)
-    .map(([k,v]) => `
-      <option value="${k}">
-        ${v}
-      </option>
-    `)
-    .join("")
-}
-</select>
+      <label>
+        Confirmation
 
-</label>
+        <input
+          name="password_confirm"
+          type="password"
+          minlength="8"
+          required
+        >
+      </label>
 
-<label>
-Date
+      <div class="full actions">
 
-<input
-  type="date"
-  name="payment_date"
-  value="${today()}"
->
-</label>
+        <button
+          type="button"
+          class="secondary"
+          id="cancelEmployee"
+        >
+          Annuler
+        </button>
 
-<label>
-Référence
+        <button
+          class="primary"
+        >
+          Créer le compte
+        </button>
 
-<input
-  name="reference"
-  placeholder="Référence transaction / chèque"
->
-</label>
-
-<label class="full">
-Notes
-
-<textarea
-  name="notes"
-></textarea>
-
-</label>
-
-<div class="full actions">
-
-<button
-  type="button"
-  class="secondary"
-  id="cancelForm"
->
-Annuler
-</button>
-
-<button class="primary">
-Enregistrer
-</button>
-
-</div>
-
-</div>
-`;
+      </div>
+    </div>
+  `;
 
   document.getElementById(
-    "cancelForm"
+    "cancelEmployee"
   ).onclick = closeModal;
 
   document.getElementById(
     "recordForm"
-  ).onsubmit = async e => {
-    e.preventDefault();
-
-    try {
-      const p =
-        Object.fromEntries(
-          new FormData(
-            e.target
-          ).entries()
-        );
-
-      p.amount =
-        Number(p.amount);
-
-      const x =
-        await insert(
-          "payments",
-          p
-        );
-
-      await recalcInvoicePaid(
-        p.invoice_id
-      );
-
-      await audit(
-        "insert",
-        "payments",
-        x.id,
-        p
-      );
-
-      closeModal();
-      render();
-
-      toast(
-        "Paiement enregistré."
-      );
-
-    } catch (err) {
-      console.error(err);
-
-      toast(
-        err.message ||
-        "Erreur lors de l'enregistrement du paiement."
-      );
-    }
-  };
-
-  document
-    .getElementById("modal")
-    .classList.remove("hidden");
-}
-
-async function recalcInvoicePaid(
-  invoiceId
-) {
-  const inv =
-    (state.db.invoices || [])
-      .find(
-        x => x.id === invoiceId
-      );
-
-  if (!inv) return;
-
-  const paid =
-    (state.db.payments || [])
-      .filter(
-        x =>
-          x.invoice_id ===
-          invoiceId
-      )
-      .reduce(
-        (a,x) =>
-          a + Number(x.amount || 0),
-        0
-      );
-
-  const total =
-    Number(inv.total || 0);
-
-  let status =
-    inv.status;
-
-  if (
-    status !== "cancelled" &&
-    status !== "draft"
-  ) {
-    status =
-      paid >= total &&
-      total > 0
-        ? "paid"
-        : paid > 0
-        ? "partial"
-        : (
-            inv.due_date &&
-            inv.due_date < today()
-          )
-          ? "overdue"
-          : "unpaid";
-  }
-
-  inv.amount_paid =
-    paid;
-
-  inv.amount_due =
-    Math.max(
-      0,
-      total - paid
-    );
-
-  inv.status =
-    status;
-
-  if (state.cloud) {
-    const { error } =
-      await sb
-        .from("invoices")
-        .update({
-          amount_paid: paid,
-          amount_due:
-            Math.max(
-              0,
-              total - paid
-            ),
-          status
-        })
-        .eq(
-          "id",
-          invoiceId
-        );
-
-    if (error) throw error;
-  } else {
-    saveLocal();
-  }
-}
-
-async function deletePayment(id) {
-  if (
-    !confirm(
-      "Supprimer ce paiement ?"
-    )
-  ) {
-    return;
-  }
-
-  try {
-    const p =
-      (state.db.payments || [])
-        .find(
-          x => x.id === id
-        );
-
-    await remove(
-      "payments",
-      id
-    );
-
-    if (p?.invoice_id) {
-      await recalcInvoicePaid(
-        p.invoice_id
-      );
-    }
-
-    await audit(
-      "delete",
-      "payments",
-      id
-    );
-
-    render();
-
-    toast(
-      "Paiement supprimé."
-    );
-
-  } catch (e) {
-    toast(e.message);
-  }
-}
-
-function reports() {
-  const sum = t =>
-    (state.db[t] || [])
-      .reduce(
-        (a,x) =>
-          a + Number(x.amount || 0),
-        0
-      );
-
-  const sales =
-    sum("sales");
-
-  const purchases =
-    sum("purchases");
-
-  const expenses =
-    sum("expenses");
-
-  return `
-<div class="grid cards">
-
-<div class="card">
-<h3>Chiffre des ventes</h3>
-<strong>${money(sales)}</strong>
-</div>
-
-<div class="card">
-<h3>Total achats</h3>
-<strong>${money(purchases)}</strong>
-</div>
-
-<div class="card">
-<h3>Total dépenses</h3>
-<strong>${money(expenses)}</strong>
-</div>
-
-</div>
-
-<div
-  class="card"
-  style="margin-top:16px"
->
-
-<h3>
-Résultat simplifié
-</h3>
-
-<p>
-Ventes − achats − dépenses
-</p>
-
-<strong>
-${money(
-  sales -
-  purchases -
-  expenses
-)}
-</strong>
-
-</div>
-
-<div
-  class="toolbar"
-  style="margin-top:16px"
->
-
-<button
-  class="secondary"
-  id="exportSalesCsv"
->
-Exporter les ventes CSV
-</button>
-
-<button
-  class="secondary"
-  id="exportAllCsv"
->
-Exporter tout en CSV
-</button>
-
-<button
-  class="secondary"
-  id="backupBtn"
->
-Sauvegarder toutes les données
-</button>
-
-</div>
-`;
-}
-
-function auditPage() {
-  if (state.role !== "admin") {
-    return `
-<div class="card">
-<h3>Accès réservé</h3>
-<p class="muted">
-Le journal des actions est réservé à l’administrateur.
-</p>
-</div>
-`;
-  }
-
-  const arr =
-    state.db.audit_logs || [];
-
-  return `
-<div class="toolbar">
-
-<div class="muted">
-${arr.length}
-action(s) enregistrée(s)
-</div>
-
-<button
-  class="secondary"
-  id="exportAuditCsv"
->
-Exporter le journal CSV
-</button>
-
-</div>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>Date</th>
-<th>Action</th>
-<th>Entité</th>
-<th>Détails</th>
-</tr>
-</thead>
-
-<tbody>
-
-${
-  arr.map(x => `
-<tr>
-
-<td>
-${
-  x.created_at
-    ? new Date(
-        x.created_at
-      ).toLocaleString("fr-FR")
-    : ""
-}
-</td>
-
-<td>
-${esc(x.action)}
-</td>
-
-<td>
-${esc(x.entity)}
-</td>
-
-<td>
-${esc(
-  safeJson(
-    x.details || {}
-  )
-)}
-</td>
-
-</tr>
-`).join("")
-||
-`
-<tr>
-<td colspan="4">
-<div class="empty">
-Aucune action enregistrée.
-</div>
-</td>
-</tr>
-`
-}
-
-</tbody>
-
-</table>
-
-</div>
-`;
-}
-
-function settings() {
-  const s =
-    (state.db.settings || [])
-      .find(
-        x =>
-          x.user_id ===
-          state.user.id
-      ) || {};
-
-  return `
-<div class="card">
-
-<h3>
-Informations de l’entreprise
-</h3>
-
-<form
-  id="settingsForm"
-  class="form-grid"
->
-
-<label>
-Nom
-
-<input
-  name="company_name"
-  value="${esc(
-    s.company_name ||
-    "LUC BRICO-TECH"
-  )}"
->
-</label>
-
-<label>
-Adresse
-
-<input
-  name="address"
-  value="${esc(
-    s.address ||
-    "Hévié Hounzévié, Abomey-Calavi"
-  )}"
->
-</label>
-
-<label>
-Téléphone
-
-<input
-  name="phone"
-  value="${esc(
-    s.phone ||
-    "01 67 02 84 91"
-  )}"
->
-</label>
-
-<label>
-Email
-
-<input
-  name="email"
-  value="${esc(
-    s.email || ""
-  )}"
->
-</label>
-
-<div class="full">
-
-<button class="primary">
-Enregistrer
-</button>
-
-</div>
-
-</form>
-
-</div>
-`;
-}
-
-async function saveSettings(e) {
-  e.preventDefault();
-
-  const f =
-    new FormData(e.target);
-
-  const p =
-    Object.fromEntries(
-      f.entries()
-    );
-
-  try {
-    if (!state.cloud) {
-      const arr =
-        state.db.settings || [];
-
-      const existing =
-        arr.find(
-          x =>
-            x.user_id ===
-            state.user.id
-        );
-
-      if (existing) {
-        Object.assign(
-          existing,
-          p,
-          {
-            updated_at: now()
-          }
-        );
-      } else {
-        arr.unshift({
-          id: uid(),
-          user_id:
-            state.user.id,
-          created_at: now(),
-          updated_at: now(),
-          ...p
-        });
-      }
-
-      state.db.settings =
-        arr;
-
-      saveLocal();
-
-    } else {
-      const {
-        data,
-        error
-      } = await sb
-        .from("settings")
-        .upsert(
-          {
-            user_id:
-              state.user.id,
-            ...p,
-            updated_at: now()
-          },
-          {
-            onConflict:
-              "user_id"
-          }
-        )
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const arr =
-        state.db.settings || [];
-
-      const i =
-        arr.findIndex(
-          x =>
-            x.user_id ===
-            state.user.id
-        );
-
-      if (i >= 0) {
-        arr[i] = data;
-      } else {
-        arr.unshift(data);
-      }
-
-      state.db.settings =
-        arr;
-    }
-
-    await audit(
-      "update",
-      "settings",
-      state.user.id,
-      p
-    );
-
-    toast(
-      "Paramètres enregistrés."
-    );
-
-    render();
-
-  } catch (err) {
-    console.error(err);
-
-    toast(
-      err.message ||
-      "Erreur lors de l’enregistrement."
-    );
-  }
-}
-
-function openForm(
-  table,
-  id = null
-) {
-  const schema =
-    schemas[table];
-
-  if (!schema) return;
-
-  const old =
-    id
-      ? (state.db[table] || [])
-          .find(
-            x => x.id === id
-          )
-      : null;
-
-  document.getElementById(
-    "modalTitle"
-  ).textContent =
-    id
-      ? "Modifier"
-      : schema.title;
-
-  document.getElementById(
-    "recordForm"
-  ).innerHTML = `
-<div class="form-grid">
-
-${
-  schema.fields
-    .map(f => {
-      const [
-        name,
-        label,
-        type,
-        req,
-        opts
-      ] = f;
-
-      const v =
-        old?.[name] ?? "";
-
-      if (type === "textarea") {
-        return `
-<label class="full">
-${label}
-
-<textarea
-  name="${name}"
->${esc(v)}</textarea>
-
-</label>
-`;
-      }
-
-      if (type === "select") {
-        return `
-<label>
-${label}
-
-<select name="${name}">
-
-${
-  opts
-    .map(o => `
-<option
-  value="${o}"
-  ${
-    v === o
-      ? "selected"
-      : ""
-  }
->
-${o}
-</option>
-`)
-.join("")
-}
-
-</select>
-
-</label>
-`;
-      }
-
-      return `
-<label>
-${label}
-
-<input
-  name="${name}"
-  type="${type}"
-  value="${esc(v)}"
-  ${req ? "required" : ""}
->
-
-</label>
-`;
-    })
-    .join("")
-}
-
-<div class="full actions">
-
-<button
-  type="button"
-  class="secondary"
-  id="cancelForm"
->
-Annuler
-</button>
-
-<button class="primary">
-Enregistrer
-</button>
-
-</div>
-
-</div>
-`;
-
-  document.getElementById(
-    "cancelForm"
-  ).onclick =
-    closeModal;
-
-  document.getElementById(
-    "recordForm"
-  ).onsubmit = async e => {
-    e.preventDefault();
-
-    const p =
-      Object.fromEntries(
+  ).onsubmit =
+    async event => {
+      event.preventDefault();
+
+      const formData =
         new FormData(
-          e.target
-        ).entries()
-      );
+          event.target
+        );
 
-    for (const f of schema.fields) {
+      const fullName =
+        String(
+          formData.get(
+            "full_name"
+          ) || ""
+        ).trim();
+
+      const phone =
+        String(
+          formData.get(
+            "phone"
+          ) || ""
+        ).trim();
+
+      const email =
+        String(
+          formData.get(
+            "email"
+          ) || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const password =
+        String(
+          formData.get(
+            "password"
+          ) || ""
+        );
+
+      const confirmation =
+        String(
+          formData.get(
+            "password_confirm"
+          ) || ""
+        );
+
       if (
-        f[2] === "number" &&
-        p[f[0]] !== ""
+        password !==
+        confirmation
       ) {
-        p[f[0]] =
-          Number(p[f[0]]);
-      }
-    }
-
-    try {
-      if (id) {
-        await update(
-          table,
-          id,
-          p
+        toast(
+          "Les mots de passe ne correspondent pas."
         );
-      } else {
-        await insert(
-          table,
-          p
-        );
+        return;
       }
 
-      await audit(
-        id
-          ? "update"
-          : "insert",
-        table,
-        id || null,
-        p
-      );
+      if (
+        password.length < 8
+      ) {
+        toast(
+          "Le mot de passe doit contenir au moins 8 caractères."
+        );
+        return;
+      }
 
-      toast("Enregistré.");
+      try {
+        if (
+          !state.cloud ||
+          !sb
+        ) {
+          const profile = {
+            id: uid(),
+            full_name:
+              fullName,
+            phone,
+            email,
+            role: "employee",
+            active: true,
+            created_at:
+              now()
+          };
 
-      closeModal();
-      render();
+          state.db.profiles.unshift(
+            profile
+          );
 
-    } catch (err) {
-      toast(err.message);
-    }
-  };
+          saveLocal();
+
+          await audit(
+            "insert",
+            "profiles",
+            profile.id,
+            {
+              full_name:
+                fullName,
+              email
+            }
+          );
+
+          toast(
+            "Compte employé créé en mode démo."
+          );
+
+          closeModal();
+
+          render();
+
+          return;
+        }
+
+        const {
+          data: sessionData
+        } = await sb.auth.getSession();
+
+        const accessToken =
+          sessionData?.session
+            ?.access_token;
+
+        if (!accessToken) {
+          throw new Error(
+            "Session administrateur introuvable."
+          );
+        }
+
+        const functionUrl =
+          `${CFG.SUPABASE_URL}/functions/v1/create-employee`;
+
+        const response =
+          await fetch(
+            functionUrl,
+            {
+              method: "POST",
+              headers: {
+                Authorization:
+                  `Bearer ${accessToken}`,
+                apikey:
+                  CFG.SUPABASE_ANON_KEY,
+                "Content-Type":
+                  "application/json"
+              },
+              body:
+                JSON.stringify({
+                  full_name:
+                    fullName,
+                  email,
+                  password,
+                  phone
+                })
+            }
+          );
+
+        const result =
+          await response
+            .json()
+            .catch(
+              () => ({})
+            );
+
+        if (
+          !response.ok ||
+          !result.success
+        ) {
+          throw new Error(
+            result.error ||
+              "Impossible de créer le compte employé."
+          );
+        }
+
+        await syncCloud();
+
+        await audit(
+          "insert",
+          "profiles",
+          result.user?.id ||
+            null,
+          {
+            full_name:
+              fullName,
+            email
+          }
+        );
+
+        toast(
+          "Compte employé créé."
+        );
+
+        closeModal();
+
+        render();
+      } catch (error) {
+        console.error(
+          "Création employé :",
+          error
+        );
+
+        toast(
+          error.message ||
+            "Impossible de créer le compte."
+        );
+      }
+    };
 
   document
     .getElementById("modal")
     .classList.remove("hidden");
-}
-
-function closeModal() {
-  document
-    .getElementById("modal")
-    .classList.add("hidden");
-}
-
-async function del(
-  table,
-  id
-) {
-  if (state.role !== "admin") {
-    return toast(
-      "La suppression est réservée à l’administrateur."
-    );
-  }
-
-  if (
-    !confirm(
-      "Supprimer cet enregistrement ?"
-    )
-  ) {
-    return;
-  }
-
-  try {
-    await remove(
-      table,
-      id
-    );
-
-    await audit(
-      "delete",
-      table,
-      id
-    );
-
-    toast("Supprimé.");
-
-    render();
-
-  } catch (e) {
-    toast(e.message);
-  }
-}
-
-function safeJson(value) {
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value ?? "");
-  }
 }
 
 function csvCell(value) {
   let text =
     value == null
       ? ""
-      : (
-          typeof value === "object"
-            ? safeJson(value)
-            : String(value)
-        );
+      : typeof value ===
+        "object"
+      ? safeJson(value)
+      : String(value);
 
   if (
     /^[=+\-@]/.test(text)
@@ -4393,11 +6368,12 @@ function rowsToCsv(
       .map(csvCell)
       .join(","),
 
-    ...rows.map(r =>
+    ...rows.map(row =>
       headers
-        .map(
-          h =>
-            csvCell(r[h])
+        .map(header =>
+          csvCell(
+            row[header]
+          )
         )
         .join(",")
     )
@@ -4405,33 +6381,37 @@ function rowsToCsv(
 }
 
 function exportSalesCsv() {
-  const rows =
-    (state.db.sales || [])
-      .map(x => ({
-        Client:
-          x.customer || "",
+  const rows = (
+    state.db.sales || []
+  ).map(item => ({
+    Client:
+      item.customer || "",
 
-        Article:
-          x.item || "",
+    Article:
+      item.item || "",
 
-        Quantité:
-          x.quantity ?? "",
+    Quantité:
+      item.quantity ?? "",
 
-        Montant:
-          x.amount ?? 0,
+    Montant:
+      item.amount ?? 0,
 
-        Paiement:
-          x.payment_method || "",
+    Paiement:
+      paymentMethodLabel(
+        item.payment_method
+      ),
 
-        Statut:
-          x.status || "",
+    Statut:
+      statusLabel(
+        item.status
+      ),
 
-        Notes:
-          x.notes || "",
+    Notes:
+      item.notes || "",
 
-        Date:
-          x.created_at || ""
-      }));
+    Date:
+      item.created_at || ""
+  }));
 
   downloadFile(
     "luc-bricotech-ventes.csv",
@@ -4473,13 +6453,15 @@ function exportAllCsv() {
 
     (
       state.db[table] || []
-    ).forEach(x => {
-      const r = map(x);
+    ).forEach(item => {
+      const row = map(item);
 
       sections.push(
         headers
-          .map(h =>
-            csvCell(r[h])
+          .map(header =>
+            csvCell(
+              row[header]
+            )
           )
           .join(",")
       );
@@ -4501,23 +6483,27 @@ function exportAllCsv() {
       "Notes",
       "Date"
     ],
-    x => ({
+    item => ({
       Client:
-        x.customer || "",
+        item.customer || "",
       Article:
-        x.item || "",
+        item.item || "",
       Quantité:
-        x.quantity ?? "",
+        item.quantity ?? "",
       Montant:
-        x.amount ?? 0,
+        item.amount ?? 0,
       Paiement:
-        x.payment_method || "",
+        paymentMethodLabel(
+          item.payment_method
+        ),
       Statut:
-        x.status || "",
+        statusLabel(
+          item.status
+        ),
       Notes:
-        x.notes || "",
+        item.notes || "",
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4533,21 +6519,23 @@ function exportAllCsv() {
       "Notes",
       "Date"
     ],
-    x => ({
+    item => ({
       Fournisseur:
-        x.supplier || "",
+        item.supplier || "",
       Article:
-        x.item || "",
+        item.item || "",
       Quantité:
-        x.quantity ?? "",
+        item.quantity ?? "",
       Montant:
-        x.amount ?? 0,
+        item.amount ?? 0,
       Statut:
-        x.status || "",
+        statusLabel(
+          item.status
+        ),
       Notes:
-        x.notes || "",
+        item.notes || "",
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4562,19 +6550,20 @@ function exportAllCsv() {
       "Notes",
       "Date"
     ],
-    x => ({
+    item => ({
       Catégorie:
-        x.category || "",
+        item.category || "",
       Libellé:
-        x.label || "",
+        item.label || "",
       Montant:
-        x.amount ?? 0,
+        item.amount ?? 0,
       Bénéficiaire:
-        x.beneficiary || "",
+        item.beneficiary ||
+        "",
       Notes:
-        x.notes || "",
+        item.notes || "",
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4590,21 +6579,24 @@ function exportAllCsv() {
       "Montant",
       "Date"
     ],
-    x => ({
+    item => ({
       Titre:
-        x.title || "",
+        item.title || "",
       Catégorie:
-        x.category || "",
+        item.category || "",
       Description:
-        x.description || "",
+        item.description ||
+        "",
       Lieu:
-        x.location || "",
+        item.location || "",
       Statut:
-        x.status || "",
+        statusLabel(
+          item.status
+        ),
       Montant:
-        x.amount ?? 0,
+        item.amount ?? 0,
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4620,21 +6612,24 @@ function exportAllCsv() {
       "Budget",
       "Date"
     ],
-    x => ({
+    item => ({
       Nom:
-        x.name || "",
+        item.name || "",
       Client:
-        x.client || "",
+        item.client || "",
       Description:
-        x.description || "",
+        item.description ||
+        "",
       Statut:
-        x.status || "",
+        statusLabel(
+          item.status
+        ),
       Progression:
-        x.progress ?? "",
+        item.progress ?? "",
       Budget:
-        x.budget ?? 0,
+        item.budget ?? 0,
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4649,19 +6644,22 @@ function exportAllCsv() {
       "Progression",
       "Date"
     ],
-    x => ({
+    item => ({
       Titre:
-        x.title || "",
+        item.title || "",
       Description:
-        x.description || "",
+        item.description ||
+        "",
       Étape:
-        x.stage || "",
+        statusLabel(
+          item.stage
+        ),
       Budget:
-        x.budget ?? 0,
+        item.budget ?? 0,
       Progression:
-        x.progress ?? "",
+        item.progress ?? "",
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4677,21 +6675,22 @@ function exportAllCsv() {
       "Emplacement",
       "Date"
     ],
-    x => ({
+    item => ({
       Article:
-        x.name || "",
+        item.name || "",
       Catégorie:
-        x.category || "",
+        item.category || "",
       Unité:
-        x.unit || "",
+        item.unit || "",
       Quantité:
-        x.quantity ?? "",
+        item.quantity ?? "",
       "Seuil minimum":
-        x.min_quantity ?? "",
+        item.min_quantity ??
+        "",
       Emplacement:
-        x.location || "",
+        item.location || "",
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4706,19 +6705,20 @@ function exportAllCsv() {
       "Ville",
       "Date"
     ],
-    x => ({
+    item => ({
       Nom:
-        x.full_name || "",
+        item.full_name || "",
       Entreprise:
-        x.company_name || "",
+        item.company_name ||
+        "",
       Téléphone:
-        x.phone || "",
+        item.phone || "",
       Email:
-        x.email || "",
+        item.email || "",
       Ville:
-        x.city || "",
+        item.city || "",
       Date:
-        x.created_at || ""
+        item.created_at || ""
     })
   );
 
@@ -4735,26 +6735,31 @@ function exportAllCsv() {
       "Reste",
       "Statut"
     ],
-    x => ({
+    item => ({
       Numéro:
-        x.invoice_number || "",
+        item.invoice_number ||
+        "",
       Client:
         clientName(
-          x.client_id
+          item.client_id
         ),
       Date:
-        x.issue_date || "",
+        item.issue_date || "",
       Échéance:
-        x.due_date || "",
+        item.due_date || "",
       Total:
-        x.total ?? 0,
+        item.total ?? 0,
       Payé:
-        x.amount_paid ?? 0,
+        item.amount_paid ??
+        0,
       Reste:
-        x.amount_due ?? 0,
+        item.amount_due ??
+        0,
       Statut:
         statusLabel(
-          invoiceDisplayStatus(x)
+          invoiceDisplayStatus(
+            item
+          )
         )
     })
   );
@@ -4767,25 +6772,39 @@ function exportAllCsv() {
       "Montant",
       "Mode",
       "Date",
-      "Référence"
+      "Référence",
+      "Notes"
     ],
-    x => ({
+    item => ({
       Facture:
         (
-          state.db.invoices || []
+          state.db.invoices ||
+          []
         ).find(
-          i =>
-            i.id ===
-            x.invoice_id
-        )?.invoice_number || "",
+          invoice =>
+            invoice.id ===
+            item.invoice_id
+        )?.invoice_number ||
+        "",
+
       Montant:
-        x.amount ?? 0,
+        item.amount ?? 0,
+
       Mode:
-        x.payment_method || "",
+        paymentMethodLabel(
+          item.payment_method
+        ),
+
       Date:
-        x.payment_date || "",
+        item.payment_date ||
+        "",
+
       Référence:
-        x.reference || ""
+        item.reference ||
+        "",
+
+      Notes:
+        item.notes || ""
     })
   );
 
@@ -4798,27 +6817,29 @@ function exportAllCsv() {
 
 function exportAuditCsv() {
   if (state.role !== "admin") {
-    return toast(
+    toast(
       "Export du journal réservé à l’administrateur."
     );
+    return;
   }
 
-  const rows =
-    (state.db.audit_logs || [])
-      .map(x => ({
-        Date:
-          x.created_at || "",
-        Action:
-          x.action || "",
-        Entité:
-          x.entity || "",
-        "ID entité":
-          x.entity_id || "",
-        Détails:
-          safeJson(
-            x.details || {}
-          )
-      }));
+  const rows = (
+    state.db.audit_logs ||
+    []
+  ).map(item => ({
+    Date:
+      item.created_at || "",
+    Action:
+      item.action || "",
+    Entité:
+      item.entity || "",
+    "ID entité":
+      item.entity_id || "",
+    Détails:
+      safeJson(
+        item.details || {}
+      )
+  }));
 
   downloadFile(
     "luc-bricotech-journal.csv",
@@ -4843,17 +6864,12 @@ function backupAllData() {
       {
         application:
           "LUC BRICO-TECH",
-
-        exported_at:
-          now(),
-
+        exported_at: now(),
         role:
           state.role,
-
         user_id:
           state.user?.id ||
           null,
-
         data:
           state.db
       },
@@ -4867,43 +6883,54 @@ function backupAllData() {
 function downloadFile(
   name,
   data,
-  mime =
-    "text/plain;charset=utf-8"
+  mime = "text/plain;charset=utf-8"
 ) {
   try {
     const content =
       String(data ?? "");
 
-    const blob =
-      new Blob(
-        ["\uFEFF", content],
-        { type: mime }
-      );
+    const blob = new Blob(
+      [
+        "\uFEFF",
+        content
+      ],
+      {
+        type: mime
+      }
+    );
 
     const url =
-      URL.createObjectURL(blob);
+      URL.createObjectURL(
+        blob
+      );
 
-    const a =
-      document.createElement("a");
+    const link =
+      document.createElement(
+        "a"
+      );
 
-    a.href = url;
-    a.download = name;
-    a.rel = "noopener";
-    a.style.display = "none";
+    link.href = url;
+    link.download = name;
+    link.rel = "noopener";
+    link.style.display =
+      "none";
 
-    document.body.appendChild(a);
+    document.body.appendChild(
+      link
+    );
 
-    a.click();
+    link.click();
 
     setTimeout(() => {
-      a.remove();
-      URL.revokeObjectURL(url);
+      link.remove();
+      URL.revokeObjectURL(
+        url
+      );
     }, 1500);
 
     toast(
       `Export terminé : ${name}`
     );
-
   } catch (error) {
     console.error(
       "Erreur export :",
@@ -4917,40 +6944,46 @@ function downloadFile(
         "," +
         encodeURIComponent(
           "\uFEFF" +
-          String(data ?? "")
+            String(
+              data ?? ""
+            )
         );
 
-      const fallback =
-        document.createElement("a");
+      const link =
+        document.createElement(
+          "a"
+        );
 
-      fallback.href =
+      link.href =
         dataUrl;
 
-      fallback.download =
+      link.download =
         name;
 
-      fallback.target =
+      link.target =
         "_blank";
 
-      fallback.rel =
+      link.rel =
         "noopener";
 
       document.body.appendChild(
-        fallback
+        link
       );
 
-      fallback.click();
+      link.click();
 
       setTimeout(
-        () => fallback.remove(),
+        () =>
+          link.remove(),
         1000
       );
 
       toast(
         `Fichier prêt : ${name}`
       );
-
-    } catch (fallbackError) {
+    } catch (
+      fallbackError
+    ) {
       console.error(
         "Erreur export fallback :",
         fallbackError
@@ -4965,9 +6998,9 @@ function downloadFile(
 
 document.addEventListener(
   "click",
-  e => {
+  event => {
     const button =
-      e.target.closest?.(
+      event.target.closest?.(
         "#exportSalesCsv, #exportAllCsv, #exportAuditCsv, #backupBtn"
       );
 
@@ -4978,20 +7011,23 @@ document.addEventListener(
       "exportSalesCsv"
     ) {
       exportSalesCsv();
+    }
 
-    } else if (
+    if (
       button.id ===
       "exportAllCsv"
     ) {
       exportAllCsv();
+    }
 
-    } else if (
+    if (
       button.id ===
       "exportAuditCsv"
     ) {
       exportAuditCsv();
+    }
 
-    } else if (
+    if (
       button.id ===
       "backupBtn"
     ) {
@@ -5005,35 +7041,39 @@ if (
     "lbt-doc-status-style"
   )
 ) {
-  const st =
-    document.createElement("style");
+  const style =
+    document.createElement(
+      "style"
+    );
 
-  st.id =
+  style.id =
     "lbt-doc-status-style";
 
-  st.textContent = `
-.badge.success{
-  background:#dcfce7;
-  color:#166534
-}
+  style.textContent = `
+    .badge.success{
+      background:#dcfce7;
+      color:#166534
+    }
 
-.badge.warn{
-  background:#fef3c7;
-  color:#92400e
-}
+    .badge.warn{
+      background:#fef3c7;
+      color:#92400e
+    }
 
-.badge.danger{
-  background:#fee2e2;
-  color:#991b1b
-}
+    .badge.danger{
+      background:#fee2e2;
+      color:#991b1b
+    }
 
-.badge.muted{
-  background:#e5e7eb;
-  color:#374151
-}
-`;
+    .badge.muted{
+      background:#e5e7eb;
+      color:#374151
+    }
+  `;
 
-  document.head.appendChild(st);
+  document.head.appendChild(
+    style
+  );
 }
 
 boot();
