@@ -1041,51 +1041,690 @@ function dashboard(){
        Centralisez les opérations et gardez une vision claire de l’activité.
      </span>
    </div>
+function dashboard(){
 
-   <div class="quick-actions">
+  const db = state.db || {};
 
-     <button
-       class="primary"
-       data-add="sales">
-       + Vente
-     </button>
+  /* =========================
+     DONNÉES PRINCIPALES
+  ========================= */
 
-     <button
-       class="secondary"
-       data-add="activities">
-       + Activité
-     </button>
+  const sales = db.sales || [];
+  const purchases = db.purchases || [];
+  const expenses = db.expenses || [];
+  const invoices = db.invoices || [];
+  const payments = db.payments || [];
+  const stock = db.stock_items || [];
+  const activities = db.activities || [];
+  const projects = db.projects || [];
+  const innovations = db.innovations || [];
 
-     <button
-       class="secondary"
-       data-add="projects">
-       + Projet
-     </button>
+  /* =========================
+     CALCULS FINANCIERS
+  ========================= */
 
-   </div>
+  const totalSales = sales.reduce(
+    (sum, x) => sum + Number(x.total || x.amount || 0),
+    0
+  );
 
- </div>
+  const totalPurchases = purchases.reduce(
+    (sum, x) => sum + Number(x.total || x.amount || 0),
+    0
+  );
 
- <div
-   class="grid cards"
-   style="margin-top:16px">
+  const totalExpenses = expenses.reduce(
+    (sum, x) => sum + Number(x.amount || 0),
+    0
+  );
 
-   <div class="card">
-     <h3>Activités récentes</h3>
-     ${recent("activities","title")}
-   </div>
+  const totalPayments = payments.reduce(
+    (sum, x) => sum + Number(x.amount || 0),
+    0
+  );
 
-   <div class="card">
-     <h3>Projets</h3>
-     ${recent("projects","name")}
-   </div>
+  const totalInvoices = invoices.reduce(
+    (sum, x) => sum + Number(x.total || 0),
+    0
+  );
 
-   <div class="card">
-     <h3>Innovations</h3>
-     ${recent("innovations","title")}
-   </div>
+  const unpaidInvoices = invoices.filter(x =>
+    ["unpaid","partial","overdue"].includes(x.status)
+  );
 
- </div>`;
+  const unpaidAmount = unpaidInvoices.reduce(
+    (sum, x) => sum + Number(
+      x.amount_due != null
+        ? x.amount_due
+        : Number(x.total || 0) - Number(x.amount_paid || 0)
+    ),
+    0
+  );
+
+  const estimatedResult =
+    totalSales - totalPurchases - totalExpenses;
+
+  /* =========================
+     STOCK
+  ========================= */
+
+  const stockValue = stock.reduce(
+    (sum, x) =>
+      sum +
+      Number(x.quantity || 0) *
+      Number(x.unit_price || x.cost_price || 0),
+    0
+  );
+
+  const lowStockItems = stock.filter(x =>
+    Number(x.quantity || 0) <= Number(x.min_quantity || 0)
+  );
+
+  const lowStock = lowStockItems.length;
+
+  const outOfStock = stock.filter(
+    x => Number(x.quantity || 0) <= 0
+  ).length;
+
+  /* =========================
+     PROJETS
+  ========================= */
+
+  const activeProjects = projects.filter(x =>
+    !["completed","closed","cancelled"].includes(
+      String(x.status || "").toLowerCase()
+    )
+  ).length;
+
+  /* =========================
+     UTILITAIRES
+  ========================= */
+
+  const money = value =>
+    Number(value || 0).toLocaleString("fr-FR") + " FCFA";
+
+  const escapeHtml = value =>
+    String(value ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+
+  const invoiceStatus = status => {
+
+    const labels = {
+      draft: "Brouillon",
+      unpaid: "Impayée",
+      partial: "Partiellement payée",
+      paid: "Payée",
+      overdue: "En retard",
+      cancelled: "Annulée"
+    };
+
+    return labels[status] || status || "Non défini";
+  };
+
+  /* =========================
+     PAGE
+  ========================= */
+
+  document.getElementById("content").innerHTML = `
+
+    <div class="dashboard-pro">
+
+      <!-- =====================
+           HERO
+      ====================== -->
+
+      <section class="dashboard-hero">
+
+        <div class="dashboard-hero-content">
+
+          <div class="dashboard-eyebrow">
+            CENTRE DE PILOTAGE
+          </div>
+
+          <h2>
+            Bienvenue sur votre espace
+            <strong>LUC BRICO-TECH</strong>
+          </h2>
+
+          <p>
+            Supervisez les ventes, les achats, les dépenses,
+            les factures, les paiements, le stock et les activités
+            de votre entreprise depuis un seul endroit.
+          </p>
+
+          <div class="dashboard-tags">
+
+            <span>⚡ Électricité</span>
+            <span>🔧 Maintenance</span>
+            <span>💻 Informatique</span>
+            <span>💡 Innovation</span>
+
+          </div>
+
+        </div>
+
+        <div class="dashboard-hero-side">
+
+          <div class="hero-logo-box">
+            <img
+              src="./logo-luc-bricotech.png"
+              alt="LUC BRICO-TECH"
+            >
+          </div>
+
+          <span>
+            Gestion & supervision
+          </span>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================
+           KPI FINANCIERS
+      ====================== -->
+
+      <div class="dashboard-section-title">
+
+        <div>
+          <span>FINANCES</span>
+          <h3>Vue financière</h3>
+        </div>
+
+        <small>
+          Situation actuelle de l'entreprise
+        </small>
+
+      </div>
+
+
+      <div class="dashboard-kpis">
+
+        <div class="dashboard-kpi kpi-sales">
+
+          <div class="kpi-icon">💰</div>
+
+          <div>
+            <span>Chiffre d'affaires</span>
+            <strong>${money(totalSales)}</strong>
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-kpi kpi-payment">
+
+          <div class="kpi-icon">💵</div>
+
+          <div>
+            <span>Paiements reçus</span>
+            <strong>${money(totalPayments)}</strong>
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-kpi kpi-invoice">
+
+          <div class="kpi-icon">🧾</div>
+
+          <div>
+            <span>Créances clients</span>
+            <strong>${money(unpaidAmount)}</strong>
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-kpi kpi-result">
+
+          <div class="kpi-icon">📊</div>
+
+          <div>
+            <span>Résultat estimé</span>
+            <strong>${money(estimatedResult)}</strong>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================
+           ACTIVITÉ FINANCIÈRE
+      ====================== -->
+
+      <div class="dashboard-finance-grid">
+
+        <div class="dashboard-panel">
+
+          <div class="panel-head">
+
+            <div>
+              <span class="panel-label">ENTRÉES</span>
+              <h3>Ventes</h3>
+            </div>
+
+            <span class="panel-icon">📈</span>
+
+          </div>
+
+          <strong class="big-number">
+            ${money(totalSales)}
+          </strong>
+
+          <p>
+            ${sales.length}
+            opération${sales.length > 1 ? "s" : ""}
+            enregistrée${sales.length > 1 ? "s" : ""}
+          </p>
+
+        </div>
+
+
+        <div class="dashboard-panel">
+
+          <div class="panel-head">
+
+            <div>
+              <span class="panel-label">SORTIES</span>
+              <h3>Achats</h3>
+            </div>
+
+            <span class="panel-icon">🛒</span>
+
+          </div>
+
+          <strong class="big-number">
+            ${money(totalPurchases)}
+          </strong>
+
+          <p>
+            ${purchases.length}
+            achat${purchases.length > 1 ? "s" : ""}
+          </p>
+
+        </div>
+
+
+        <div class="dashboard-panel">
+
+          <div class="panel-head">
+
+            <div>
+              <span class="panel-label">CHARGES</span>
+              <h3>Dépenses</h3>
+            </div>
+
+            <span class="panel-icon">💳</span>
+
+          </div>
+
+          <strong class="big-number">
+            ${money(totalExpenses)}
+          </strong>
+
+          <p>
+            ${expenses.length}
+            dépense${expenses.length > 1 ? "s" : ""}
+          </p>
+
+        </div>
+
+
+        <div class="dashboard-panel">
+
+          <div class="panel-head">
+
+            <div>
+              <span class="panel-label">FACTURATION</span>
+              <h3>Factures</h3>
+            </div>
+
+            <span class="panel-icon">🧾</span>
+
+          </div>
+
+          <strong class="big-number">
+            ${money(totalInvoices)}
+          </strong>
+
+          <p>
+            ${invoices.length}
+            facture${invoices.length > 1 ? "s" : ""}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================
+           ALERTES
+      ====================== -->
+
+      <div class="dashboard-section-title">
+
+        <div>
+          <span>SURVEILLANCE</span>
+          <h3>Points à surveiller</h3>
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-alert-grid">
+
+        <div class="dashboard-alert
+          ${unpaidInvoices.length ? "alert-warning" : "alert-ok"}">
+
+          <div class="alert-icon">🧾</div>
+
+          <div>
+
+            <strong>
+              ${unpaidInvoices.length}
+              facture${unpaidInvoices.length > 1 ? "s" : ""}
+            </strong>
+
+            <span>
+              ${unpaidInvoices.length
+                ? money(unpaidAmount) + " à recouvrer"
+                : "Aucune créance en attente"}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-alert
+          ${lowStock ? "alert-warning" : "alert-ok"}">
+
+          <div class="alert-icon">📦</div>
+
+          <div>
+
+            <strong>
+              ${lowStock}
+              article${lowStock > 1 ? "s" : ""}
+            </strong>
+
+            <span>
+              ${lowStock
+                ? "Stock faible ou à réapprovisionner"
+                : "Stock normal"}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-alert
+          ${outOfStock ? "alert-danger" : "alert-ok"}">
+
+          <div class="alert-icon">⚠️</div>
+
+          <div>
+
+            <strong>
+              ${outOfStock}
+              rupture${outOfStock > 1 ? "s" : ""}
+            </strong>
+
+            <span>
+              ${outOfStock
+                ? "Articles actuellement indisponibles"
+                : "Aucune rupture de stock"}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-alert alert-info">
+
+          <div class="alert-icon">🏗️</div>
+
+          <div>
+
+            <strong>
+              ${activeProjects}
+              projet${activeProjects > 1 ? "s" : ""}
+            </strong>
+
+            <span>
+              Projet${activeProjects > 1 ? "s" : ""} actuellement actif${activeProjects > 1 ? "s" : ""}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================
+           ACTIONS RAPIDES
+      ====================== -->
+
+      <div class="quick-strip">
+
+        <div>
+
+          <span class="quick-label">
+            LUC BRICO-TECH
+          </span>
+
+          <strong>
+            Votre besoin, notre solution.
+          </strong>
+
+          <span>
+            Centralisez les opérations et gardez
+            une vision claire de l'activité.
+          </span>
+
+        </div>
+
+
+        <div class="quick-actions">
+
+          <button
+            class="primary"
+            data-add="sales">
+            + Vente
+          </button>
+
+          <button
+            class="secondary"
+            data-add="activities">
+            + Activité
+          </button>
+
+          <button
+            class="secondary"
+            data-add="projects">
+            + Projet
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================
+           ACTIVITÉ ENTREPRISE
+      ====================== -->
+
+      <div class="dashboard-section-title">
+
+        <div>
+          <span>ACTIVITÉ</span>
+          <h3>Vue opérationnelle</h3>
+        </div>
+
+        <small>
+          Les dernières informations enregistrées
+        </small>
+
+      </div>
+
+
+      <div class="dashboard-three-columns">
+
+        <div class="dashboard-list-card">
+
+          <div class="dashboard-card-head">
+
+            <div>
+              <span>DERNIÈRES OPÉRATIONS</span>
+              <h3>Activités récentes</h3>
+            </div>
+
+            <span>🔧</span>
+
+          </div>
+
+          <div class="dashboard-list">
+            ${recent("activities","title")}
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-list-card">
+
+          <div class="dashboard-card-head">
+
+            <div>
+              <span>CHANTIERS</span>
+              <h3>Projets</h3>
+            </div>
+
+            <span>🏗️</span>
+
+          </div>
+
+          <div class="dashboard-list">
+            ${recent("projects","name")}
+          </div>
+
+        </div>
+
+
+        <div class="dashboard-list-card">
+
+          <div class="dashboard-card-head">
+
+            <div>
+              <span>CRÉATIVITÉ</span>
+              <h3>Innovations</h3>
+            </div>
+
+            <span>💡</span>
+
+          </div>
+
+          <div class="dashboard-list">
+            ${recent("innovations","title")}
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================
+           STOCK
+      ====================== -->
+
+      <div class="dashboard-stock-card">
+
+        <div>
+
+          <span class="panel-label">
+            STOCK & MATÉRIEL
+          </span>
+
+          <h3>
+            Situation du stock
+          </h3>
+
+          <p>
+            Suivez les ressources disponibles
+            et anticipez les réapprovisionnements.
+          </p>
+
+        </div>
+
+
+        <div class="stock-dashboard-stats">
+
+          <div>
+            <strong>
+              ${stock.length}
+            </strong>
+            <span>Articles</span>
+          </div>
+
+          <div>
+            <strong>
+              ${stockValue.toLocaleString("fr-FR")}
+            </strong>
+            <span>Valeur estimée</span>
+          </div>
+
+          <div class="${lowStock ? "stock-danger" : ""}">
+            <strong>
+              ${lowStock}
+            </strong>
+            <span>Stock faible</span>
+          </div>
+
+          <div class="${outOfStock ? "stock-danger" : ""}">
+            <strong>
+              ${outOfStock}
+            </strong>
+            <span>Rupture</span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================
+           SIGNATURE
+      ====================== -->
+
+      <div class="dashboard-footer-message">
+
+        <strong>
+          LUC BRICO-TECH
+        </strong>
+
+        <span>
+          Électricité • Maintenance • Informatique •
+          Innovation
+        </span>
+
+        <small>
+          La technologie au service de vos projets.
+        </small>
+
+      </div>
+
+    </div>
+  `;
+
 }
 
 function recent(t,key){
