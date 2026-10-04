@@ -520,7 +520,26 @@ const lowStock=(state.db.stock_items||[])
 .filter(x=>
 Number(x.quantity||0)<=Number(x.min_quantity||0)
 ).length;
+function dashboard(){
 
+const sum = table =>
+(state.db[table] || []).reduce(
+(total,row) => total + Number(row.amount || row.total || 0),
+0
+);
+
+const stock = (state.db.stock_items || [])
+.reduce(
+(total,row) => total + Number(row.quantity || 0),
+0
+);
+
+const lowStock = (state.db.stock_items || [])
+.filter(row =>
+Number(row.quantity || 0) <= Number(row.min_quantity || 0)
+).length;
+
+return `
 return `
 <section class="welcome-hero">
 <div class="hero-glow hero-glow-one"></div>
