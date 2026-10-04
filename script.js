@@ -5552,3 +5552,1197 @@ if(!document.getElementById("lbt-doc-status-style")){
 boot();
 
 })();
+
+// SUITE — MODULE CARTES EMPLOYÉS / MANAGER / ADMINISTRATEUR
+// À placer à la suite du code précédent.
+
+function employeeCardData(profile) {
+  const role = String(profile?.role || "employee").toLowerCase();
+
+  const roleLabels = {
+    admin: "ADMINISTRATEUR",
+    manager: "MANAGER",
+    employee: "EMPLOYÉ"
+  };
+
+  const roleCodes = {
+    admin: "ADM",
+    manager: "MGR",
+    employee: "EMP"
+  };
+
+  const roleLabel = roleLabels[role] || "EMPLOYÉ";
+  const roleCode = roleCodes[role] || "EMP";
+
+  const employeeCode =
+    profile?.employee_code ||
+    profile?.code_employe ||
+    `LBT-${roleCode}-${String(profile?.id || "")
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .slice(0, 8)
+      .toUpperCase()}`;
+
+  return {
+    id: profile?.id || "",
+    full_name:
+      profile?.full_name ||
+      profile?.name ||
+      profile?.email ||
+      "Utilisateur",
+
+    email: profile?.email || "",
+    phone: profile?.phone || "",
+    role,
+    roleLabel,
+    employeeCode,
+
+    active: profile?.active !== false,
+
+    department:
+      profile?.department ||
+      profile?.service ||
+      "LUC BRICO-TECH",
+
+    position:
+      profile?.position ||
+      roleLabel,
+
+    photo:
+      profile?.avatar_url ||
+      profile?.photo_url ||
+      profile?.photo ||
+      "",
+
+    address: profile?.address || "",
+    city: profile?.city || "",
+
+    created_at:
+      profile?.created_at ||
+      new Date().toISOString(),
+
+    qrData: {
+      type: "LBT_EMPLOYEE_CARD",
+      version: 1,
+      company: "LUC BRICO-TECH",
+      id: profile?.id || "",
+      code: employeeCode,
+      name:
+        profile?.full_name ||
+        profile?.name ||
+        profile?.email ||
+        "Utilisateur",
+      role: roleLabel,
+      active: profile?.active !== false
+    }
+  };
+}
+
+
+function employeeQrText(profile) {
+  const data = employeeCardData(profile);
+
+  return JSON.stringify({
+    type: data.qrData.type,
+    version: data.qrData.version,
+    company: data.qrData.company,
+    id: data.qrData.id,
+    code: data.qrData.code,
+    name: data.qrData.name,
+    role: data.qrData.role,
+    active: data.qrData.active
+  });
+}
+
+
+function qrImageUrl(text, size = 220) {
+  return (
+    "https://api.qrserver.com/v1/create-qr-code/" +
+    `?size=${size}x${size}` +
+    "&margin=8" +
+    "&data=" +
+    encodeURIComponent(text)
+  );
+}
+
+
+function employeeCardHtml(profile, options = {}) {
+  const data = employeeCardData(profile);
+
+  const photo = data.photo
+    ? data.photo
+    : "data:image/svg+xml;charset=UTF-8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="300"
+             height="300"
+             viewBox="0 0 300 300">
+          <rect width="300" height="300" fill="#eef2ff"/>
+          <circle cx="150" cy="105" r="55" fill="#9ca3af"/>
+          <path d="M55 265c10-65 48-95 95-95s85 30 95 95"
+                fill="#9ca3af"/>
+        </svg>
+      `);
+
+  const qr = qrImageUrl(employeeQrText(profile), 220);
+
+  const roleClass =
+    data.role === "admin"
+      ? "admin"
+      : data.role === "manager"
+      ? "manager"
+      : "employee";
+
+  return `
+    <div class="lbt-employee-card ${roleClass}" id="employee-card-${esc(data.id)}">
+
+      <div class="lbt-card-header">
+
+        <div class="lbt-card-brand">
+          <img
+            src="./logo-luc-bricotech.png"
+            alt="LUC BRICO-TECH"
+            class="lbt-card-logo"
+          >
+
+          <div>
+            <strong>LUC BRICO-TECH</strong>
+            <small>GESTION & SUPERVISION</small>
+          </div>
+        </div>
+
+        <span class="lbt-role-badge">
+          ${esc(data.roleLabel)}
+        </span>
+
+      </div>
+
+      <div class="lbt-card-body">
+
+        <div class="lbt-card-photo-box">
+          <img
+            src="${esc(photo)}"
+            alt="Photo de ${esc(data.full_name)}"
+            class="lbt-card-photo"
+          >
+        </div>
+
+        <div class="lbt-card-information">
+
+          <span class="lbt-card-label">
+            NOM ET PRÉNOM
+          </span>
+
+          <h2>
+            ${esc(data.full_name)}
+          </h2>
+
+          <div class="lbt-card-line">
+            <span>Code employé</span>
+            <strong>${esc(data.employeeCode)}</strong>
+          </div>
+
+          <div class="lbt-card-line">
+            <span>Fonction</span>
+            <strong>${esc(data.position)}</strong>
+          </div>
+
+          <div class="lbt-card-line">
+            <span>Service</span>
+            <strong>${esc(data.department)}</strong>
+          </div>
+
+          ${
+            data.email
+              ? `
+                <div class="lbt-card-line">
+                  <span>Email</span>
+                  <strong>${esc(data.email)}</strong>
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            data.phone
+              ? `
+                <div class="lbt-card-line">
+                  <span>Téléphone</span>
+                  <strong>${esc(data.phone)}</strong>
+                </div>
+              `
+              : ""
+          }
+
+        </div>
+
+        <div class="lbt-card-qr">
+
+          <img
+            src="${esc(qr)}"
+            alt="QR Code de vérification"
+            class="lbt-qr-image"
+          >
+
+          <strong>SCANNER POUR VÉRIFIER</strong>
+
+          <small>
+            ${esc(data.employeeCode)}
+          </small>
+
+        </div>
+
+      </div>
+
+      <div class="lbt-card-footer">
+
+        <div>
+          <strong>
+            ${
+              data.active
+                ? "COMPTE ACTIF"
+                : "COMPTE DÉSACTIVÉ"
+            }
+          </strong>
+
+          <span>
+            ${esc(data.roleLabel)}
+          </span>
+        </div>
+
+        <div>
+          <strong>
+            LUC BRICO-TECH
+          </strong>
+
+          <span>
+            Votre besoin, notre solution.
+          </span>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+function cardModal(profile) {
+
+  const data = employeeCardData(profile);
+
+  const old = document.getElementById("lbt-card-modal");
+
+  if (old) {
+    old.remove();
+  }
+
+  const wrapper = document.createElement("div");
+
+  wrapper.id = "lbt-card-modal";
+
+  wrapper.className = "lbt-card-modal";
+
+  wrapper.innerHTML = `
+    <div class="lbt-card-modal-overlay"></div>
+
+    <div class="lbt-card-modal-box">
+
+      <div class="lbt-card-modal-head">
+
+        <div>
+          <h2>Carte professionnelle</h2>
+          <p>
+            ${esc(data.full_name)}
+            — ${esc(data.roleLabel)}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="icon-btn"
+          id="lbt-card-close"
+        >
+          ✕
+        </button>
+
+      </div>
+
+      <div class="lbt-card-preview">
+
+        ${employeeCardHtml(profile)}
+
+      </div>
+
+      <div class="lbt-card-actions">
+
+        <button
+          type="button"
+          class="primary"
+          id="lbt-card-print"
+        >
+          🖨️ Imprimer
+        </button>
+
+        <button
+          type="button"
+          class="secondary"
+          id="lbt-card-download"
+        >
+          ⬇️ Télécharger
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(wrapper);
+
+  document
+    .getElementById("lbt-card-close")
+    ?.addEventListener("click", () => {
+      wrapper.remove();
+    });
+
+  wrapper
+    .querySelector(".lbt-card-modal-overlay")
+    ?.addEventListener("click", () => {
+      wrapper.remove();
+    });
+
+  document
+    .getElementById("lbt-card-print")
+    ?.addEventListener("click", () => {
+      printEmployeeCard(profile);
+    });
+
+  document
+    .getElementById("lbt-card-download")
+    ?.addEventListener("click", () => {
+      downloadEmployeeCard(profile);
+    });
+}
+
+
+function printEmployeeCard(profile) {
+
+  const data = employeeCardData(profile);
+
+  const html = employeeCardHtml(profile);
+
+  const win = window.open(
+    "",
+    "_blank",
+    "width=1000,height=800"
+  );
+
+  if (!win) {
+
+    toast(
+      "Autorisez les fenêtres pop-up pour imprimer la carte."
+    );
+
+    return;
+  }
+
+  win.document.write(`
+    <!doctype html>
+
+    <html lang="fr">
+
+    <head>
+
+      <meta charset="utf-8">
+
+      <title>
+        Carte - ${esc(data.full_name)}
+      </title>
+
+      <style>
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          padding: 30px;
+          background: white;
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+        }
+
+        .lbt-employee-card {
+          width: 856px;
+          min-height: 540px;
+          margin: 0 auto;
+          border-radius: 28px;
+          overflow: hidden;
+          background: #ffffff;
+          border: 1px solid #dbe3f0;
+          box-shadow: none;
+        }
+
+        .lbt-card-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 25px 30px;
+          background: #f8fafc;
+          border-bottom: 3px solid #2438a5;
+        }
+
+        .lbt-card-brand {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+
+        .lbt-card-logo {
+          width: 58px;
+          height: 58px;
+          object-fit: contain;
+        }
+
+        .lbt-card-brand strong {
+          display: block;
+          font-size: 22px;
+          color: #172554;
+        }
+
+        .lbt-card-brand small {
+          display: block;
+          margin-top: 4px;
+          color: #64748b;
+          letter-spacing: 1px;
+        }
+
+        .lbt-role-badge {
+          padding: 10px 18px;
+          border-radius: 30px;
+          background: #2438a5;
+          color: white;
+          font-size: 13px;
+          font-weight: 800;
+        }
+
+        .lbt-card-body {
+          display: grid;
+          grid-template-columns: 150px 1fr 150px;
+          gap: 25px;
+          align-items: center;
+          padding: 35px;
+        }
+
+        .lbt-card-photo-box {
+          width: 145px;
+          height: 175px;
+          border-radius: 16px;
+          overflow: hidden;
+          background: #eef2ff;
+        }
+
+        .lbt-card-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .lbt-card-label {
+          color: #64748b;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 1.5px;
+        }
+
+        .lbt-card-information h2 {
+          margin: 5px 0 20px;
+          color: #0f172a;
+          font-size: 25px;
+        }
+
+        .lbt-card-line {
+          display: flex;
+          gap: 15px;
+          margin: 8px 0;
+          font-size: 13px;
+        }
+
+        .lbt-card-line span {
+          min-width: 95px;
+          color: #64748b;
+        }
+
+        .lbt-card-line strong {
+          color: #111827;
+        }
+
+        .lbt-card-qr {
+          text-align: center;
+        }
+
+        .lbt-qr-image {
+          display: block;
+          width: 125px;
+          height: 125px;
+          margin: auto;
+        }
+
+        .lbt-card-qr strong {
+          display: block;
+          margin-top: 8px;
+          font-size: 8px;
+          color: #475569;
+        }
+
+        .lbt-card-qr small {
+          display: block;
+          margin-top: 5px;
+          font-size: 9px;
+          color: #64748b;
+        }
+
+        .lbt-card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 30px;
+          background: #2438a5;
+          color: white;
+        }
+
+        .lbt-card-footer strong,
+        .lbt-card-footer span {
+          display: block;
+        }
+
+        .lbt-card-footer strong {
+          font-size: 11px;
+        }
+
+        .lbt-card-footer span {
+          margin-top: 3px;
+          font-size: 9px;
+          opacity: .85;
+        }
+
+        @media print {
+
+          @page {
+            size: auto;
+            margin: 0;
+          }
+
+          body {
+            padding: 0;
+          }
+
+          .lbt-employee-card {
+            margin: 0;
+            box-shadow: none;
+          }
+
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      ${html}
+
+      <script>
+
+        window.onload = function () {
+          setTimeout(function () {
+            window.print();
+          }, 500);
+        };
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+}
+
+
+async function downloadEmployeeCard(profile) {
+
+  const data = employeeCardData(profile);
+
+  const html = `
+    <!doctype html>
+
+    <html lang="fr">
+
+    <head>
+
+      <meta charset="utf-8">
+
+      <title>
+        Carte ${esc(data.employeeCode)}
+      </title>
+
+      <style>
+
+        body {
+          margin: 0;
+          padding: 30px;
+          background: #f1f5f9;
+          font-family: Arial, sans-serif;
+        }
+
+        .card {
+          width: 856px;
+          margin: auto;
+          background: white;
+          border-radius: 25px;
+          overflow: hidden;
+          border: 1px solid #dbe3f0;
+        }
+
+        .header {
+          padding: 25px;
+          background: #f8fafc;
+          border-bottom: 3px solid #2438a5;
+        }
+
+        .body {
+          padding: 35px;
+          display: grid;
+          grid-template-columns: 150px 1fr 150px;
+          gap: 25px;
+          align-items: center;
+        }
+
+        img.photo {
+          width: 145px;
+          height: 175px;
+          object-fit: cover;
+          border-radius: 15px;
+        }
+
+        img.qr {
+          width: 130px;
+          height: 130px;
+        }
+
+        .footer {
+          background: #2438a5;
+          color: white;
+          padding: 20px;
+        }
+
+        h1 {
+          margin: 0 0 8px;
+          font-size: 26px;
+        }
+
+        p {
+          margin: 6px 0;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="card">
+
+        <div class="header">
+
+          <h1>
+            LUC BRICO-TECH
+          </h1>
+
+          <strong>
+            CARTE PROFESSIONNELLE
+          </strong>
+
+        </div>
+
+        <div class="body">
+
+          <div>
+
+            <img
+              class="photo"
+              src="${esc(
+                data.photo ||
+                "./logo-luc-bricotech.png"
+              )}"
+            >
+
+          </div>
+
+          <div>
+
+            <h1>
+              ${esc(data.full_name)}
+            </h1>
+
+            <p>
+              <strong>Code :</strong>
+              ${esc(data.employeeCode)}
+            </p>
+
+            <p>
+              <strong>Fonction :</strong>
+              ${esc(data.roleLabel)}
+            </p>
+
+            <p>
+              <strong>Service :</strong>
+              ${esc(data.department)}
+            </p>
+
+            <p>
+              <strong>Statut :</strong>
+              ${data.active ? "ACTIF" : "DÉSACTIVÉ"}
+            </p>
+
+            <p>
+              <strong>Téléphone :</strong>
+              ${esc(data.phone || "—")}
+            </p>
+
+            <p>
+              <strong>Email :</strong>
+              ${esc(data.email || "—")}
+            </p>
+
+          </div>
+
+          <div>
+
+            <img
+              class="qr"
+              src="${esc(
+                qrImageUrl(
+                  employeeQrText(profile),
+                  250
+                )
+              )}"
+            >
+
+            <p>
+              Scanner pour vérifier
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="footer">
+
+          Votre besoin, notre solution.
+          —
+          La technologie au service de vos projets.
+
+        </div>
+
+      </div>
+
+    </body>
+
+    </html>
+  `;
+
+  const blob = new Blob(
+    [html],
+    {
+      type: "text/html;charset=utf-8"
+    }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    `carte-${data.employeeCode}.html`;
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 2000);
+
+  toast(
+    "Carte générée. Ouvrez le fichier pour l'imprimer."
+  );
+}
+
+
+function addCardButtonToMemberRow(profile) {
+
+  const data = employeeCardData(profile);
+
+  return `
+    <button
+      type="button"
+      class="secondary"
+      data-employee-card="${esc(data.id)}"
+    >
+      🪪 Carte
+    </button>
+  `;
+}
+
+
+function findProfileById(id) {
+
+  return (
+    state.db.profiles || []
+  ).find(
+    p => String(p.id) === String(id)
+  );
+}
+
+
+function bindEmployeeCardButtons() {
+
+  document
+    .querySelectorAll("[data-employee-card]")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const id =
+            button.dataset.employeeCard;
+
+          const profile =
+            findProfileById(id);
+
+          if (!profile) {
+
+            toast(
+              "Profil introuvable."
+            );
+
+            return;
+          }
+
+          cardModal(profile);
+        }
+      );
+
+    });
+}
+
+
+function injectEmployeeCardStyles() {
+
+  if (
+    document.getElementById(
+      "lbt-employee-card-styles"
+    )
+  ) {
+    return;
+  }
+
+  const style =
+    document.createElement("style");
+
+  style.id =
+    "lbt-employee-card-styles";
+
+  style.textContent = `
+
+    .lbt-employee-card {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 24px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 18px 45px rgba(15,23,42,.10);
+    }
+
+    .lbt-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 20px;
+      background: #f8fafc;
+      border-bottom: 3px solid #2438a5;
+    }
+
+    .lbt-card-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lbt-card-logo {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+    }
+
+    .lbt-card-brand strong {
+      display: block;
+      color: #172554;
+    }
+
+    .lbt-card-brand small {
+      display: block;
+      margin-top: 3px;
+      color: #64748b;
+      font-size: 10px;
+    }
+
+    .lbt-role-badge {
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: #2438a5;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .lbt-card-body {
+      display: grid;
+      grid-template-columns: 130px 1fr 130px;
+      gap: 20px;
+      align-items: center;
+      padding: 25px;
+    }
+
+    .lbt-card-photo-box {
+      width: 125px;
+      height: 150px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #eef2ff;
+    }
+
+    .lbt-card-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .lbt-card-information h2 {
+      margin: 5px 0 15px;
+      font-size: 22px;
+      color: #0f172a;
+    }
+
+    .lbt-card-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #64748b;
+      letter-spacing: 1px;
+    }
+
+    .lbt-card-line {
+      display: flex;
+      gap: 10px;
+      margin: 7px 0;
+      font-size: 12px;
+    }
+
+    .lbt-card-line span {
+      min-width: 90px;
+      color: #64748b;
+    }
+
+    .lbt-card-line strong {
+      color: #111827;
+      word-break: break-word;
+    }
+
+    .lbt-card-qr {
+      text-align: center;
+    }
+
+    .lbt-qr-image {
+      width: 115px;
+      height: 115px;
+      object-fit: contain;
+    }
+
+    .lbt-card-qr strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 8px;
+      color: #475569;
+    }
+
+    .lbt-card-qr small {
+      display: block;
+      margin-top: 3px;
+      font-size: 8px;
+      color: #64748b;
+    }
+
+    .lbt-card-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 15px 20px;
+      background: #2438a5;
+      color: white;
+    }
+
+    .lbt-card-footer strong,
+    .lbt-card-footer span {
+      display: block;
+    }
+
+    .lbt-card-footer strong {
+      font-size: 10px;
+    }
+
+    .lbt-card-footer span {
+      margin-top: 3px;
+      font-size: 8px;
+      opacity: .85;
+    }
+
+    .lbt-card-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+    }
+
+    .lbt-card-modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15,23,42,.70);
+      backdrop-filter: blur(5px);
+    }
+
+    .lbt-card-modal-box {
+      position: relative;
+      z-index: 2;
+      width: min(1000px, 94vw);
+      max-height: 92vh;
+      overflow: auto;
+      margin: 4vh auto;
+      padding: 20px;
+      border-radius: 24px;
+      background: #fff;
+    }
+
+    .lbt-card-modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .lbt-card-modal-head h2 {
+      margin: 0;
+    }
+
+    .lbt-card-modal-head p {
+      margin: 4px 0 0;
+      color: #64748b;
+    }
+
+    .lbt-card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    @media(max-width:700px) {
+
+      .lbt-card-body {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .lbt-card-photo-box {
+        margin: auto;
+      }
+
+      .lbt-card-line {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .lbt-card-qr {
+        margin-top: 10px;
+      }
+
+      .lbt-card-footer {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .lbt-card-actions {
+        flex-direction: column;
+      }
+
+      .lbt-card-actions button {
+        width: 100%;
+      }
+
+    }
+
+  `;
+
+  document.head.appendChild(style);
+}
+
+
+function initEmployeeCards() {
+
+  injectEmployeeCardStyles();
+
+  bindEmployeeCardButtons();
+
+}
+
+
+window.LBT_EMPLOYEE_CARD = {
+  employeeCardData,
+  employeeQrText,
+  employeeCardHtml,
+  cardModal,
+  printEmployeeCard,
+  downloadEmployeeCard,
+  initEmployeeCards
+};
+
+
+if (
+  typeof window !== "undefined"
+) {
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      setTimeout(
+        initEmployeeCards,
+        300
+      );
+
+    }
+  );
+
+}
