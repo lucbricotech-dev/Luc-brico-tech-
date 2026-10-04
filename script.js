@@ -1,7079 +1,5552 @@
 (() => {
 "use strict";
+const CFG=window.LBT_CONFIG||{};
+const hasCloud=!!(CFG.SUPABASE_URL&&CFG.SUPABASE_ANON_KEY&&window.supabase);
+const sb=hasCloud?window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY):null;
+const DBKEY="lbt_v3_demo";
 
-const CFG = window.LBT_CONFIG || {};
-const hasCloud = !!(
-  CFG.SUPABASE_URL &&
-  CFG.SUPABASE_ANON_KEY &&
-  window.supabase
-);
-
-const sb = hasCloud
-  ? window.supabase.createClient(
-      CFG.SUPABASE_URL,
-      CFG.SUPABASE_ANON_KEY
-    )
-  : null;
-
-const DBKEY = "lbt_v3_demo";
-
-const schemas = {
-  sales: {
-    title: "Nouvelle vente",
-    fields: [
-      ["customer", "Client", "text", true],
-      ["item", "Article / service", "text", true],
-      ["quantity", "Quantité", "number", true],
-      ["amount", "Montant (FCFA)", "number", true],
-      [
-        "payment_method",
-        "Paiement",
-        "select",
-        false,
-        ["cash", "mobile_money", "bank", "credit"]
-      ],
-      [
-        "status",
-        "Statut",
-        "select",
-        false,
-        ["paid", "pending", "cancelled"]
-      ],
-      ["notes", "Notes", "textarea", false]
-    ]
-  },
-
-  purchases: {
-    title: "Nouvel achat",
-    fields: [
-      ["supplier", "Fournisseur", "text", true],
-      ["item", "Article", "text", true],
-      ["quantity", "Quantité", "number", true],
-      ["amount", "Montant (FCFA)", "number", true],
-      [
-        "status",
-        "Statut",
-        "select",
-        false,
-        ["received", "pending", "cancelled"]
-      ],
-      ["notes", "Notes", "textarea", false]
-    ]
-  },
-
-  expenses: {
-    title: "Nouvelle dépense",
-    fields: [
-      ["category", "Catégorie", "text", true],
-      ["label", "Libellé", "text", true],
-      ["amount", "Montant (FCFA)", "number", true],
-      ["beneficiary", "Bénéficiaire", "text", false],
-      ["notes", "Notes", "textarea", false]
-    ]
-  },
-
-  activities: {
-    title: "Nouvelle activité",
-    fields: [
-      ["title", "Titre", "text", true],
-      ["category", "Catégorie", "text", false],
-      ["description", "Description", "textarea", false],
-      ["location", "Lieu", "text", false],
-      [
-        "status",
-        "Statut",
-        "select",
-        false,
-        ["open", "in_progress", "done", "cancelled"]
-      ],
-      ["amount", "Montant (FCFA)", "number", false]
-    ]
-  },
-
-  projects: {
-    title: "Nouveau projet",
-    fields: [
-      ["name", "Nom du projet", "text", true],
-      ["client", "Client", "text", false],
-      ["description", "Description", "textarea", false],
-      [
-        "status",
-        "Statut",
-        "select",
-        false,
-        ["planned", "active", "completed", "paused"]
-      ],
-      ["progress", "Progression (%)", "number", false],
-      ["budget", "Budget (FCFA)", "number", false]
-    ]
-  },
-
-  innovations: {
-    title: "Nouvelle innovation",
-    fields: [
-      ["title", "Titre", "text", true],
-      ["description", "Description", "textarea", false],
-      [
-        "stage",
-        "Étape",
-        "select",
-        false,
-        ["idea", "prototype", "test", "production"]
-      ],
-      ["budget", "Budget (FCFA)", "number", false],
-      ["progress", "Progression (%)", "number", false]
-    ]
-  },
-
-  stock_items: {
-    title: "Nouvel article de stock",
-    fields: [
-      ["name", "Article", "text", true],
-      ["category", "Catégorie", "text", false],
-      ["unit", "Unité", "text", false],
-      ["quantity", "Quantité", "number", true],
-      ["min_quantity", "Seuil minimum", "number", false],
-      ["location", "Emplacement", "text", false]
-    ]
-  },
-
-  clients: {
-    title: "Nouveau client",
-    fields: [
-      ["full_name", "Nom complet", "text", true],
-      ["company_name", "Entreprise / société", "text", false],
-      ["phone", "Téléphone", "tel", false],
-      ["email", "E-mail", "email", false],
-      ["address", "Adresse", "text", false],
-      ["city", "Ville", "text", false],
-      ["notes", "Notes", "textarea", false]
-    ]
-  }
+const schemas={
+ sales:{title:"Nouvelle vente",fields:[
+  ["customer","Client","text",true],["item","Article / service","text",true],["quantity","Quantité","number",true],["amount","Montant (FCFA)","number",true],["payment_method","Paiement","select",false,["cash","mobile_money","bank","credit"]],["status","Statut","select",false,["paid","pending","cancelled"]],["notes","Notes","textarea",false]
+ ]},
+ purchases:{title:"Nouvel achat",fields:[["supplier","Fournisseur","text",true],["item","Article","text",true],["quantity","Quantité","number",true],["amount","Montant (FCFA)","number",true],["status","Statut","select",false,["received","pending","cancelled"]],["notes","Notes","textarea",false]]},
+ expenses:{title:"Nouvelle dépense",fields:[["category","Catégorie","text",true],["label","Libellé","text",true],["amount","Montant (FCFA)","number",true],["beneficiary","Bénéficiaire","text",false],["notes","Notes","textarea",false]]},
+ activities:{title:"Nouvelle activité",fields:[["title","Titre","text",true],["category","Catégorie","text",false],["description","Description","textarea",false],["location","Lieu","text",false],["status","Statut","select",false,["open","in_progress","done","cancelled"]],["amount","Montant (FCFA)","number",false]]},
+ projects:{title:"Nouveau projet",fields:[["name","Nom du projet","text",true],["client","Client","text",false],["description","Description","textarea",false],["status","Statut","select",false,["planned","active","completed","paused"]],["progress","Progression (%)","number",false],["budget","Budget (FCFA)","number",false]]},
+ innovations:{title:"Nouvelle innovation",fields:[["title","Titre","text",true],["description","Description","textarea",false],["stage","Étape","select",false,["idea","prototype","test","production"]],["budget","Budget (FCFA)","number",false],["progress","Progression (%)","number",false]]},
+ stock_items:{title:"Nouvel article de stock",fields:[["name","Article","text",true],["category","Catégorie","text",false],["unit","Unité","text",false],["quantity","Quantité","number",true],["min_quantity","Seuil minimum","number",false],["location","Emplacement","text",false]]},
+ clients:{title:"Nouveau client",fields:[["full_name","Nom complet","text",true],["company_name","Entreprise / société","text",false],["phone","Téléphone","tel",false],["email","E-mail","email",false],["address","Adresse","text",false],["city","Ville","text",false],["notes","Notes","textarea",false]]}
 };
 
-const state = {
-  page: "dashboard",
-  role: "admin",
-  user: null,
-  profile: null,
-  cloud: hasCloud,
-  db: loadLocal()
-};
+const state={page:"dashboard",role:"admin",user:null,cloud:hasCloud,db:loadLocal()};
+const TABLES=["profiles","sales","purchases","expenses","stock_items","stock_movements","activities","projects","innovations","audit_logs","settings","clients","quotes","quote_items","invoices","invoice_items","payments"];
 
-const TABLES = [
-  "profiles",
-  "sales",
-  "purchases",
-  "expenses",
-  "stock_items",
-  "stock_movements",
-  "activities",
-  "projects",
-  "innovations",
-  "audit_logs",
-  "settings",
-  "clients",
-  "quotes",
-  "quote_items",
-  "invoices",
-  "invoice_items",
-  "payments"
-];
-
-const TABLES_WITH_USER_ID = [
-  "sales",
-  "purchases",
-  "expenses",
-  "stock_movements",
-  "activities",
-  "projects",
-  "innovations",
-  "audit_logs",
-  "clients",
-  "quotes",
-  "invoices",
-  "payments"
-];
-
-function seed() {
-  return {
-    profiles: [
-      {
-        id: "demo-admin",
-        full_name: "Lucien BESSAN",
-        role: "admin",
-        active: true
-      }
-    ],
-    sales: [],
-    purchases: [],
-    expenses: [],
-    stock_items: [],
-    stock_movements: [],
-    activities: [],
-    projects: [],
-    innovations: [],
-    audit_logs: [],
-    settings: [],
-    clients: [],
-    quotes: [],
-    quote_items: [],
-    invoices: [],
-    invoice_items: [],
-    payments: []
-  };
+function loadLocal(){
+ try{
+  const d=JSON.parse(localStorage.getItem(DBKEY))||seed();
+  TABLES.forEach(t=>{if(!Array.isArray(d[t]))d[t]=[]});
+  return d;
+ }catch{return seed()}
 }
 
-function loadLocal() {
-  try {
-    const d = JSON.parse(localStorage.getItem(DBKEY)) || seed();
-
-    TABLES.forEach(table => {
-      if (!Array.isArray(d[table])) {
-        d[table] = [];
-      }
-    });
-
-    return d;
-  } catch {
-    return seed();
-  }
+function saveLocal(){
+ localStorage.setItem(DBKEY,JSON.stringify(state.db))
 }
 
-function saveLocal() {
-  localStorage.setItem(DBKEY, JSON.stringify(state.db));
+function seed(){
+ return {
+  profiles:[{id:"demo-admin",full_name:"Lucien BESSAN",role:"admin",active:true}],
+  sales:[],purchases:[],expenses:[],stock_items:[],stock_movements:[],
+  activities:[],projects:[],innovations:[],audit_logs:[],settings:[],
+  clients:[],quotes:[],quote_items:[],invoices:[],invoice_items:[],payments:[]
+ }
 }
 
-function toast(message) {
-  const element = document.getElementById("toast");
-  if (!element) return;
-
-  element.textContent = message;
-  element.classList.add("show");
-
-  clearTimeout(window.__lbtToastTimer);
-
-  window.__lbtToastTimer = setTimeout(() => {
-    element.classList.remove("show");
-  }, 2400);
+function toast(s){
+ const e=document.getElementById("toast");
+ if(!e)return;
+ e.textContent=s;
+ e.classList.add("show");
+ setTimeout(()=>e.classList.remove("show"),2400)
 }
 
-function esc(value) {
-  return String(value ?? "").replace(
-    /[&<>"']/g,
-    char =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      })[char]
-  );
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,m=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+ }[m]))
 }
 
-function money(value) {
-  return (
-    new Intl.NumberFormat("fr-FR").format(Number(value || 0)) +
-    " FCFA"
-  );
+function money(n){
+ return new Intl.NumberFormat("fr-FR").format(Number(n||0))+" FCFA"
 }
 
-function uid() {
-  return crypto.randomUUID
-    ? crypto.randomUUID()
-    : "demo-" +
-        Date.now() +
-        "-" +
-        Math.random().toString(36).slice(2);
+function uid(){
+ return crypto.randomUUID?crypto.randomUUID():"demo-"+Date.now()+"-"+Math.random()
 }
 
-function now() {
-  return new Date().toISOString();
+function now(){
+ return new Date().toISOString()
 }
 
-function safeJson(value) {
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value ?? "");
-  }
+async function cloudSession(){
+ if(!sb)return null;
+ const {data:{session}}=await sb.auth.getSession();
+ return session;
 }
 
-function normalizeDate(value) {
-  if (!value) return "";
-  try {
-    return new Date(value).toLocaleDateString("fr-FR");
-  } catch {
-    return String(value);
-  }
-}
+async function boot(){
+ try{
+  if(hasCloud){
+   const session=await cloudSession();
 
-function formatDateTime(value) {
-  if (!value) return "";
-  try {
-    return new Date(value).toLocaleString("fr-FR");
-  } catch {
-    return String(value);
-  }
-}
+   if(!session){
+    if(location.pathname.endsWith("login.html"))return;
+    location.href="login.html";
+    return;
+   }
 
-async function cloudSession() {
-  if (!sb) return null;
+   state.user=session.user;
 
-  const {
-    data: { session }
-  } = await sb.auth.getSession();
-
-  return session;
-}
-
-async function boot() {
-  try {
-    if (hasCloud) {
-      const session = await cloudSession();
-
-      if (!session) {
-        if (location.pathname.endsWith("login.html")) {
-          return;
-        }
-
-        location.href = "login.html";
-        return;
-      }
-
-      state.user = session.user;
-
-      const { data: profile, error: profileError } =
-        await sb
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-      if (profileError) {
-        console.warn(profileError);
-      }
-
-      state.profile =
-        profile || {
-          id: session.user.id,
-          full_name: session.user.email,
-          email: session.user.email,
-          role: "employee",
-          active: true
-        };
-
-      if (state.profile.active === false) {
-        await sb.auth.signOut();
-
-        alert(
-          "Ce compte a été désactivé par l’administrateur."
-        );
-
-        location.href = "login.html";
-        return;
-      }
-
-      state.role = state.profile.role || "employee";
-
-      await syncCloud();
-
-      applyRoleNavigation();
-    } else {
-      state.user = {
-        id: "demo-admin",
-        email: "demo@lucbricotech.local"
-      };
-
-      state.profile =
-        state.db.profiles[0] || {
-          id: "demo-admin",
-          full_name: "Lucien BESSAN",
-          role: "admin",
-          active: true
-        };
-
-      state.role = state.profile.role || "admin";
-    }
-
-    const userName = document.getElementById("userName");
-    const userRole = document.getElementById("userRole");
-    const modeBadge = document.getElementById("modeBadge");
-
-    if (userName) {
-      userName.textContent =
-        state.profile.full_name ||
-        state.user.email ||
-        "Utilisateur";
-    }
-
-    if (userRole) {
-      userRole.textContent = state.role.toUpperCase();
-    }
-
-    if (modeBadge) {
-      modeBadge.textContent = state.cloud
-        ? "SUPABASE"
-        : "MODE DÉMO";
-    }
-
-    bind();
-    render();
-  } catch (error) {
-    console.error("Erreur de démarrage :", error);
-
-    if (hasCloud) {
-      const content = document.getElementById("content");
-
-      if (content) {
-        content.innerHTML = `
-          <div class="card">
-            <h3>Connexion sécurisée indisponible</h3>
-            <p class="muted">
-              Impossible de charger les données Supabase.
-            </p>
-
-            <button class="primary" id="retryConnection">
-              Réessayer
-            </button>
-
-            <button
-              class="secondary"
-              id="goLogin"
-              style="margin-left:8px"
-            >
-              Retour à la connexion
-            </button>
-          </div>
-        `;
-      }
-
-      document
-        .getElementById("retryConnection")
-        ?.addEventListener("click", () =>
-          location.reload()
-        );
-
-      document
-        .getElementById("goLogin")
-        ?.addEventListener("click", () =>
-          (location.href = "login.html")
-        );
-
-      toast(
-        "Erreur de connexion sécurisée à Supabase."
-      );
-
-      return;
-    }
-
-    state.cloud = false;
-
-    state.user = {
-      id: "demo-admin",
-      email: "demo@lucbricotech.local"
-    };
-
-    state.profile =
-      state.db.profiles?.[0] || {
-        id: "demo-admin",
-        full_name: "Lucien BESSAN",
-        role: "admin",
-        active: true
-      };
-
-    state.role = state.profile.role || "admin";
-
-    const userName = document.getElementById("userName");
-    const userRole = document.getElementById("userRole");
-    const modeBadge = document.getElementById("modeBadge");
-
-    if (userName) {
-      userName.textContent =
-        state.profile.full_name || "Utilisateur";
-    }
-
-    if (userRole) {
-      userRole.textContent = state.role.toUpperCase();
-    }
-
-    if (modeBadge) {
-      modeBadge.textContent = "MODE DÉMO";
-    }
-
-    bind();
-    render();
-
-    toast("Mode démo actif.");
-  }
-}
-
-async function syncCloud() {
-  for (const table of TABLES) {
-    try {
-      let query = sb.from(table).select("*");
-
-      if (table !== "settings") {
-        query = query.order("created_at", {
-          ascending: false
-        });
-      }
-
-      const { data, error } = await query;
-
-      if (!error && data) {
-        state.db[table] = data;
-      } else {
-        console.warn(
-          `Impossible de charger ${table}:`,
-          error
-        );
-
-        if (!Array.isArray(state.db[table])) {
-          state.db[table] = [];
-        }
-      }
-    } catch (error) {
-      console.warn(
-        `Erreur lors du chargement de ${table}:`,
-        error
-      );
-
-      if (!Array.isArray(state.db[table])) {
-        state.db[table] = [];
-      }
-    }
-  }
-}
-
-async function insert(table, payload) {
-  const hasUserId =
-    TABLES_WITH_USER_ID.includes(table);
-
-  if (!state.cloud) {
-    const item = {
-      id: uid(),
-      created_at: now(),
-      ...payload
-    };
-
-    if (hasUserId) {
-      item.user_id = state.user.id;
-    }
-
-    if (!Array.isArray(state.db[table])) {
-      state.db[table] = [];
-    }
-
-    state.db[table].unshift(item);
-    saveLocal();
-
-    return item;
-  }
-
-  const item = {
-    ...payload
-  };
-
-  if (hasUserId) {
-    item.user_id = state.user.id;
-  }
-
-  const {
-    data,
-    error
-  } = await sb
-    .from(table)
-    .insert(item)
-    .select()
+   const {data:p}=await sb
+    .from("profiles")
+    .select("*")
+    .eq("id",session.user.id)
     .single();
 
-  if (error) {
-    throw error;
-  }
+   state.profile=p||{
+    id:session.user.id,
+    full_name:session.user.email,
+    email:session.user.email,
+    role:"employee",
+    active:true
+   };
 
-  if (!Array.isArray(state.db[table])) {
-    state.db[table] = [];
-  }
-
-  state.db[table].unshift(data);
-
-  return data;
-}
-
-async function update(table, id, payload) {
-  if (!state.cloud) {
-    const array = state.db[table] || [];
-    const index = array.findIndex(
-      item => item.id === id
-    );
-
-    if (index >= 0) {
-      array[index] = {
-        ...array[index],
-        ...payload
-      };
-    }
-
-    saveLocal();
+   if(state.profile.active===false){
+    await sb.auth.signOut();
+    alert("Ce compte a été désactivé par l’administrateur.");
+    location.href="login.html";
     return;
+   }
+
+   state.role=state.profile.role;
+
+   await syncCloud();
+   await ensureMemberCodes();
+   applyRoleNavigation();
+
+  }else{
+   state.user={id:"demo-admin",email:"demo@lucbricotech.local"};
+   state.profile=state.db.profiles[0];
+   state.role="admin";
   }
 
-  const {
-    data,
-    error
-  } = await sb
-    .from(table)
-    .update(payload)
-    .eq("id", id)
-    .select()
-    .single();
+  document.getElementById("userName").textContent=
+    state.profile.full_name||state.user.email||"Utilisateur";
 
-  if (error) {
-    throw error;
-  }
+  document.getElementById("userRole").textContent=
+    state.role.toUpperCase();
 
-  const array = state.db[table] || [];
-  const index = array.findIndex(
-    item => item.id === id
-  );
+  document.getElementById("modeBadge").textContent=
+    state.cloud?"SUPABASE":"MODE DÉMO";
 
-  if (index >= 0) {
-    array[index] = data;
-  }
-}
+  bind();
+  render();
 
-async function remove(table, id) {
-  if (!state.cloud) {
-    state.db[table] = (
-      state.db[table] || []
-    ).filter(item => item.id !== id);
+ }catch(err){
 
-    saveLocal();
-    return;
-  }
+  console.error("Erreur de démarrage:",err);
 
-  const { error } = await sb
-    .from(table)
-    .delete()
-    .eq("id", id);
+  if(hasCloud){
 
-  if (error) {
-    throw error;
-  }
+   const content=document.getElementById("content");
 
-  state.db[table] = (
-    state.db[table] || []
-  ).filter(item => item.id !== id);
-}
-
-async function audit(
-  action,
-  entity,
-  id,
-  details = {}
-) {
-  try {
-    await insert("audit_logs", {
-      action,
-      entity,
-      entity_id: id,
-      details
-    });
-  } catch (error) {
-    console.warn("Audit :", error);
-  }
-}
-
-const ROLE_PAGES = {
-  admin: [
-    "dashboard",
-    "members",
-    "clients",
-    "quotes",
-    "invoices",
-    "payments",
-    "sales",
-    "purchases",
-    "expenses",
-    "stock",
-    "activities",
-    "projects",
-    "innovations",
-    "reports",
-    "audit",
-    "settings"
-  ],
-
-  manager: [
-    "dashboard",
-    "members",
-    "clients",
-    "quotes",
-    "invoices",
-    "payments",
-    "sales",
-    "purchases",
-    "expenses",
-    "stock",
-    "activities",
-    "projects",
-    "innovations",
-    "reports"
-  ],
-
-  employee: [
-    "dashboard",
-    "clients",
-    "quotes",
-    "invoices",
-    "payments",
-    "sales",
-    "purchases",
-    "expenses",
-    "stock",
-    "activities",
-    "projects",
-    "innovations",
-    "reports"
-  ]
-};
-
-function allowedPages() {
-  return (
-    ROLE_PAGES[state.role] ||
-    ROLE_PAGES.employee
-  );
-}
-
-function canManageStock() {
-  return (
-    state.role === "admin" ||
-    state.role === "manager"
-  );
-}
-
-function applyRoleNavigation() {
-  const allowed = allowedPages();
-
-  document
-    .querySelectorAll("#nav button")
-    .forEach(button => {
-      const visible = allowed.includes(
-        button.dataset.page
-      );
-
-      button.hidden = !visible;
-
-      button.setAttribute(
-        "aria-hidden",
-        String(!visible)
-      );
-    });
-
-  if (!allowed.includes(state.page)) {
-    state.page = "dashboard";
-  }
-}
-
-function bind() {
-  applyRoleNavigation();
-
-  document
-    .querySelectorAll("#nav button:not([hidden])")
-    .forEach(button => {
-      button.onclick = function (event) {
-        event.preventDefault();
-
-        const page = this.dataset.page;
-
-        if (!allowedPages().includes(page)) {
-          return;
-        }
-
-        state.page = page;
-
-        closeMenu();
-
-        render();
-      };
-    });
-
-  const menuButton =
-    document.getElementById("menuBtn");
-
-  const sidebar =
-    document.getElementById("sidebar");
-
-  if (menuButton && sidebar) {
-    menuButton.onclick = null;
-
-    menuButton.addEventListener(
-      "click",
-      event => {
-        event.preventDefault();
-        event.stopPropagation();
-
-        sidebar.classList.toggle("open");
-      }
-    );
-
-    document.addEventListener(
-      "click",
-      event => {
-        if (
-          !sidebar.classList.contains("open")
-        ) {
-          return;
-        }
-
-        if (
-          sidebar.contains(event.target) ||
-          menuButton.contains(event.target)
-        ) {
-          return;
-        }
-
-        closeMenu();
-      }
-    );
-  }
-
-  const closeModalButton =
-    document.getElementById("closeModal");
-
-  if (closeModalButton) {
-    closeModalButton.onclick = closeModal;
-  }
-
-  const modal =
-    document.getElementById("modal");
-
-  if (modal) {
-    modal.addEventListener(
-      "click",
-      event => {
-        if (event.target === modal) {
-          closeModal();
-        }
-      }
-    );
-  }
-
-  const logoutButton =
-    document.getElementById("logoutBtn");
-
-  if (logoutButton) {
-    logoutButton.onclick = logout;
-  }
-}
-
-function closeMenu() {
-  document
-    .getElementById("sidebar")
-    ?.classList.remove("open");
-}
-
-async function logout() {
-  try {
-    if (state.cloud && sb) {
-      await sb.auth.signOut();
-    }
-  } finally {
-    location.href = "login.html";
-  }
-}
-
-function setHeader(title, subtitle) {
-  const titleElement =
-    document.getElementById("pageTitle");
-
-  const subtitleElement =
-    document.getElementById("pageSub");
-
-  if (titleElement) {
-    titleElement.textContent = title;
-  }
-
-  if (subtitleElement) {
-    subtitleElement.textContent = subtitle;
-  }
-}
-
-function render() {
-  applyRoleNavigation();
-
-  const allowed = allowedPages();
-
-  if (!allowed.includes(state.page)) {
-    state.page = "dashboard";
-  }
-
-  document
-    .querySelectorAll("#nav button")
-    .forEach(button => {
-      button.classList.toggle(
-        "active",
-        button.dataset.page === state.page
-      );
-    });
-
-  const headers = {
-    dashboard: [
-      "Tableau de bord",
-      "Vue générale de l’activité."
-    ],
-
-    members: [
-      "Membres",
-      "Utilisateurs et rôles."
-    ],
-
-    clients: [
-      "Clients",
-      "Gestion de la clientèle."
-    ],
-
-    quotes: [
-      "Devis",
-      "Préparation et suivi des devis."
-    ],
-
-    invoices: [
-      "Factures",
-      "Facturation et suivi des règlements."
-    ],
-
-    payments: [
-      "Paiements",
-      "Enregistrement des règlements."
-    ],
-
-    sales: [
-      "Ventes",
-      "Suivi des ventes et encaissements."
-    ],
-
-    purchases: [
-      "Achats",
-      "Achats auprès des fournisseurs."
-    ],
-
-    expenses: [
-      "Dépenses",
-      "Charges et dépenses."
-    ],
-
-    stock: [
-      "Stock & matériel",
-      "Articles, quantités et seuils."
-    ],
-
-    activities: [
-      "Activités",
-      "Interventions et opérations réalisées."
-    ],
-
-    projects: [
-      "Projets",
-      "Suivi des projets et chantiers."
-    ],
-
-    innovations: [
-      "Innovations",
-      "Idées, prototypes et solutions."
-    ],
-
-    reports: [
-      "Rapports",
-      "Synthèse financière et opérationnelle."
-    ],
-
-    audit: [
-      "Journal",
-      "Traçabilité des actions."
-    ],
-
-    settings: [
-      "Paramètres",
-      "Configuration de l’entreprise."
-    ]
-  };
-
-  const header =
-    headers[state.page] ||
-    headers.dashboard;
-
-  setHeader(header[0], header[1]);
-
-  const pageFunctions = {
-    dashboard,
-    members,
-    clients: clientsPage,
-    quotes: quotesPage,
-    invoices: invoicesPage,
-    payments: paymentsPage,
-    sales: page => tablePage(page),
-    purchases: page => tablePage(page),
-    expenses: page => tablePage(page),
-    stock,
-    activities: page => tablePage(page),
-    projects: page => tablePage(page),
-    innovations: page => tablePage(page),
-    reports,
-    audit: auditPage,
-    settings
-  };
-
-  let pageFunction =
-    pageFunctions[state.page];
-
-  if (typeof pageFunction !== "function") {
-    state.page = "dashboard";
-    setHeader(
-      headers.dashboard[0],
-      headers.dashboard[1]
-    );
-    pageFunction = dashboard;
-  }
-
-  const content =
-    document.getElementById("content");
-
-  if (!content) return;
-
-  try {
-    content.innerHTML = pageFunction(
-      state.page
-    );
-  } catch (error) {
-    console.error(
-      "Erreur de rendu de la page :",
-      error
-    );
-
-    content.innerHTML = `
+   if(content){
+    content.innerHTML=`
       <div class="card">
-        <h3>Erreur d’affichage</h3>
+        <h3>Connexion sécurisée indisponible</h3>
         <p class="muted">
-          Une erreur est survenue lors du chargement de cette page.
+          Impossible de charger les données Supabase.
+          Aucun mode administrateur de démonstration n'est activé.
         </p>
-        <button
-          class="primary"
-          onclick="location.reload()"
-        >
-          Recharger
+        <button class="primary" id="retryConnection">Réessayer</button>
+        <button class="secondary" id="goLogin" style="margin-left:8px">
+          Retour à la connexion
         </button>
       </div>
     `;
+   }
 
-    toast(
-      "Erreur d’affichage de la page."
+   document.getElementById("retryConnection")
+    ?.addEventListener("click",()=>location.reload());
+
+   document.getElementById("goLogin")
+    ?.addEventListener("click",()=>location.href="login.html");
+
+   toast("Erreur de connexion sécurisée à Supabase.");
+   return;
+  }
+
+  state.cloud=false;
+  state.user={id:"demo-admin",email:"demo@lucbricotech.local"};
+
+  state.profile=state.db.profiles?.[0]||{
+   id:"demo-admin",
+   full_name:"Lucien BESSAN",
+   role:"admin",
+   active:true
+  };
+
+  state.role=state.profile.role||"admin";
+
+  document.getElementById("userName").textContent=
+    state.profile.full_name||"Utilisateur";
+
+  document.getElementById("userRole").textContent=
+    state.role.toUpperCase();
+
+  document.getElementById("modeBadge").textContent="MODE DÉMO";
+
+  bind();
+  render();
+  toast("Mode démo actif.");
+ }
+}
+
+async function syncCloud(){
+ for(const t of TABLES){
+
+  const query=sb.from(t).select("*");
+
+  const result=t==="settings"
+    ? await query
+    : await query.order("created_at",{ascending:false});
+
+  const {data,error}=result;
+
+  if(!error&&data)
+   state.db[t]=data;
+  else if(!Array.isArray(state.db[t]))
+   state.db[t]=[];
+ }
+}
+
+async function ensureMemberCodes(){
+
+ const profiles=state.db.profiles||[];
+
+ const used=new Set(
+  profiles.map(x=>x.employee_code).filter(Boolean)
+ );
+
+ const nextByPrefix={
+  "LBT-ADM-":1,
+  "LBT-MGR-":1,
+  "LBT-EMP-":1
+ };
+
+ for(const code of used){
+
+  const m=String(code)
+   .match(/^(LBT-(?:ADM|MGR|EMP)-)(\d+)$/);
+
+  if(m){
+   nextByPrefix[m[1]]=
+    Math.max(
+     nextByPrefix[m[1]]||1,
+     Number(m[2])+1
+    );
+  }
+ }
+
+ const missing=profiles.filter(x=>!x.employee_code);
+
+ if(!missing.length)return;
+
+ for(const member of missing){
+
+  const prefix=
+   member.role==="admin"
+    ?"LBT-ADM-"
+    :member.role==="manager"
+      ?"LBT-MGR-"
+      :"LBT-EMP-";
+
+  let n=nextByPrefix[prefix]||1;
+
+  let code=
+   `${prefix}${String(n).padStart(4,"0")}`;
+
+  while(used.has(code)){
+   n++;
+   code=`${prefix}${String(n).padStart(4,"0")}`;
+  }
+
+  nextByPrefix[prefix]=n+1;
+  used.add(code);
+
+  member.employee_code=code;
+
+  if(state.cloud&&state.role==="admin"){
+
+   try{
+
+    const {data,error}=await sb
+     .from("profiles")
+     .update({employee_code:code})
+     .eq("id",member.id)
+     .select()
+     .single();
+
+    if(error)throw error;
+
+    Object.assign(
+     member,
+     data||{employee_code:code}
     );
 
-    return;
+   }catch(error){
+
+    console.warn(
+     "Impossible d'attribuer le code membre",
+     member.id,
+     error
+    );
+   }
   }
+ }
+
+ if(!state.cloud)saveLocal();
+}
+
+const TABLES_WITH_USER_ID=[
+ "sales",
+ "purchases",
+ "expenses",
+ "stock_movements",
+ "activities",
+ "projects",
+ "innovations",
+ "audit_logs",
+ "clients",
+ "quotes",
+ "invoices",
+ "payments"
+];
+
+async function insert(table,payload){
+
+ const hasUserId=TABLES_WITH_USER_ID.includes(table);
+
+ if(!state.cloud){
+
+  const x={
+   id:uid(),
+   created_at:now(),
+   ...payload
+  };
+
+  if(hasUserId)x.user_id=state.user.id;
+
+  (state.db[table]??=[]).unshift(x);
+
+  saveLocal();
+
+  return x;
+ }
+
+ const x={...payload};
+
+ if(hasUserId)x.user_id=state.user.id;
+
+ const {data,error}=await sb
+  .from(table)
+  .insert(x)
+  .select()
+  .single();
+
+ if(error)throw error;
+
+ state.db[table].unshift(data);
+
+ return data;
+}
+
+async function update(table,id,payload){
+
+ if(!state.cloud){
+
+  const arr=state.db[table]||[];
+  const i=arr.findIndex(x=>x.id===id);
+
+  if(i>=0)
+   arr[i]={...arr[i],...payload};
+
+  saveLocal();
+
+  return;
+ }
+
+ const {data,error}=await sb
+  .from(table)
+  .update(payload)
+  .eq("id",id)
+  .select()
+  .single();
+
+ if(error)throw error;
+
+ const arr=state.db[table]||[];
+ const i=arr.findIndex(x=>x.id===id);
+
+ if(i>=0)arr[i]=data;
+}
+
+async function remove(table,id){
+
+ if(!state.cloud){
+
+  state.db[table]=(state.db[table]||[])
+   .filter(x=>x.id!==id);
+
+  saveLocal();
+
+  return;
+ }
+
+ const {error}=await sb
+  .from(table)
+  .delete()
+  .eq("id",id);
+
+ if(error)throw error;
+
+ state.db[table]=(state.db[table]||[])
+  .filter(x=>x.id!==id);
+}
+
+async function audit(action,entity,id,details={}){
+ try{
+  await insert("audit_logs",{
+   action,
+   entity,
+   entity_id:id,
+   details
+  });
+ }catch(e){
+  console.warn(e)
+ }
+}
+
+const ROLE_PAGES={
+ admin:[
+  "dashboard","members","clients","sales","quotes","invoices",
+  "payments","purchases","expenses","stock","activities",
+  "projects","innovations","reports","audit","settings"
+ ],
+ manager:[
+  "dashboard","members","clients","sales","quotes","invoices",
+  "payments","purchases","expenses","stock","activities",
+  "projects","innovations","reports"
+ ],
+ employee:[
+  "dashboard","clients","sales","quotes","invoices",
+  "payments","purchases","expenses","stock","activities",
+  "projects","innovations","reports"
+ ]
+};
+
+function allowedPages(){
+ return ROLE_PAGES[state.role]||ROLE_PAGES.employee
+}
+
+function canManageStock(){
+ return state.role==="admin"||state.role==="manager"
+}
+
+function applyRoleNavigation(){
+
+ const allowed=allowedPages();
+
+ document.querySelectorAll("#nav button").forEach(b=>{
+
+  const visible=allowed.includes(b.dataset.page);
+
+  b.hidden=!visible;
+
+  b.setAttribute(
+   "aria-hidden",
+   String(!visible)
+  );
+ });
+
+ if(!allowed.includes(state.page))
+  state.page="dashboard";
+}
+
+function bind(){
+
+ applyRoleNavigation();
+
+ document.querySelectorAll("#nav button:not([hidden])")
+ .forEach(b=>{
+
+  b.onclick=function(e){
+
+   e.preventDefault();
+
+   const page=this.dataset.page;
+
+   if(!allowedPages().includes(page))
+    return;
+
+   state.page=page;
+
+   closeMenu();
+
+   render();
+  };
+ });
+
+ const menuBtn=document.getElementById("menuBtn");
+ const sidebar=document.getElementById("sidebar");
+
+ if(menuBtn&&sidebar){
+
+  menuBtn.onclick=null;
+
+  menuBtn.addEventListener("click",function(e){
+
+   e.preventDefault();
+   e.stopPropagation();
+
+   sidebar.classList.toggle("open");
+
+   menuBtn.setAttribute(
+    "aria-expanded",
+    String(sidebar.classList.contains("open"))
+   );
+  });
+
+  if(!document.body.dataset.lbtOutsideMenu){
+
+   document.body.dataset.lbtOutsideMenu="1";
+
+   document.addEventListener("click",function(e){
+
+    if(
+     sidebar.classList.contains("open") &&
+     !sidebar.contains(e.target) &&
+     !menuBtn.contains(e.target)
+    ){
+     closeMenu();
+    }
+   });
+  }
+ }
+
+ const closeModalBtn=document.getElementById("closeModal");
+
+ if(closeModalBtn)
+  closeModalBtn.onclick=closeModal;
+
+ const logoutBtn=document.getElementById("logoutBtn");
+
+ if(logoutBtn)
+  logoutBtn.onclick=logout;
+}
+
+function closeMenu(){
+
+ const sidebar=document.getElementById("sidebar");
+ const menuBtn=document.getElementById("menuBtn");
+
+ if(sidebar)
+  sidebar.classList.remove("open");
+
+ if(menuBtn)
+  menuBtn.setAttribute("aria-expanded","false");
+}
+
+async function logout(){
+
+ if(sb)
+  await sb.auth.signOut();
+
+ location.href="login.html";
+}
+
+function setHeader(title,sub){
+
+ document.getElementById("pageTitle").textContent=title;
+
+ document.getElementById("pageSub").textContent=sub;
+}
+
+function render(){
+
+ applyRoleNavigation();
+
+ if(!allowedPages().includes(state.page))
+  state.page="dashboard";
+
+ document.querySelectorAll("#nav button")
+ .forEach(b=>
+  b.classList.toggle(
+   "active",
+   b.dataset.page===state.page
+  )
+ );
+
+ const map={
+  dashboard:["Tableau de bord","Vue générale de l’activité."],
+  members:["Membres","Utilisateurs et rôles."],
+  clients:["Clients","Gestion et historique des clients."],
+  quotes:["Devis","Création et suivi des devis."],
+  invoices:["Factures","Facturation et suivi des échéances."],
+  payments:["Paiements","Enregistrement et suivi des règlements."],
+  sales:["Ventes","Suivi des ventes et encaissements."],
+  purchases:["Achats","Achats auprès des fournisseurs."],
+  expenses:["Dépenses","Charges et dépenses."],
+  stock:["Stock & matériel","Articles, quantités et seuils."],
+  activities:["Activités","Interventions et opérations réalisées."],
+  projects:["Projets","Suivi des projets et chantiers."],
+  innovations:["Innovations","Idées, prototypes et solutions."],
+  reports:["Rapports","Synthèse financière et opérationnelle."],
+  audit:["Journal","Traçabilité des actions."],
+  settings:["Paramètres","Configuration de l’entreprise."]
+ };
+
+ setHeader(...map[state.page]);
+
+ const fn={
+  dashboard:dashboard,
+  members:members,
+  clients:clientsPage,
+  quotes:quotesPage,
+  invoices:invoicesPage,
+  payments:paymentsPage,
+  sales:tablePage,
+  purchases:tablePage,
+  expenses:tablePage,
+  stock:stock,
+  activities:tablePage,
+  projects:tablePage,
+  innovations:tablePage,
+  reports:reports,
+  audit:auditPage,
+  settings:settings
+ }[state.page];
+
+ if(typeof fn!=="function"){
+
+  state.page="dashboard";
+
+  setHeader(
+   "Tableau de bord",
+   "Vue générale de l’activité."
+  );
+
+  document.getElementById("content").innerHTML=dashboard();
 
   bindPage();
+
+  return;
+ }
+
+ const out=fn(state.page);
+
+ document.getElementById("content").innerHTML=out;
+
+ bindPage();
 }
 
-function dashboard() {
-  const sum = table =>
-    (state.db[table] || []).reduce(
-      (total, item) =>
-        total + Number(item.amount || 0),
-      0
-    );
+function bindPage(){
 
-  const stock = (
-    state.db.stock_items || []
-  ).reduce(
-    (total, item) =>
-      total + Number(item.quantity || 0),
-    0
+ document.querySelectorAll("[data-add]")
+  .forEach(b=>
+   b.onclick=()=>openForm(b.dataset.add)
   );
 
-  const lowStock = (
-    state.db.stock_items || []
-  ).filter(
-    item =>
-      Number(item.quantity || 0) <=
-      Number(item.min_quantity || 0)
-  ).length;
-
-  const invoiceTotal = (
-    state.db.invoices || []
-  ).reduce(
-    (total, invoice) =>
-      total + Number(invoice.total || 0),
-    0
+ document.querySelectorAll("[data-delete]")
+  .forEach(b=>
+   b.onclick=()=>del(
+    b.dataset.delete,
+    b.dataset.id
+   )
   );
 
-  const invoicePaid = (
-    state.db.invoices || []
-  ).reduce(
-    (total, invoice) =>
-      total +
-      Number(
-        invoice.amount_paid || 0
-      ),
-    0
+ document.querySelectorAll("[data-edit]")
+  .forEach(b=>
+   b.onclick=()=>openForm(
+    b.dataset.edit,
+    b.dataset.id
+   )
   );
 
-  const invoiceDue = Math.max(
-    0,
-    invoiceTotal - invoicePaid
+ document.querySelectorAll("[data-role]")
+  .forEach(s=>
+   s.onchange=()=>changeRole(
+    s.dataset.id,
+    s.value
+   )
   );
 
-  const paymentsTotal = (
-    state.db.payments || []
-  ).reduce(
-    (total, payment) =>
-      total + Number(payment.amount || 0),
-    0
+ document.querySelectorAll("[data-create-employee]")
+  .forEach(b=>
+   b.onclick=openEmployeeForm
   );
 
-  const recentActivities = (
-    state.db.activities || []
-  )
-    .slice(0, 5)
-    .map(
-      item => `
-        <p>
-          <strong>${esc(
-            item.title || "Activité"
-          )}</strong>
-          <br>
-          <span class="muted">
-            ${formatDateTime(
-              item.created_at
-            )}
-          </span>
-        </p>
-      `
-    )
-    .join("");
+ document.querySelectorAll("[data-toggle-active]")
+  .forEach(s=>
+   s.onchange=()=>toggleMember(
+    s.dataset.id,
+    s.checked
+   )
+  );
 
-  const recentProjects = (
-    state.db.projects || []
-  )
-    .slice(0, 5)
-    .map(
-      item => `
-        <p>
-          <strong>${esc(
-            item.name || "Projet"
-          )}</strong>
-          <br>
-          <span class="muted">
-            ${esc(item.status || "")}
-          </span>
-        </p>
-      `
-    )
-    .join("");
+ document.querySelectorAll("[data-member-card]")
+  .forEach(b=>
+   b.onclick=()=>openMemberCard(
+    b.dataset.memberCard
+   )
+  );
 
-  const recentInnovations = (
-    state.db.innovations || []
-  )
-    .slice(0, 5)
-    .map(
-      item => `
-        <p>
-          <strong>${esc(
-            item.title || "Innovation"
-          )}</strong>
-          <br>
-          <span class="muted">
-            ${esc(item.stage || "")}
-          </span>
-        </p>
-      `
-    )
-    .join("");
+ document.querySelectorAll("[data-edit-stock]")
+  .forEach(b=>
+   b.onclick=()=>openForm(
+    "stock_items",
+    b.dataset.editStock
+   )
+  );
+
+ document.querySelectorAll("[data-edit-document]")
+  .forEach(b=>
+   b.onclick=()=>openDocumentForm(
+    b.dataset.editDocument,
+    b.dataset.id
+   )
+  );
+
+ document.querySelectorAll("[data-details-document]")
+  .forEach(b=>
+   b.onclick=()=>openDocumentForm(
+    b.dataset.detailsDocument,
+    b.dataset.id,
+    true
+   )
+  );
+
+ document.querySelectorAll("[data-add-document]")
+  .forEach(b=>
+   b.onclick=()=>openDocumentForm(
+    b.dataset.addDocument
+   )
+  );
+
+ document.querySelectorAll("[data-add-payment]")
+  .forEach(b=>
+   b.onclick=()=>openPaymentForm(
+    b.dataset.addPayment
+   )
+  );
+
+ document.querySelectorAll("[data-delete-payment]")
+  .forEach(b=>
+   b.onclick=()=>deletePayment(
+    b.dataset.deletePayment
+   )
+  );
+
+ document.getElementById("settingsForm")
+  ?.addEventListener(
+   "submit",
+   saveSettings
+  );
+}
+
+function dashboard(){
+
+ const sum=t=>
+  state.db[t].reduce(
+   (a,x)=>a+Number(x.amount||0),
+   0
+  );
+
+ const stock=
+  state.db.stock_items.reduce(
+   (a,x)=>a+Number(x.quantity||0),
+   0
+  );
+
+ return `
+ <section class="welcome-hero">
+
+   <div class="hero-glow hero-glow-one"></div>
+   <div class="hero-glow hero-glow-two"></div>
+
+   <div class="hero-copy">
+
+     <span class="hero-kicker">
+       ESPACE DE GESTION
+     </span>
+
+     <h2>
+       Bienvenue chez<br>
+       <strong>LUC BRICO-TECH</strong>
+     </h2>
+
+     <p>
+       La technologie au service de vos projets.
+     </p>
+
+     <div class="hero-tags">
+       <span>Électricité</span>
+       <span>Maintenance</span>
+       <span>Informatique</span>
+       <span>Innovation</span>
+     </div>
+
+   </div>
+
+   <div class="hero-logo">
+     <img
+       src="./logo-luc-bricotech.png"
+       alt="Logo LUC BRICO-TECH"
+     >
+   </div>
+
+ </section>
+
+ <div class="grid kpis">
+
+   <div class="card kpi">
+     <small>Ventes</small>
+     <strong>${money(sum("sales"))}</strong>
+   </div>
+
+   <div class="card kpi">
+     <small>Achats</small>
+     <strong>${money(sum("purchases"))}</strong>
+   </div>
+
+   <div class="card kpi">
+     <small>Dépenses</small>
+     <strong>${money(sum("expenses"))}</strong>
+   </div>
+
+   <div class="card kpi">
+     <small>Stock total</small>
+     <strong>${stock}</strong>
+   </div>
+
+ </div>
+
+ <div class="quick-strip">
+
+   <div>
+     <strong>
+       Votre besoin, notre solution.
+     </strong>
+
+     <span>
+       Centralisez les opérations et gardez une vision claire de l’activité.
+     </span>
+   </div>
+
+   <div class="quick-actions">
+
+     <button class="primary" data-add="sales">
+       + Vente
+     </button>
+
+     <button class="secondary" data-add="activities">
+       + Activité
+     </button>
+
+     <button class="secondary" data-add="projects">
+       + Projet
+     </button>
+
+   </div>
+
+ </div>
+
+ <div class="grid cards" style="margin-top:16px">
+
+   <div class="card">
+     <h3>Activités récentes</h3>
+     ${recent("activities","title")}
+   </div>
+
+   <div class="card">
+     <h3>Projets</h3>
+     ${recent("projects","name")}
+   </div>
+
+   <div class="card">
+     <h3>Innovations</h3>
+     ${recent("innovations","title")}
+   </div>
+
+ </div>`;
+}
+
+function recent(t,key){
+
+ const a=state.db[t].slice(0,5);
+
+ return a.length
+  ?a.map(x=>`
+    <p>
+      <strong>${esc(x[key])}</strong>
+      <br>
+      <span class="muted">
+        ${new Date(x.created_at).toLocaleString("fr-FR")}
+      </span>
+    </p>
+   `).join("")
+  :`<div class="empty">Aucun élément.</div>`;
+}
+
+function tablePage(t){
+
+ const labels={
+  sales:["Client","Article","Montant","Statut"],
+  purchases:["Fournisseur","Article","Montant","Statut"],
+  expenses:["Catégorie","Libellé","Montant","Bénéficiaire"],
+  activities:["Titre","Catégorie","Statut","Montant"],
+  projects:["Nom","Client","Statut","Progression"],
+  innovations:["Titre","Étape","Progression","Budget"]
+ };
+
+ const l=labels[t];
+ const arr=state.db[t]||[];
+
+ let rows=arr.map(x=>{
+
+  const vals=
+   t==="sales"
+    ?[x.customer,x.item,money(x.amount),x.status]
+    :t==="purchases"
+      ?[x.supplier,x.item,money(x.amount),x.status]
+      :t==="expenses"
+        ?[x.category,x.label,money(x.amount),x.beneficiary]
+        :t==="activities"
+          ?[x.title,x.category,x.status,money(x.amount)]
+          :t==="projects"
+            ?[x.name,x.client,x.status,(x.progress||0)+" %"]
+            :[x.title,x.stage,(x.progress||0)+" %",money(x.budget)];
+
+  const action=
+   state.role==="admin"
+    ?`<button class="danger" data-delete="${t}" data-id="${x.id}">Supprimer</button>`
+    :"—";
 
   return `
-    <section class="welcome-hero">
-      <div class="hero-glow hero-glow-one"></div>
-      <div class="hero-glow hero-glow-two"></div>
-
-      <div class="hero-copy">
-        <span class="hero-kicker">
-          ESPACE DE GESTION
-        </span>
-
-        <h2>
-          Bienvenue chez<br>
-          <strong>LUC BRICO-TECH</strong>
-        </h2>
-
-        <p>
-          La technologie au service de vos projets.
-        </p>
-
-        <div class="hero-tags">
-          <span>Électricité</span>
-          <span>Maintenance</span>
-          <span>Informatique</span>
-          <span>Innovation</span>
-        </div>
-      </div>
-
-      <div class="hero-logo">
-        <img
-          src="./logo-luc-bricotech.png"
-          alt="Logo LUC BRICO-TECH"
-        >
-      </div>
-    </section>
-
-    <div class="grid kpis">
-
-      <div class="card kpi">
-        <small>Ventes</small>
-        <strong>${money(
-          sum("sales")
-        )}</strong>
-      </div>
-
-      <div class="card kpi">
-        <small>Paiements reçus</small>
-        <strong>${money(
-          paymentsTotal
-        )}</strong>
-      </div>
-
-      <div class="card kpi">
-        <small>Factures à recevoir</small>
-        <strong>${money(
-          invoiceDue
-        )}</strong>
-      </div>
-
-      <div class="card kpi">
-        <small>Dépenses</small>
-        <strong>${money(
-          sum("expenses")
-        )}</strong>
-      </div>
-
-      <div class="card kpi">
-        <small>Stock total</small>
-        <strong>${stock}</strong>
-      </div>
-
-      <div class="card kpi">
-        <small>Alertes stock</small>
-        <strong>${lowStock}</strong>
-      </div>
-    </div>
-
-    <div class="quick-strip">
-      <div>
-        <strong>
-          Votre besoin, notre solution.
-        </strong>
-
-        <span>
-          Centralisez les opérations et gardez une vision claire de l’activité.
-        </span>
-      </div>
-
-      <div class="quick-actions">
-        <button
-          class="primary"
-          data-add="sales"
-        >
-          + Vente
-        </button>
-
-        <button
-          class="secondary"
-          data-add="activities"
-        >
-          + Activité
-        </button>
-
-        <button
-          class="secondary"
-          data-add="projects"
-        >
-          + Projet
-        </button>
-      </div>
-    </div>
-
-    <div
-      class="grid cards"
-      style="margin-top:16px"
-    >
-
-      <div class="card">
-        <h3>Activités récentes</h3>
-
-        ${
-          recentActivities ||
-          '<div class="empty">Aucune activité.</div>'
-        }
-      </div>
-
-      <div class="card">
-        <h3>Projets</h3>
-
-        ${
-          recentProjects ||
-          '<div class="empty">Aucun projet.</div>'
-        }
-      </div>
-
-      <div class="card">
-        <h3>Innovations</h3>
-
-        ${
-          recentInnovations ||
-          '<div class="empty">Aucune innovation.</div>'
-        }
-      </div>
-
-    </div>
+   <tr>
+     ${vals.map(v=>`<td>${esc(v)}</td>`).join("")}
+     <td>${action}</td>
+   </tr>
   `;
-}
-
-function recent(table, key) {
-  const array = (
-    state.db[table] || []
-  ).slice(0, 5);
-
-  if (!array.length) {
-    return `
-      <div class="empty">
-        Aucun élément.
-      </div>
-    `;
-  }
-
-  return array
-    .map(
-      item => `
-        <p>
-          <strong>${esc(
-            item[key]
-          )}</strong>
-          <br>
-          <span class="muted">
-            ${formatDateTime(
-              item.created_at
-            )}
-          </span>
-        </p>
-      `
-    )
-    .join("");
-}
-
-function members() {
-  const membersList =
-    state.db.profiles || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>Membres</h3>
-          <p class="muted">
-            Gestion des utilisateurs et des rôles.
-          </p>
-        </div>
-
-        ${
-          state.role === "admin"
-            ? `
-              <button
-                class="primary"
-                id="createEmployeeBtn"
-              >
-                + Créer un compte employé
-              </button>
-            `
-            : ""
-        }
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>E-mail</th>
-              <th>Rôle</th>
-              <th>Statut</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              membersList.length
-                ? membersList
-                    .map(
-                      member => `
-                        <tr>
-                          <td>
-                            ${esc(
-                              member.full_name ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              member.email ||
-                                ""
-                            )}
-                          </td>
-
-                          <td>
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <select
-                                    data-role="${member.id}"
-                                  >
-                                    <option
-                                      value="admin"
-                                      ${
-                                        member.role ===
-                                        "admin"
-                                          ? "selected"
-                                          : ""
-                                      }
-                                    >
-                                      Admin
-                                    </option>
-
-                                    <option
-                                      value="manager"
-                                      ${
-                                        member.role ===
-                                        "manager"
-                                          ? "selected"
-                                          : ""
-                                      }
-                                    >
-                                      Manager
-                                    </option>
-
-                                    <option
-                                      value="employee"
-                                      ${
-                                        member.role ===
-                                        "employee"
-                                          ? "selected"
-                                          : ""
-                                      }
-                                    >
-                                      Employé
-                                    </option>
-                                  </select>
-                                `
-                                : esc(
-                                    member.role ||
-                                      ""
-                                  )
-                            }
-                          </td>
-
-                          <td>
-                            <span
-                              class="badge ${
-                                member.active === false
-                                  ? "danger"
-                                  : "success"
-                              }"
-                            >
-                              ${
-                                member.active === false
-                                  ? "Désactivé"
-                                  : "Actif"
-                              }
-                            </span>
-                          </td>
-
-                          <td>
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="secondary"
-                                    data-toggle-active="${member.id}"
-                                  >
-                                    ${
-                                      member.active ===
-                                      false
-                                        ? "Activer"
-                                        : "Désactiver"
-                                    }
-                                  </button>
-                                `
-                                : "Lecture seule"
-                            }
-                          </td>
-                        </tr>
-                      `
-                    )
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="5">
-                      <div class="empty">
-                        Aucun membre.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function clientsPage() {
-  const clients =
-    state.db.clients || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>Clients</h3>
-          <p class="muted">
-            Base clients de LUC BRICO-TECH.
-          </p>
-        </div>
-
-        <button
-          class="primary"
-          data-add="clients"
-        >
-          + Nouveau client
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Entreprise</th>
-              <th>Téléphone</th>
-              <th>E-mail</th>
-              <th>Ville</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              clients.length
-                ? clients
-                    .map(
-                      client => `
-                        <tr>
-                          <td>
-                            ${esc(
-                              client.full_name
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              client.company_name ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              client.phone ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              client.email ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              client.city ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            <button
-                              class="secondary"
-                              data-edit="clients"
-                              data-id="${client.id}"
-                            >
-                              Modifier
-                            </button>
-
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="danger ghost"
-                                    data-delete="clients"
-                                    data-id="${client.id}"
-                                  >
-                                    Supprimer
-                                  </button>
-                                `
-                                : ""
-                            }
-                          </td>
-                        </tr>
-                      `
-                    )
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="6">
-                      <div class="empty">
-                        Aucun client enregistré.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function clientName(id) {
-  const client = (
-    state.db.clients || []
-  ).find(item => item.id === id);
-
-  if (!client) return "Client non renseigné";
-
-  return (
-    client.full_name ||
-    client.company_name ||
-    "Client"
-  );
-}
-
-function statusLabel(status) {
-  const labels = {
-    draft: "Brouillon",
-    sent: "Envoyé",
-    accepted: "Accepté",
-    rejected: "Refusé",
-    expired: "Expiré",
-    converted: "Converti",
-    unpaid: "Impayée",
-    partial: "Partiellement payée",
-    paid: "Payée",
-    cancelled: "Annulée",
-    overdue: "En retard",
-    planned: "Planifié",
-    active: "En cours",
-    completed: "Terminé",
-    paused: "En pause",
-    open: "Ouverte",
-    in_progress: "En cours",
-    done: "Terminée"
-  };
-
-  return (
-    labels[status] ||
-    status ||
-    "—"
-  );
-}
-
-function invoiceDisplayStatus(invoice) {
-  if (!invoice) return "draft";
-
-  const total = Number(
-    invoice.total || 0
-  );
-
-  const paid = Number(
-    invoice.amount_paid || 0
-  );
-
-  if (
-    invoice.status === "cancelled"
-  ) {
-    return "cancelled";
-  }
-
-  if (
-    total > 0 &&
-    paid >= total
-  ) {
-    return "paid";
-  }
-
-  if (
-    paid > 0 &&
-    paid < total
-  ) {
-    return "partial";
-  }
-
-  if (
-    invoice.due_date &&
-    new Date(invoice.due_date) <
-      new Date() &&
-    total > paid
-  ) {
-    return "overdue";
-  }
-
-  return invoice.status || "unpaid";
-}
-
-function invoiceStatusClass(status) {
-  if (status === "paid") {
-    return "success";
-  }
-
-  if (
-    status === "partial" ||
-    status === "sent"
-  ) {
-    return "warn";
-  }
-
-  if (
-    status === "overdue" ||
-    status === "cancelled" ||
-    status === "rejected"
-  ) {
-    return "danger";
-  }
-
-  return "muted";
-}
-
-function quotesPage() {
-  const quotes =
-    state.db.quotes || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>Devis</h3>
-          <p class="muted">
-            Création et suivi des devis clients.
-          </p>
-        </div>
-
-        <button
-          class="primary"
-          data-add="quotes"
-        >
-          + Nouveau devis
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>N° devis</th>
-              <th>Client</th>
-              <th>Date</th>
-              <th>Validité</th>
-              <th>Total</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              quotes.length
-                ? quotes
-                    .map(
-                      quote => `
-                        <tr>
-                          <td>
-                            <strong>
-                              ${esc(
-                                quote.quote_number ||
-                                  "DEVIS"
-                              )}
-                            </strong>
-                          </td>
-
-                          <td>
-                            ${esc(
-                              clientName(
-                                quote.client_id
-                              )
-                            )}
-                          </td>
-
-                          <td>
-                            ${normalizeDate(
-                              quote.issue_date
-                            )}
-                          </td>
-
-                          <td>
-                            ${normalizeDate(
-                              quote.valid_until
-                            )}
-                          </td>
-
-                          <td>
-                            ${money(
-                              quote.total
-                            )}
-                          </td>
-
-                          <td>
-                            <span
-                              class="badge ${invoiceStatusClass(
-                                quote.status
-                              )}"
-                            >
-                              ${statusLabel(
-                                quote.status
-                              )}
-                            </span>
-                          </td>
-
-                          <td>
-                            <button
-                              class="secondary"
-                              data-details-document="quotes"
-                              data-id="${quote.id}"
-                            >
-                              Détails
-                            </button>
-
-                            <button
-                              class="secondary"
-                              data-edit-document="quotes"
-                              data-id="${quote.id}"
-                            >
-                              Modifier
-                            </button>
-
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="danger ghost"
-                                    data-delete="quotes"
-                                    data-id="${quote.id}"
-                                  >
-                                    Supprimer
-                                  </button>
-                                `
-                                : ""
-                            }
-                          </td>
-                        </tr>
-                      `
-                    )
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="7">
-                      <div class="empty">
-                        Aucun devis enregistré.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function invoicesPage() {
-  const invoices =
-    state.db.invoices || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>Factures</h3>
-          <p class="muted">
-            Suivi des factures et des règlements clients.
-          </p>
-        </div>
-
-        <button
-          class="primary"
-          data-add="invoices"
-        >
-          + Nouvelle facture
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>N° facture</th>
-              <th>Client</th>
-              <th>Date</th>
-              <th>Échéance</th>
-              <th>Total</th>
-              <th>Payé</th>
-              <th>Reste</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              invoices.length
-                ? invoices
-                    .map(invoice => {
-                      const displayStatus =
-                        invoiceDisplayStatus(
-                          invoice
-                        );
-
-                      const paid = Number(
-                        invoice.amount_paid ||
-                          0
-                      );
-
-                      const total = Number(
-                        invoice.total ||
-                          0
-                      );
-
-                      const due = Math.max(
-                        0,
-                        total - paid
-                      );
-
-                      return `
-                        <tr>
-                          <td>
-                            <strong>
-                              ${esc(
-                                invoice.invoice_number ||
-                                  "FACTURE"
-                              )}
-                            </strong>
-                          </td>
-
-                          <td>
-                            ${esc(
-                              clientName(
-                                invoice.client_id
-                              )
-                            )}
-                          </td>
-
-                          <td>
-                            ${normalizeDate(
-                              invoice.issue_date
-                            )}
-                          </td>
-
-                          <td>
-                            ${normalizeDate(
-                              invoice.due_date
-                            )}
-                          </td>
-
-                          <td>
-                            ${money(total)}
-                          </td>
-
-                          <td>
-                            ${money(paid)}
-                          </td>
-
-                          <td>
-                            ${money(due)}
-                          </td>
-
-                          <td>
-                            <span
-                              class="badge ${invoiceStatusClass(
-                                displayStatus
-                              )}"
-                            >
-                              ${statusLabel(
-                                displayStatus
-                              )}
-                            </span>
-                          </td>
-
-                          <td>
-                            <button
-                              class="secondary"
-                              data-details-document="invoices"
-                              data-id="${invoice.id}"
-                            >
-                              Détails
-                            </button>
-
-                            <button
-                              class="secondary"
-                              data-edit-document="invoices"
-                              data-id="${invoice.id}"
-                            >
-                              Modifier
-                            </button>
-
-                            <button
-                              class="primary"
-                              data-add-payment="${invoice.id}"
-                            >
-                              + Paiement
-                            </button>
-
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="danger ghost"
-                                    data-delete="invoices"
-                                    data-id="${invoice.id}"
-                                  >
-                                    Supprimer
-                                  </button>
-                                `
-                                : ""
-                            }
-                          </td>
-                        </tr>
-                      `;
-                    })
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="9">
-                      <div class="empty">
-                        Aucune facture enregistrée.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function paymentsPage() {
-  const payments =
-    state.db.payments || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>Paiements</h3>
-          <p class="muted">
-            Enregistrement comptable des règlements.
-          </p>
-        </div>
-
-        <button
-          class="primary"
-          id="newPaymentBtn"
-        >
-          + Nouveau paiement
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Facture</th>
-              <th>Client</th>
-              <th>Montant</th>
-              <th>Mode</th>
-              <th>Date</th>
-              <th>Référence</th>
-              <th>Notes</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              payments.length
-                ? payments
-                    .map(payment => {
-                      const invoice =
-                        (
-                          state.db.invoices ||
-                          []
-                        ).find(
-                          item =>
-                            item.id ===
-                            payment.invoice_id
-                        );
-
-                      return `
-                        <tr>
-                          <td>
-                            ${esc(
-                              invoice?.invoice_number ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              invoice
-                                ? clientName(
-                                    invoice.client_id
-                                  )
-                                : "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${money(
-                              payment.amount
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              paymentMethodLabel(
-                                payment.payment_method
-                              )
-                            )}
-                          </td>
-
-                          <td>
-                            ${normalizeDate(
-                              payment.payment_date
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              payment.reference ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              payment.notes ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="danger ghost"
-                                    data-delete-payment="${payment.id}"
-                                  >
-                                    Supprimer
-                                  </button>
-                                `
-                                : ""
-                            }
-                          </td>
-                        </tr>
-                      `;
-                    })
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="8">
-                      <div class="empty">
-                        Aucun paiement enregistré.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function paymentMethodLabel(method) {
-  const labels = {
-    cash: "Espèces",
-    mtn_momo: "MTN MoMo",
-    moov_money: "Moov Money",
-    celtiis_cash: "Celtiis Cash",
-    bank_transfer: "Virement bancaire",
-    card: "Carte bancaire",
-    check: "Chèque bancaire",
-    pi_spi: "PI-SPI",
-    mobile_money: "Mobile Money",
-    bank: "Banque",
-    credit: "Crédit",
-    other: "Autre"
-  };
-
-  return labels[method] || method || "—";
-}
-
-function tablePage(page) {
-  const table = page;
-
-  const labels = {
-    sales: {
-      title: "Ventes",
-      add: "Nouvelle vente",
-      columns: [
-        ["customer", "Client"],
-        ["item", "Article / service"],
-        ["quantity", "Quantité"],
-        ["amount", "Montant"],
-        ["payment_method", "Paiement"],
-        ["status", "Statut"]
-      ]
-    },
-
-    purchases: {
-      title: "Achats",
-      add: "Nouvel achat",
-      columns: [
-        ["supplier", "Fournisseur"],
-        ["item", "Article"],
-        ["quantity", "Quantité"],
-        ["amount", "Montant"],
-        ["status", "Statut"]
-      ]
-    },
-
-    expenses: {
-      title: "Dépenses",
-      add: "Nouvelle dépense",
-      columns: [
-        ["category", "Catégorie"],
-        ["label", "Libellé"],
-        ["amount", "Montant"],
-        ["beneficiary", "Bénéficiaire"]
-      ]
-    },
-
-    activities: {
-      title: "Activités",
-      add: "Nouvelle activité",
-      columns: [
-        ["title", "Titre"],
-        ["category", "Catégorie"],
-        ["location", "Lieu"],
-        ["status", "Statut"],
-        ["amount", "Montant"]
-      ]
-    },
-
-    projects: {
-      title: "Projets",
-      add: "Nouveau projet",
-      columns: [
-        ["name", "Nom"],
-        ["client", "Client"],
-        ["status", "Statut"],
-        ["progress", "Progression"],
-        ["budget", "Budget"]
-      ]
-    },
-
-    innovations: {
-      title: "Innovations",
-      add: "Nouvelle innovation",
-      columns: [
-        ["title", "Titre"],
-        ["stage", "Étape"],
-        ["progress", "Progression"],
-        ["budget", "Budget"]
-      ]
-    }
-  };
-
-  const config = labels[table];
-
-  if (!config) {
-    return `
-      <div class="card">
-        <h3>Page indisponible</h3>
-      </div>
-    `;
-  }
-
-  const rows =
-    state.db[table] || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>${config.title}</h3>
-          <p class="muted">
-            Gestion des opérations.
-          </p>
-        </div>
-
-        <button
-          class="primary"
-          data-add="${table}"
-        >
-          + ${config.add}
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              ${config.columns
-                .map(
-                  column =>
-                    `<th>${column[1]}</th>`
-                )
-                .join("")}
-
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              rows.length
-                ? rows
-                    .map(
-                      row => `
-                        <tr>
-                          ${config.columns
-                            .map(
-                              ([key]) => {
-                                let value =
-                                  row[key];
-
-                                if (
-                                  key ===
-                                    "amount" ||
-                                  key ===
-                                    "budget"
-                                ) {
-                                  value =
-                                    money(value);
-                                }
-
-                                if (
-                                  key ===
-                                  "payment_method"
-                                ) {
-                                  value =
-                                    paymentMethodLabel(
-                                      value
-                                    );
-                                }
-
-                                if (
-                                  key ===
-                                  "status" ||
-                                  key ===
-                                  "stage"
-                                ) {
-                                  value =
-                                    statusLabel(
-                                      value
-                                    );
-                                }
-
-                                if (
-                                  key ===
-                                  "progress"
-                                ) {
-                                  value =
-                                    value == null
-                                      ? "—"
-                                      : `${value}%`;
-                                }
-
-                                return `<td>${esc(
-                                  value ??
-                                    "—"
-                                )}</td>`;
-                              }
-                            )
-                            .join("")}
-
-                          <td>
-                            <button
-                              class="secondary"
-                              data-edit="${table}"
-                              data-id="${row.id}"
-                            >
-                              Modifier
-                            </button>
-
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="danger ghost"
-                                    data-delete="${table}"
-                                    data-id="${row.id}"
-                                  >
-                                    Supprimer
-                                  </button>
-                                `
-                                : ""
-                            }
-                          </td>
-                        </tr>
-                      `
-                    )
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="${
-                      config.columns.length +
-                      1
-                    }">
-                      <div class="empty">
-                        Aucun enregistrement.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function stock() {
-  const items =
-    state.db.stock_items || [];
-
-  return `
-    <div class="card">
-
-      <div class="page-actions">
-        <div>
-          <h3>Stock & matériel</h3>
-          <p class="muted">
-            Suivi des articles et du matériel.
-          </p>
-        </div>
-
-        ${
-          canManageStock()
-            ? `
-              <button
-                class="primary"
-                data-add="stock_items"
-              >
-                + Nouvel article
-              </button>
-            `
-            : ""
-        }
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Article</th>
-              <th>Catégorie</th>
-              <th>Unité</th>
-              <th>Quantité</th>
-              <th>Seuil</th>
-              <th>Emplacement</th>
-              <th>État</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              items.length
-                ? items
-                    .map(item => {
-                      const quantity =
-                        Number(
-                          item.quantity || 0
-                        );
-
-                      const minimum =
-                        Number(
-                          item.min_quantity ||
-                            0
-                        );
-
-                      const low =
-                        quantity <= minimum;
-
-                      return `
-                        <tr>
-                          <td>
-                            <strong>
-                              ${esc(
-                                item.name
-                              )}
-                            </strong>
-                          </td>
-
-                          <td>
-                            ${esc(
-                              item.category ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              item.unit ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            ${quantity}
-                          </td>
-
-                          <td>
-                            ${minimum}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              item.location ||
-                                "—"
-                            )}
-                          </td>
-
-                          <td>
-                            <span
-                              class="badge ${
-                                low
-                                  ? "danger"
-                                  : "success"
-                              }"
-                            >
-                              ${
-                                low
-                                  ? "Stock faible"
-                                  : "Disponible"
-                              }
-                            </span>
-                          </td>
-
-                          <td>
-                            ${
-                              canManageStock()
-                                ? `
-                                  <button
-                                    class="secondary"
-                                    data-edit-stock="${item.id}"
-                                  >
-                                    Modifier
-                                  </button>
-                                `
-                                : ""
-                            }
-
-                            <button
-                              class="primary"
-                              data-stock-move="${item.id}"
-                            >
-                              Mouvement
-                            </button>
-
-                            ${
-                              state.role ===
-                              "admin"
-                                ? `
-                                  <button
-                                    class="danger ghost"
-                                    data-delete="stock_items"
-                                    data-id="${item.id}"
-                                  >
-                                    Supprimer
-                                  </button>
-                                `
-                                : ""
-                            }
-                          </td>
-                        </tr>
-                      `;
-                    })
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="8">
-                      <div class="empty">
-                        Aucun article en stock.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div
-      class="card"
-      style="margin-top:16px"
-    >
-      <h3>Historique des mouvements</h3>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Article</th>
-              <th>Type</th>
-              <th>Quantité</th>
-              <th>Projet</th>
-              <th>Responsable</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${stockMovementRows()}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function stockMovementRows() {
-  const movements =
-    state.db.stock_movements || [];
-
-  if (!movements.length) {
-    return `
-      <tr>
-        <td colspan="7">
-          <div class="empty">
-            Aucun mouvement enregistré.
-          </div>
-        </td>
-      </tr>
-    `;
-  }
-
-  return movements
-    .slice(0, 50)
-    .map(movement => {
-      const item =
-        (
-          state.db.stock_items ||
-          []
-        ).find(
-          x => x.id === movement.stock_item_id
-        );
-
-      const project =
-        (
-          state.db.projects ||
-          []
-        ).find(
-          x => x.id === movement.project_id
-        );
-
-      const employee =
-        (
-          state.db.profiles ||
-          []
-        ).find(
-          x => x.id === movement.employee_id
-        );
-
-      return `
+ }).join("");
+
+ return `
+ <div class="toolbar">
+   <div class="muted">
+     ${arr.length} enregistrement(s)
+   </div>
+
+   <button class="primary" data-add="${t}">
+     + Ajouter
+   </button>
+ </div>
+
+ <div class="table-wrap">
+
+   <table>
+
+     <thead>
+       <tr>
+         ${l.map(x=>`<th>${x}</th>`).join("")}
+         <th>Action</th>
+       </tr>
+     </thead>
+
+     <tbody>
+       ${rows||`
         <tr>
-          <td>
-            ${formatDateTime(
-              movement.created_at
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              item?.name || "—"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              movement.type || "—"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              movement.quantity ?? "—"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              project?.name || "—"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              employee?.full_name ||
-                "—"
-            )}
-          </td>
-
-          <td>
-            ${esc(
-              movement.notes || "—"
-            )}
-          </td>
+         <td colspan="${l.length+1}">
+          <div class="empty">
+           Aucun enregistrement.
+          </div>
+         </td>
         </tr>
-      `;
-    })
-    .join("");
+       `}
+     </tbody>
+
+   </table>
+
+ </div>`;
 }
 
-function reports() {
-  const sales = (
-    state.db.sales || []
-  ).reduce(
-    (sum, item) =>
-      sum + Number(item.amount || 0),
-    0
-  );
+function stock(){
 
-  const purchases = (
-    state.db.purchases || []
-  ).reduce(
-    (sum, item) =>
-      sum + Number(item.amount || 0),
-    0
-  );
+ const arr=state.db.stock_items||[];
 
-  const expenses = (
-    state.db.expenses || []
-  ).reduce(
-    (sum, item) =>
-      sum + Number(item.amount || 0),
-    0
-  );
+ const rows=arr.map(x=>{
 
-  const payments = (
-    state.db.payments || []
-  ).reduce(
-    (sum, item) =>
-      sum + Number(item.amount || 0),
-    0
-  );
-
-  const result =
-    sales -
-    purchases -
-    expenses;
+  const action=
+   state.role==="admin"
+    ?`<button class="danger" data-delete="stock_items" data-id="${x.id}">
+       Supprimer
+      </button>`
+    :"—";
 
   return `
-    <div class="grid kpis">
+   <tr>
+    <td>${esc(x.name)}</td>
+    <td>${esc(x.category)}</td>
+    <td>${x.quantity} ${esc(x.unit||"")}</td>
+    <td>${x.min_quantity}</td>
+    <td>${esc(x.location)}</td>
+    <td>
+      ${
+       Number(x.quantity)<=Number(x.min_quantity)
+        ?'<span class="badge warn">Stock faible</span>'
+        :'<span class="badge success">OK</span>'
+      }
+    </td>
+    <td>${action}</td>
+   </tr>
+  `;
+ }).join("");
 
-      <div class="card kpi">
-        <small>Ventes</small>
-        <strong>${money(sales)}</strong>
-      </div>
+ const add=
+  canManageStock()
+   ?`<button class="primary" data-add="stock_items">
+      + Ajouter au stock
+     </button>`
+   :"";
 
-      <div class="card kpi">
-        <small>Achats</small>
-        <strong>${money(purchases)}</strong>
-      </div>
+ return `
+ <div class="toolbar">
+   <div class="muted">
+     ${arr.length} article(s)
+   </div>
+   ${add}
+ </div>
 
-      <div class="card kpi">
-        <small>Dépenses</small>
-        <strong>${money(expenses)}</strong>
-      </div>
+ <div class="table-wrap">
 
-      <div class="card kpi">
-        <small>Paiements reçus</small>
-        <strong>${money(payments)}</strong>
-      </div>
+   <table>
 
-      <div class="card kpi">
-        <small>Résultat estimé</small>
-        <strong>${money(result)}</strong>
-      </div>
+    <thead>
+     <tr>
+      <th>Article</th>
+      <th>Catégorie</th>
+      <th>Quantité</th>
+      <th>Seuil</th>
+      <th>Lieu</th>
+      <th>État</th>
+      <th>Action</th>
+     </tr>
+    </thead>
 
-    </div>
+    <tbody>
+     ${rows||`
+      <tr>
+       <td colspan="7">
+        <div class="empty">
+         Stock vide.
+        </div>
+       </td>
+      </tr>
+     `}
+    </tbody>
 
-    <div
-      class="card"
-      style="margin-top:16px"
+   </table>
+
+ </div>`;
+}
+
+function members(){
+
+ const arr=state.db.profiles||[];
+
+ const rows=arr.map(x=>{
+
+  const roleLabel=roleCardLabel(x.role);
+
+  const code=x.employee_code||"Code non attribué";
+
+  const actions=`
+   <div class="member-actions">
+     <button
+       type="button"
+       class="secondary"
+       data-member-card="${x.id}"
+     >
+       🎫 Carte
+     </button>
+   </div>
+  `;
+
+  return `
+   <tr>
+
+     <td>
+       <b>${esc(x.full_name||"Sans nom")}</b>
+       <br>
+       <span class="muted">
+         ${esc(x.email||"—")}
+       </span>
+     </td>
+
+     <td>
+       ${esc(x.phone||"—")}
+     </td>
+
+     <td>
+       ${
+        state.role==="admin"
+         ?`
+          <select data-role data-id="${x.id}">
+            ${
+             ["admin","manager","employee"]
+              .map(r=>`
+               <option
+                 value="${r}"
+                 ${x.role===r?"selected":""}
+               >
+                 ${roleCardLabel(r)}
+               </option>
+              `).join("")
+            }
+          </select>
+         `
+         :`
+          <span class="badge">
+            ${esc(roleLabel)}
+          </span>
+         `
+       }
+     </td>
+
+     <td>
+       ${
+        state.role==="admin"
+         ?`
+          <label class="switch">
+            <input
+              type="checkbox"
+              data-toggle-active
+              data-id="${x.id}"
+              ${x.active!==false?"checked":""}
+            >
+            <span></span>
+          </label>
+         `
+         :(x.active!==false?"Actif":"Inactif")
+       }
+     </td>
+
+     <td>
+       <b class="member-code-table">
+         ${esc(code)}
+       </b>
+     </td>
+
+     <td>
+       ${actions}
+     </td>
+
+   </tr>
+  `;
+ }).join("");
+
+ const create=
+  state.role==="admin"
+   ?`
+    <button
+      class="primary"
+      data-create-employee
     >
-      <h3>Exports</h3>
+      + Créer un compte employé
+    </button>
+   `
+   :"";
 
-      <div class="quick-actions">
-        <button
-          class="primary"
-          id="exportSalesCsv"
-        >
-          Exporter les ventes
-        </button>
+ const intro=
+  state.role==="admin"
+   ?"Créez les comptes de connexion, gérez les rôles et les cartes professionnelles."
+   :"Consultez les membres et leurs cartes professionnelles. La gestion des comptes est réservée à l’administrateur.";
 
-        <button
-          class="secondary"
-          id="exportAllCsv"
-        >
-          Export complet
-        </button>
+ return `
+ <div class="card">
 
-        ${
-          state.role === "admin"
-            ? `
-              <button
-                class="secondary"
-                id="backupBtn"
-              >
-                Sauvegarde JSON
-              </button>
-            `
-            : ""
-        }
-      </div>
-    </div>
-  `;
+  <div class="toolbar">
+
+   <div>
+
+    <h3 style="margin:0">
+      Membres
+    </h3>
+
+    <p
+      class="muted"
+      style="margin:.35rem 0 0"
+    >
+      ${intro}
+    </p>
+
+   </div>
+
+   ${create}
+
+  </div>
+
+  <div class="table-wrap">
+
+   <table>
+
+    <thead>
+     <tr>
+      <th>Nom / E-mail</th>
+      <th>Téléphone</th>
+      <th>Rôle</th>
+      <th>État</th>
+      <th>Code membre</th>
+      <th>Carte</th>
+     </tr>
+    </thead>
+
+    <tbody>
+
+     ${
+      rows||`
+       <tr>
+        <td colspan="6">
+         <div class="empty">
+          Aucun membre.
+         </div>
+        </td>
+       </tr>
+      `
+     }
+
+    </tbody>
+
+   </table>
+
+  </div>
+
+ </div>`;
 }
 
-function auditPage() {
-  if (state.role !== "admin") {
-    return `
-      <div class="card">
-        <h3>Accès refusé</h3>
-        <p class="muted">
-          Le journal est réservé à l’administrateur.
-        </p>
-      </div>
-    `;
+/* =========================
+   CARTES PROFESSIONNELLES
+   ========================= */
+
+function roleCardLabel(role){
+
+ const labels={
+  admin:"ADMINISTRATEUR",
+  manager:"MANAGER",
+  employee:"EMPLOYÉ"
+ };
+
+ return labels[role]||
+  String(role||"MEMBRE").toUpperCase();
+}
+
+function roleCardColor(role){
+
+ if(role==="admin")
+  return "#172554";
+
+ if(role==="manager")
+  return "#1d4ed8";
+
+ return "#334155";
+}
+
+function getMember(id){
+
+ return (state.db.profiles||[])
+  .find(x=>x.id===id)||null;
+}
+
+function memberInitials(name){
+
+ const value=String(name||"LB").trim();
+
+ return value
+  .split(/\s+/)
+  .slice(0,2)
+  .map(x=>x.charAt(0).toUpperCase())
+  .join("")||"LB";
+}
+
+function cardDate(value){
+
+ if(!value)return "—";
+
+ const d=new Date(value);
+
+ if(Number.isNaN(d.getTime()))
+  return String(value);
+
+ return d.toLocaleDateString(
+  "fr-FR",
+  {
+   month:"short",
+   year:"numeric"
+  }
+ );
+}
+
+function ensureMemberCardLibraries(){
+
+ return new Promise((resolve,reject)=>{
+
+  const needed=[];
+
+  if(typeof window.QRCode==="undefined")
+   needed.push({
+    src:"https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+    test:()=>typeof window.QRCode!=="undefined"
+   });
+
+  if(typeof window.html2canvas==="undefined")
+   needed.push({
+    src:"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+    test:()=>typeof window.html2canvas!=="undefined"
+   });
+
+  if(!needed.length)
+   return resolve();
+
+  let index=0;
+
+  const next=()=>{
+
+   if(index>=needed.length)
+    return resolve();
+
+   const item=needed[index++];
+
+   const script=document.createElement("script");
+
+   script.src=item.src;
+   script.async=true;
+
+   script.onload=()=>
+    item.test()
+     ?next()
+     :reject(
+       new Error(
+        "Bibliothèque graphique indisponible."
+       )
+      );
+
+   script.onerror=()=>
+    reject(
+     new Error(
+      "Impossible de charger le générateur de carte."
+     )
+    );
+
+   document.head.appendChild(script);
+  };
+
+  next();
+ });
+}
+
+function injectMemberCardStyles(){
+
+ if(document.getElementById("lbt-member-card-style"))
+  return;
+
+ const style=document.createElement("style");
+
+ style.id="lbt-member-card-style";
+
+ style.textContent=`
+
+ .member-actions{
+   display:flex;
+   gap:6px;
+   flex-wrap:wrap
+ }
+
+ .member-code-table{
+   font-size:.82rem;
+   white-space:nowrap
+ }
+
+ .member-card-preview{
+   display:flex;
+   flex-direction:column;
+   gap:16px;
+   align-items:center;
+   width:100%
+ }
+
+ .professional-member-card{
+   width:856px;
+   max-width:100%;
+   aspect-ratio:856/540;
+   overflow:hidden;
+   border:1px solid #dbe3ef;
+   border-radius:28px;
+   background:#fff;
+   box-shadow:0 18px 45px rgba(15,23,42,.16);
+   font-family:Arial,Helvetica,sans-serif;
+   color:#0f172a;
+   display:flex;
+   flex-direction:column
+ }
+
+ .member-card-top{
+   height:23%;
+   padding:22px 28px 15px;
+   display:flex;
+   justify-content:space-between;
+   align-items:center;
+   border-bottom:1px solid #dbe3ef;
+   background:linear-gradient(180deg,#fff,#f8fafc)
+ }
+
+ .member-card-brand{
+   display:flex;
+   align-items:center;
+   gap:12px
+ }
+
+ .member-card-brand img{
+   width:56px;
+   height:56px;
+   object-fit:contain
+ }
+
+ .member-card-brand strong{
+   display:block;
+   font-size:20px;
+   letter-spacing:.5px
+ }
+
+ .member-card-brand span{
+   display:block;
+   margin-top:3px;
+   font-size:11px;
+   color:#64748b;
+   letter-spacing:1.3px
+ }
+
+ .member-card-role{
+   padding:9px 13px;
+   border-radius:999px;
+   color:#fff;
+   background:var(--card-color);
+   font-size:11px;
+   font-weight:800;
+   letter-spacing:.8px
+ }
+
+ .member-card-main{
+   flex:1;
+   display:grid;
+   grid-template-columns:150px 1fr 145px;
+   gap:22px;
+   padding:25px 28px;
+   align-items:center
+ }
+
+ .member-card-photo{
+   width:150px;
+   height:175px;
+   border-radius:18px;
+   overflow:hidden;
+   background:#e2e8f0;
+   display:flex;
+   align-items:center;
+   justify-content:center;
+   border:4px solid #fff;
+   box-shadow:0 7px 18px rgba(15,23,42,.12)
+ }
+
+ .member-card-photo img{
+   width:100%;
+   height:100%;
+   object-fit:cover
+ }
+
+ .member-card-initials{
+   font-size:52px;
+   font-weight:800;
+   color:#334155
+ }
+
+ .member-card-info h2{
+   margin:0 0 7px;
+   font-size:28px;
+   line-height:1.05
+ }
+
+ .member-card-position{
+   font-size:14px;
+   font-weight:800;
+   color:var(--card-color);
+   margin-bottom:15px
+ }
+
+ .member-card-line{
+   display:flex;
+   gap:10px;
+   margin-bottom:7px;
+   font-size:11px;
+   line-height:1.2
+ }
+
+ .member-card-line span{
+   color:#64748b;
+   min-width:78px;
+   font-weight:700
+ }
+
+ .member-card-line strong{
+   color:#0f172a;
+   overflow-wrap:anywhere
+ }
+
+ .member-card-qr-area{
+   text-align:center;
+   display:flex;
+   flex-direction:column;
+   align-items:center
+ }
+
+ .member-card-qr{
+   width:126px;
+   height:126px;
+   background:#fff;
+   padding:7px;
+   border:1px solid #e2e8f0;
+   border-radius:10px;
+   display:flex;
+   align-items:center;
+   justify-content:center
+ }
+
+ .member-card-qr img,
+ .member-card-qr canvas{
+   width:112px!important;
+   height:112px!important;
+   display:block
+ }
+
+ .member-card-qr-area small{
+   display:block;
+   margin-top:9px;
+   font-size:9px;
+   line-height:1.25;
+   font-weight:800;
+   letter-spacing:.7px;
+   color:#475569
+ }
+
+ .member-card-footer{
+   height:15%;
+   padding:0 28px;
+   display:flex;
+   justify-content:space-between;
+   align-items:center;
+   color:#fff;
+   background:var(--card-color);
+   font-size:10px;
+   letter-spacing:.25px
+ }
+
+ .member-card-status{
+   font-weight:900
+ }
+
+ .member-card-actions{
+   display:flex;
+   gap:10px;
+   flex-wrap:wrap;
+   justify-content:center
+ }
+
+ .member-card-meta{
+   width:100%;
+   max-width:856px;
+   display:grid;
+   grid-template-columns:repeat(2,minmax(0,1fr));
+   gap:10px
+ }
+
+ .member-card-meta div{
+   padding:10px 12px;
+   border:1px solid #e2e8f0;
+   border-radius:10px;
+   background:#f8fafc
+ }
+
+ .member-card-meta small{
+   display:block;
+   color:#64748b;
+   font-size:11px
+ }
+
+ .member-card-meta strong{
+   display:block;
+   margin-top:3px;
+   font-size:13px;
+   overflow-wrap:anywhere
+ }
+
+ @media(max-width:700px){
+
+   .professional-member-card{
+     border-radius:18px
+   }
+
+   .member-card-top{
+     padding:12px 14px 9px
+   }
+
+   .member-card-brand{
+     gap:7px
+   }
+
+   .member-card-brand img{
+     width:34px;
+     height:34px
+   }
+
+   .member-card-brand strong{
+     font-size:12px
+   }
+
+   .member-card-brand span{
+     font-size:7px
+   }
+
+   .member-card-role{
+     padding:5px 7px;
+     font-size:7px
+   }
+
+   .member-card-main{
+     grid-template-columns:74px 1fr 70px;
+     gap:9px;
+     padding:12px 14px
+   }
+
+   .member-card-photo{
+     width:74px;
+     height:92px;
+     border-radius:9px
+   }
+
+   .member-card-initials{
+     font-size:24px
+   }
+
+   .member-card-info h2{
+     font-size:15px
+   }
+
+   .member-card-position{
+     font-size:8px;
+     margin-bottom:7px
+   }
+
+   .member-card-line{
+     gap:4px;
+     margin-bottom:4px;
+     font-size:6.5px
+   }
+
+   .member-card-line span{
+     min-width:42px
+   }
+
+   .member-card-qr{
+     width:64px;
+     height:64px;
+     padding:3px
+   }
+
+   .member-card-qr img,
+   .member-card-qr canvas{
+     width:58px!important;
+     height:58px!important
+   }
+
+   .member-card-qr-area small{
+     font-size:5px;
+     margin-top:4px
+   }
+
+   .member-card-footer{
+     padding:0 14px;
+     font-size:6px
+   }
+
+   .member-card-meta{
+     grid-template-columns:1fr
+   }
+ }
+
+ @media print{
+
+   .member-card-actions,
+   .member-card-meta{
+     display:none!important
+   }
+
+   .professional-member-card{
+     box-shadow:none;
+     max-width:none;
+     width:85.6mm;
+     height:54mm;
+     border-radius:4mm
+   }
+
+   .member-card-top{
+     padding:4mm 4mm 3mm
+   }
+
+   .member-card-brand img{
+     width:10mm;
+     height:10mm
+   }
+
+   .member-card-brand strong{
+     font-size:3.2mm
+   }
+
+   .member-card-brand span{
+     font-size:1.8mm
+   }
+
+   .member-card-role{
+     padding:1.5mm 2mm;
+     font-size:2.2mm
+   }
+
+   .member-card-main{
+     grid-template-columns:16mm 1fr 19mm;
+     gap:3mm;
+     padding:4mm
+   }
+
+   .member-card-photo{
+     width:16mm;
+     height:20mm;
+     border-radius:2mm
+   }
+
+   .member-card-initials{
+     font-size:7mm
+   }
+
+   .member-card-info h2{
+     font-size:4mm
+   }
+
+   .member-card-position{
+     font-size:2.3mm;
+     margin-bottom:2mm
+   }
+
+   .member-card-line{
+     gap:1.5mm;
+     margin-bottom:.8mm;
+     font-size:1.8mm
+   }
+
+   .member-card-line span{
+     min-width:11mm
+   }
+
+   .member-card-qr{
+     width:16mm;
+     height:16mm;
+     padding:1mm
+   }
+
+   .member-card-qr img,
+   .member-card-qr canvas{
+     width:14mm!important;
+     height:14mm!important
+   }
+
+   .member-card-qr-area small{
+     font-size:1.5mm
+   }
+
+   .member-card-footer{
+     padding:0 4mm;
+     font-size:1.8mm
+   }
+ }
+
+ `;
+
+ document.head.appendChild(style);
+}
+
+async function openMemberCard(id){
+
+ const member=getMember(id);
+
+ if(!member)
+  return toast("Membre introuvable.");
+
+ injectMemberCardStyles();
+
+ try{
+  await ensureMemberCardLibraries();
+ }catch(error){
+  console.error(error);
+  return toast(
+   error.message||
+   "Impossible de charger les outils de carte."
+  );
+ }
+
+ const role=roleCardLabel(member.role);
+ const color=roleCardColor(member.role);
+ const code=member.employee_code||"LBT-MEMBRE";
+
+ const photo=member.avatar_url
+  ?`
+   <img
+     src="${esc(member.avatar_url)}"
+     alt="Photo de ${esc(member.full_name||"membre")}"
+     crossorigin="anonymous"
+   >
+  `
+  :`
+   <div class="member-card-initials">
+     ${esc(memberInitials(member.full_name))}
+   </div>
+  `;
+
+ const form=document.getElementById("recordForm");
+ const title=document.getElementById("modalTitle");
+
+ if(!form||!title)return;
+
+ title.textContent=
+  `Carte professionnelle — ${member.full_name||"Membre"}`;
+
+ form.innerHTML=`
+
+ <div class="member-card-preview">
+
+   <div
+     id="printableMemberCard"
+     class="professional-member-card"
+     style="--card-color:${color}"
+   >
+
+     <div class="member-card-top">
+
+       <div class="member-card-brand">
+
+         <img
+           src="./logo-luc-bricotech.png"
+           alt="LUC BRICO-TECH"
+         >
+
+         <div>
+           <strong>LUC BRICO-TECH</strong>
+           <span>GESTION & SUPERVISION</span>
+         </div>
+
+       </div>
+
+       <div class="member-card-role">
+         ${esc(role)}
+       </div>
+
+     </div>
+
+     <div class="member-card-main">
+
+       <div class="member-card-photo">
+         ${photo}
+       </div>
+
+       <div class="member-card-info">
+
+         <h2>
+           ${esc(member.full_name||"Nom non renseigné")}
+         </h2>
+
+         <div class="member-card-position">
+           ${esc(member.position||role)}
+         </div>
+
+         <div class="member-card-line">
+           <span>MAT.</span>
+           <strong>${esc(code)}</strong>
+         </div>
+
+         <div class="member-card-line">
+           <span>SERVICE</span>
+           <strong>
+             ${esc(member.department||"LUC BRICO-TECH")}
+           </strong>
+         </div>
+
+         <div class="member-card-line">
+           <span>TÉL.</span>
+           <strong>${esc(member.phone||"—")}</strong>
+         </div>
+
+         <div class="member-card-line">
+           <span>E-MAIL</span>
+           <strong>${esc(member.email||"—")}</strong>
+         </div>
+
+         <div class="member-card-line">
+           <span>VILLE</span>
+           <strong>${esc(member.city||"—")}</strong>
+         </div>
+
+       </div>
+
+       <div class="member-card-qr-area">
+
+         <div
+           id="memberCardQR"
+           class="member-card-qr"
+         ></div>
+
+         <small>
+           SCANNEZ POUR<br>
+           VÉRIFIER
+         </small>
+
+       </div>
+
+     </div>
+
+     <div class="member-card-footer">
+
+       <span>
+         ${
+          member.joined_at
+           ?`Membre depuis ${esc(cardDate(member.joined_at))}`
+           :"Membre LUC BRICO-TECH"
+         }
+       </span>
+
+       <span class="member-card-status">
+         ${member.active===false?"INACTIF":"ACTIF"}
+       </span>
+
+     </div>
+
+   </div>
+
+   <div class="member-card-meta">
+
+     <div>
+       <small>Identifiant</small>
+       <strong>${esc(code)}</strong>
+     </div>
+
+     <div>
+       <small>Fonction</small>
+       <strong>${esc(role)}</strong>
+     </div>
+
+     <div>
+       <small>Service</small>
+       <strong>${esc(member.department||"LUC BRICO-TECH")}</strong>
+     </div>
+
+     <div>
+       <small>Statut</small>
+       <strong>
+         ${member.active===false?"Inactif":"Actif"}
+       </strong>
+     </div>
+
+   </div>
+
+   <div class="member-card-actions">
+
+     <button
+       type="button"
+       class="primary"
+       id="downloadMemberCard"
+     >
+       Télécharger la carte PNG
+     </button>
+
+     <button
+       type="button"
+       class="secondary"
+       id="printMemberCard"
+     >
+       Imprimer
+     </button>
+
+     <button
+       type="button"
+       class="secondary"
+       id="closeMemberCard"
+     >
+       Fermer
+     </button>
+
+   </div>
+
+ </div>
+ `;
+
+ document.getElementById("modal")
+  ?.classList.remove("hidden");
+
+ const qr=document.getElementById("memberCardQR");
+
+ if(qr&&typeof QRCode!=="undefined"){
+
+  qr.innerHTML="";
+
+  new QRCode(qr,{
+   text:code,
+   width:112,
+   height:112,
+   correctLevel:QRCode.CorrectLevel.M
+  });
+ }
+
+ document.getElementById("downloadMemberCard")
+  ?.addEventListener(
+   "click",
+   ()=>downloadMemberCard(member)
+  );
+
+ document.getElementById("printMemberCard")
+  ?.addEventListener(
+   "click",
+   ()=>printMemberCard(member)
+  );
+
+ document.getElementById("closeMemberCard")
+  ?.addEventListener(
+   "click",
+   closeModal
+  );
+}
+
+async function downloadMemberCard(member){
+
+ const card=document.getElementById(
+  "printableMemberCard"
+ );
+
+ if(!card)
+  return toast("Carte introuvable.");
+
+ if(typeof html2canvas==="undefined")
+  return toast(
+   "Le générateur d'image n'est pas chargé."
+  );
+
+ toast("Préparation de la carte...");
+
+ try{
+
+  const canvas=await html2canvas(card,{
+   scale:3,
+   backgroundColor:"#ffffff",
+   useCORS:true,
+   logging:false
+  });
+
+  const link=document.createElement("a");
+
+  const safeName=
+   String(member.full_name||"membre")
+    .replace(/[^a-z0-9À-ÿ]+/gi,"-")
+    .replace(/^-|-$/g,"");
+
+  link.download=
+   `${member.employee_code||"LBT-CARTE"}-${safeName||"membre"}.png`;
+
+  link.href=canvas.toDataURL("image/png");
+
+  link.click();
+
+  toast("Carte téléchargée.");
+
+ }catch(error){
+
+  console.error(error);
+
+  toast("Impossible de générer la carte.");
+ }
+}
+
+function printMemberCard(member){
+
+ const card=document.getElementById(
+  "printableMemberCard"
+ );
+
+ if(!card)
+  return toast("Carte introuvable.");
+
+ const win=window.open("","_blank");
+
+ if(!win)
+  return toast(
+   "Autorisez les fenêtres popup pour imprimer."
+  );
+
+ const styles=
+  document.getElementById(
+   "lbt-member-card-style"
+  )?.textContent||"";
+
+ win.document.write(`
+ <!doctype html>
+
+ <html lang="fr">
+
+ <head>
+
+   <meta charset="utf-8">
+
+   <title>
+     Carte ${esc(member.full_name||"Membre")}
+   </title>
+
+   <style>
+     ${styles}
+   </style>
+
+ </head>
+
+ <body>
+
+   ${card.outerHTML}
+
+   <script>
+     window.onload=function(){
+       window.print();
+     };
+   <\/script>
+
+ </body>
+
+ </html>
+ `);
+
+ win.document.close();
+}
+
+function openEmployeeForm(){
+
+ if(state.role!=="admin")
+  return toast(
+   "Action réservée à l’administrateur."
+  );
+
+ document.getElementById("modalTitle").textContent=
+  "Créer un compte employé";
+
+ document.getElementById("recordForm").innerHTML=`
+
+ <div class="form-grid">
+
+   <label>
+     Nom complet
+     <input
+       name="full_name"
+       required
+       placeholder="Nom et prénom"
+     >
+   </label>
+
+   <label>
+     Téléphone
+     <input
+       name="phone"
+       type="tel"
+       placeholder="01 XX XX XX XX"
+     >
+   </label>
+
+   <label class="full">
+     E-mail de connexion
+     <input
+       name="email"
+       type="email"
+       required
+       placeholder="employe@lucbricotech.com"
+     >
+   </label>
+
+   <label>
+     Fonction
+     <input
+       name="position"
+       placeholder="Technicien, commercial..."
+     >
+   </label>
+
+   <label>
+     Service
+     <input
+       name="department"
+       placeholder="Électricité, informatique..."
+     >
+   </label>
+
+   <label>
+     Ville
+     <input
+       name="city"
+       placeholder="Abomey-Calavi"
+     >
+   </label>
+
+   <label>
+     Date d'entrée
+     <input
+       name="joined_at"
+       type="date"
+       value="${new Date().toISOString().slice(0,10)}"
+     >
+   </label>
+
+   <label>
+     Mot de passe initial
+     <input
+       name="password"
+       type="password"
+       minlength="8"
+       required
+       placeholder="8 caractères minimum"
+     >
+   </label>
+
+   <label>
+     Confirmation
+     <input
+       name="password_confirm"
+       type="password"
+       minlength="8"
+       required
+       placeholder="Retaper le mot de passe"
+     >
+   </label>
+
+   <div class="full">
+
+     <div class="hint">
+       Le nouveau compte sera créé avec le rôle
+       <b>Employé</b>.
+       Une carte professionnelle et un QR Code
+       pourront ensuite être générés automatiquement.
+     </div>
+
+   </div>
+
+   <div class="full actions">
+
+     <button
+       type="button"
+       class="secondary"
+       id="cancelForm"
+     >
+       Annuler
+     </button>
+
+     <button class="primary">
+       Créer le compte
+     </button>
+
+   </div>
+
+ </div>
+ `;
+
+ document.getElementById("cancelForm")
+  .onclick=closeModal;
+
+ document.getElementById("recordForm")
+  .onsubmit=createEmployee;
+
+ document.getElementById("modal")
+  .classList.remove("hidden");
+}
+
+async function createEmployee(e){
+
+ e.preventDefault();
+
+ const p=Object.fromEntries(
+  new FormData(e.target).entries()
+ );
+
+ if(p.password!==p.password_confirm)
+  return toast(
+   "Les deux mots de passe ne correspondent pas."
+  );
+
+ if(p.password.length<8)
+  return toast(
+   "Le mot de passe doit contenir au moins 8 caractères."
+  );
+
+ try{
+
+  if(!state.cloud){
+
+   const exists=
+    (state.db.profiles||[])
+     .some(
+      x=>
+       (x.email||"").toLowerCase()===
+       p.email.toLowerCase()
+     );
+
+   if(exists)
+    throw new Error(
+     "Cette adresse e-mail existe déjà dans le mode démo."
+    );
+
+   const x={
+    id:uid(),
+    full_name:p.full_name,
+    phone:p.phone||"",
+    email:p.email,
+    position:p.position||"",
+    department:p.department||"",
+    city:p.city||"",
+    joined_at:
+     p.joined_at||
+     new Date().toISOString().slice(0,10),
+    role:"employee",
+    active:true,
+    created_at:now()
+   };
+
+   state.db.profiles.unshift(x);
+
+   await ensureMemberCodes();
+
+   saveLocal();
+
+   await audit(
+    "create_employee",
+    "profiles",
+    x.id,
+    {
+     email:p.email,
+     role:"employee",
+     employee_code:x.employee_code
+    }
+   );
+
+  }else{
+
+   const {data,error}=
+    await sb.functions.invoke(
+     "create-employee",
+     {
+      body:{
+       full_name:p.full_name,
+       email:p.email,
+       password:p.password,
+       phone:p.phone||""
+      }
+     }
+    );
+
+   if(error)throw error;
+
+   if(!data?.success)
+    throw new Error(
+     data?.error||
+     "Impossible de créer le compte."
+    );
+
+   await syncCloud();
+
+   const newId=data?.user?.id;
+
+   if(newId){
+
+    try{
+
+     const extra={
+      email:p.email,
+      position:p.position||"",
+      department:p.department||"",
+      city:p.city||"",
+      joined_at:
+       p.joined_at||
+       new Date().toISOString().slice(0,10)
+     };
+
+     const {error:profileError}=
+      await sb
+       .from("profiles")
+       .update(extra)
+       .eq("id",newId);
+
+     if(profileError)
+      console.warn(
+       "Profil créé mais informations complémentaires non enregistrées :",
+       profileError
+      );
+
+    }catch(profileError){
+     console.warn(profileError);
+    }
+   }
+
+   await syncCloud();
+   await ensureMemberCodes();
   }
 
-  const logs =
-    state.db.audit_logs || [];
+  closeModal();
+
+  render();
+
+  toast(
+   "Compte employé créé avec succès."
+  );
+
+ }catch(err){
+
+  console.error(err);
+
+  toast(
+   err.message||
+   "Erreur lors de la création du compte."
+  );
+ }
+}
+
+async function toggleMember(id,active){
+
+ if(state.role!=="admin")
+  return toast(
+   "Action réservée à l’administrateur."
+  );
+
+ try{
+
+  await update(
+   "profiles",
+   id,
+   {active}
+  );
+
+  await audit(
+   active
+    ?"activate_member"
+    :"deactivate_member",
+   "profiles",
+   id,
+   {active}
+  );
+
+  toast(
+   active
+    ?"Compte activé."
+    :"Compte désactivé."
+  );
+
+  render();
+
+ }catch(e){
+  toast(e.message)
+ }
+}
+
+async function changeRole(id,role){
+
+ if(state.role!=="admin")
+  return toast(
+   "Action réservée à l’administrateur."
+  );
+
+ try{
+
+  await update(
+   "profiles",
+   id,
+   {role}
+  );
+
+  await audit(
+   "update_role",
+   "profiles",
+   id,
+   {role}
+  );
+
+  toast("Rôle mis à jour.");
+
+  render();
+
+ }catch(e){
+  toast(e.message)
+ }
+}
+
+function today(){
+ return new Date().toISOString().slice(0,10)
+}
+
+function clientName(id){
+
+ const c=
+  (state.db.clients||[])
+   .find(x=>x.id===id);
+
+ return c
+  ?(c.company_name||c.full_name||"Client")
+  :"Client inconnu";
+}
+
+function statusLabel(s){
+
+ const m={
+  draft:"Brouillon",
+  sent:"Envoyé",
+  accepted:"Accepté",
+  rejected:"Refusé",
+  expired:"Expiré",
+  converted:"Converti",
+  unpaid:"Impayée",
+  partial:"Partiellement payée",
+  paid:"Payée",
+  cancelled:"Annulée",
+  overdue:"En retard"
+ };
+
+ return m[
+  String(s||"").toLowerCase()
+ ]||s||"—";
+}
+
+function statusClass(s){
+
+ s=String(s||"").toLowerCase();
+
+ if(
+  ["paid","accepted","converted"]
+   .includes(s)
+ )
+  return"success";
+
+ if(
+  ["partial","sent"].includes(s)
+ )
+  return"warn";
+
+ if(
+  ["cancelled","rejected","overdue","expired"]
+   .includes(s)
+ )
+  return"danger";
+
+ return"muted";
+}
+
+function invoiceDisplayStatus(x){
+
+ if(!x)
+  return"unpaid";
+
+ if(x.status==="cancelled")
+  return"cancelled";
+
+ if(x.status==="draft")
+  return"draft";
+
+ const total=Number(x.total||0);
+ const paid=Number(x.amount_paid||0);
+
+ if(total>0&&paid>=total)
+  return"paid";
+
+ if(paid>0)
+  return"partial";
+
+ if(
+  x.due_date&&
+  x.due_date<today()
+ )
+  return"overdue";
+
+ return"unpaid";
+}
+
+function linesSummary(type,id){
+
+ const table=
+  type==="quotes"
+   ?"quote_items"
+   :"invoice_items";
+
+ const rows=
+  (state.db[table]||[])
+   .filter(
+    x=>
+     (type==="quotes"
+      ?x.quote_id
+      :x.invoice_id
+     )===id
+   );
+
+ return rows.length
+  ?`${rows.length} ligne(s)`
+  :"0 ligne";
+}
+
+function clientsPage(){
+
+ const arr=state.db.clients||[];
+
+ const rows=arr.map(x=>`
+
+  <tr>
+
+   <td>
+
+    <b>
+      ${esc(x.company_name||x.full_name||"—")}
+    </b>
+
+    ${
+     x.company_name&&x.full_name
+      ?`
+       <br>
+       <span class="muted">
+        ${esc(x.full_name)}
+       </span>
+      `
+      :""
+    }
+
+   </td>
+
+   <td>${esc(x.phone||"—")}</td>
+
+   <td>${esc(x.email||"—")}</td>
+
+   <td>${esc(x.city||"—")}</td>
+
+   <td>
+
+    <button
+      class="secondary"
+      data-edit="clients"
+      data-id="${x.id}"
+    >
+      Modifier
+    </button>
+
+    ${
+     state.role==="admin"
+      ?`
+       <button
+         class="danger"
+         data-delete="clients"
+         data-id="${x.id}"
+       >
+         Supprimer
+       </button>
+      `
+      :""
+    }
+
+   </td>
+
+  </tr>
+ `).join("");
+
+ return `
+ <div class="toolbar">
+
+   <div class="muted">
+     ${arr.length} client(s)
+   </div>
+
+   <button
+     class="primary"
+     data-add="clients"
+   >
+     + Nouveau client
+   </button>
+
+ </div>
+
+ <div class="table-wrap">
+
+  <table>
+
+   <thead>
+
+    <tr>
+     <th>Client / Société</th>
+     <th>Téléphone</th>
+     <th>Email</th>
+     <th>Ville</th>
+     <th>Actions</th>
+    </tr>
+
+   </thead>
+
+   <tbody>
+
+    ${
+     rows||`
+      <tr>
+       <td colspan="5">
+        <div class="empty">
+         Aucun client enregistré.
+        </div>
+       </td>
+      </tr>
+     `
+    }
+
+   </tbody>
+
+  </table>
+
+ </div>`;
+}
+
+function quotesPage(){
+
+ const arr=state.db.quotes||[];
+
+ const rows=arr.map(x=>`
+
+  <tr>
+
+   <td>
+    <b>${esc(x.quote_number||"—")}</b>
+    <br>
+    <span class="muted">
+      ${esc(x.title||"")}
+    </span>
+   </td>
+
+   <td>${esc(clientName(x.client_id))}</td>
+
+   <td>${esc(x.issue_date||"—")}</td>
+
+   <td>${esc(x.valid_until||"—")}</td>
+
+   <td>
+     ${linesSummary("quotes",x.id)}
+   </td>
+
+   <td>${money(x.total)}</td>
+
+   <td>
+    <span class="badge ${statusClass(x.status)}">
+      ${esc(statusLabel(x.status))}
+    </span>
+   </td>
+
+   <td>
+
+    <button
+      class="secondary"
+      data-details-document="quotes"
+      data-id="${x.id}"
+    >
+      Détails
+    </button>
+
+    <button
+      class="secondary"
+      data-edit-document="quotes"
+      data-id="${x.id}"
+    >
+      Modifier
+    </button>
+
+    ${
+     state.role!=="employee"
+      ?`
+       <button
+         class="danger"
+         data-delete="quotes"
+         data-id="${x.id}"
+       >
+         Supprimer
+       </button>
+      `
+      :""
+    }
+
+   </td>
+
+  </tr>
+
+ `).join("");
+
+ return `
+ <div class="toolbar">
+
+  <div class="muted">
+    ${arr.length} devis
+  </div>
+
+  <button
+    class="primary"
+    data-add-document="quotes"
+  >
+    + Nouveau devis
+  </button>
+
+ </div>
+
+ <div class="table-wrap">
+
+  <table>
+
+   <thead>
+
+    <tr>
+     <th>Devis</th>
+     <th>Client</th>
+     <th>Date</th>
+     <th>Valable jusqu'au</th>
+     <th>Lignes</th>
+     <th>Total</th>
+     <th>Statut</th>
+     <th>Actions</th>
+    </tr>
+
+   </thead>
+
+   <tbody>
+
+    ${
+     rows||`
+      <tr>
+       <td colspan="8">
+        <div class="empty">
+         Aucun devis enregistré.
+        </div>
+       </td>
+      </tr>
+     `
+    }
+
+   </tbody>
+
+  </table>
+
+ </div>`;
+}
+
+function invoicesPage(){
+
+ const arr=state.db.invoices||[];
+
+ const rows=arr.map(x=>{
+
+  const total=Number(x.total||0);
+  const paid=Number(x.amount_paid||0);
+  const due=Math.max(0,total-paid);
+  const st=invoiceDisplayStatus(x);
 
   return `
-    <div class="card">
+   <tr>
 
-      <div class="page-actions">
-        <div>
-          <h3>Journal d’activité</h3>
-          <p class="muted">
-            Traçabilité des opérations effectuées.
-          </p>
-        </div>
+    <td>
+     <b>${esc(x.invoice_number||"—")}</b>
+     <br>
+     <span class="muted">
+       ${esc(x.title||"")}
+     </span>
+    </td>
 
+    <td>${esc(clientName(x.client_id))}</td>
+
+    <td>${esc(x.issue_date||"—")}</td>
+
+    <td>${esc(x.due_date||"—")}</td>
+
+    <td>
+      ${linesSummary("invoices",x.id)}
+    </td>
+
+    <td>${money(total)}</td>
+
+    <td>${money(paid)}</td>
+
+    <td>${money(due)}</td>
+
+    <td>
+     <span class="badge ${statusClass(st)}">
+       ${esc(statusLabel(st))}
+     </span>
+    </td>
+
+    <td>
+
+     <button
+       class="secondary"
+       data-details-document="invoices"
+       data-id="${x.id}"
+     >
+       Détails
+     </button>
+
+     <button
+       class="secondary"
+       data-edit-document="invoices"
+       data-id="${x.id}"
+     >
+       Modifier
+     </button>
+
+     ${
+      state.role!=="employee"
+       ?`
         <button
-          class="secondary"
-          id="exportAuditCsv"
+          class="danger"
+          data-delete="invoices"
+          data-id="${x.id}"
         >
-          Exporter
+          Supprimer
         </button>
-      </div>
+       `
+       :""
+     }
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Action</th>
-              <th>Entité</th>
-              <th>Détails</th>
-            </tr>
-          </thead>
+    </td>
 
-          <tbody>
-            ${
-              logs.length
-                ? logs
-                    .slice(0, 100)
-                    .map(
-                      log => `
-                        <tr>
-                          <td>
-                            ${formatDateTime(
-                              log.created_at
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              log.action
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              log.entity
-                            )}
-                          </td>
-
-                          <td>
-                            ${esc(
-                              safeJson(
-                                log.details ||
-                                  {}
-                              )
-                            )}
-                          </td>
-                        </tr>
-                      `
-                    )
-                    .join("")
-                : `
-                  <tr>
-                    <td colspan="4">
-                      <div class="empty">
-                        Aucune action enregistrée.
-                      </div>
-                    </td>
-                  </tr>
-                `
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+   </tr>
   `;
+ }).join("");
+
+ return `
+ <div class="toolbar">
+
+  <div class="muted">
+    ${arr.length} facture(s)
+  </div>
+
+  <button
+    class="primary"
+    data-add-document="invoices"
+  >
+    + Nouvelle facture
+  </button>
+
+ </div>
+
+ <div class="table-wrap">
+
+  <table>
+
+   <thead>
+
+    <tr>
+     <th>Facture</th>
+     <th>Client</th>
+     <th>Date</th>
+     <th>Échéance</th>
+     <th>Lignes</th>
+     <th>Total</th>
+     <th>Payé</th>
+     <th>Reste</th>
+     <th>Statut</th>
+     <th>Actions</th>
+    </tr>
+
+   </thead>
+
+   <tbody>
+
+    ${
+     rows||`
+      <tr>
+       <td colspan="10">
+        <div class="empty">
+         Aucune facture enregistrée.
+        </div>
+       </td>
+      </tr>
+     `
+    }
+
+   </tbody>
+
+  </table>
+
+ </div>`;
 }
 
-function settings() {
-  if (state.role !== "admin") {
-    return `
-      <div class="card">
-        <h3>Accès refusé</h3>
-        <p class="muted">
-          Les paramètres sont réservés à l’administrateur.
-        </p>
-      </div>
-    `;
-  }
+function paymentsPage(){
 
-  const setting =
-    (
-      state.db.settings || []
-    ).find(
-      item =>
-        item.user_id ===
-        state.user.id
-    ) || {};
+ const arr=state.db.payments||[];
+
+ const methods={
+  cash:"Espèces",
+  mtn_momo:"MTN MoMo",
+  moov_money:"Moov Money",
+  celtiis_cash:"Celtiis Cash",
+  bank_transfer:"Virement bancaire",
+  card:"Carte bancaire",
+  check:"Chèque bancaire",
+  pi_spi:"PI-SPI / paiement instantané",
+  other:"Autre"
+ };
+
+ const rows=arr.map(x=>{
+
+  const inv=
+   (state.db.invoices||[])
+    .find(i=>i.id===x.invoice_id);
 
   return `
-    <div class="card">
+   <tr>
 
-      <h3>
-        Informations de l’entreprise
-      </h3>
+    <td>
+      ${esc(inv?.invoice_number||"—")}
+    </td>
 
-      <form
-        id="settingsForm"
-        class="form-grid"
-      >
+    <td>
+      ${esc(clientName(inv?.client_id))}
+    </td>
 
-        <label>
-          Nom
-          <input
-            name="company_name"
-            value="${esc(
-              setting.company_name ||
-                "LUC BRICO-TECH"
-            )}"
-          >
-        </label>
+    <td>
+      ${money(x.amount)}
+    </td>
 
-        <label>
-          Adresse
-          <input
-            name="address"
-            value="${esc(
-              setting.address ||
-                "Hévié Hounzévié, Abomey-Calavi"
-            )}"
-          >
-        </label>
+    <td>
+      ${esc(
+       methods[x.payment_method]||
+       x.payment_method||
+       "—"
+      )}
+    </td>
 
-        <label>
-          Téléphone
-          <input
-            name="phone"
-            value="${esc(
-              setting.phone ||
-                "01 67 02 84 91"
-            )}"
-          >
-        </label>
+    <td>
+      ${esc(x.payment_date||"—")}
+    </td>
 
-        <label>
-          Email
-          <input
-            name="email"
-            value="${esc(
-              setting.email || ""
-            )}"
-          >
-        </label>
+    <td>
+      ${esc(x.reference||"—")}
+    </td>
 
-        <div class="full">
-          <button class="primary">
-            Enregistrer
-          </button>
+    <td>
+
+     <button
+       class="danger"
+       data-delete-payment="${x.id}"
+     >
+       Supprimer
+     </button>
+
+    </td>
+
+   </tr>
+  `;
+ }).join("");
+
+ return `
+ <div class="toolbar">
+
+  <div class="muted">
+    ${arr.length} paiement(s)
+  </div>
+
+  ${
+   (state.db.invoices||[]).length
+    ?`
+     <button
+       class="primary"
+       data-add-payment=""
+     >
+       + Enregistrer un paiement
+     </button>
+    `
+    :""
+  }
+
+ </div>
+
+ <div class="table-wrap">
+
+  <table>
+
+   <thead>
+
+    <tr>
+     <th>Facture</th>
+     <th>Client</th>
+     <th>Montant</th>
+     <th>Mode</th>
+     <th>Date</th>
+     <th>Référence</th>
+     <th>Action</th>
+    </tr>
+
+   </thead>
+
+   <tbody>
+
+    ${
+     rows||`
+      <tr>
+       <td colspan="7">
+        <div class="empty">
+         Aucun paiement enregistré.
         </div>
-
-      </form>
-    </div>
-  `;
-}
-
-async function saveSettings(event) {
-  event.preventDefault();
-
-  const formData =
-    new FormData(event.target);
-
-  const payload =
-    Object.fromEntries(
-      formData.entries()
-    );
-
-  try {
-    if (!state.cloud) {
-      const array =
-        state.db.settings || [];
-
-      const existing =
-        array.find(
-          item =>
-            item.user_id ===
-            state.user.id
-        );
-
-      if (existing) {
-        Object.assign(
-          existing,
-          payload,
-          {
-            updated_at: now()
-          }
-        );
-      } else {
-        array.unshift({
-          id: uid(),
-          user_id: state.user.id,
-          created_at: now(),
-          updated_at: now(),
-          ...payload
-        });
-      }
-
-      state.db.settings = array;
-
-      saveLocal();
-    } else {
-      const {
-        data,
-        error
-      } = await sb
-        .from("settings")
-        .upsert(
-          {
-            user_id: state.user.id,
-            ...payload,
-            updated_at: now()
-          },
-          {
-            onConflict: "user_id"
-          }
-        )
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      const array =
-        state.db.settings || [];
-
-      const index =
-        array.findIndex(
-          item =>
-            item.user_id ===
-            state.user.id
-        );
-
-      if (index >= 0) {
-        array[index] = data;
-      } else {
-        array.unshift(data);
-      }
-
-      state.db.settings = array;
+       </td>
+      </tr>
+     `
     }
 
-    await audit(
-      "update",
-      "settings",
-      state.user.id,
-      payload
-    );
+   </tbody>
 
-    toast(
-      "Paramètres enregistrés."
-    );
+  </table>
 
-    render();
-  } catch (error) {
-    console.error(error);
-
-    toast(
-      error.message ||
-        "Erreur lors de l’enregistrement."
-    );
-  }
+ </div>`;
 }
 
-function openForm(table, id = null) {
-  const schema =
-    schemas[table];
+function documentLines(type,id){
 
-  if (!schema) return;
+ const table=
+  type==="quotes"
+   ?"quote_items"
+   :"invoice_items";
 
-  const old = id
-    ? (
-        state.db[table] || []
-      ).find(
-        item => item.id === id
-      )
-    : null;
+ const key=
+  type==="quotes"
+   ?"quote_id"
+   :"invoice_id";
 
-  const modalTitle =
-    document.getElementById(
-      "modalTitle"
-    );
-
-  const recordForm =
-    document.getElementById(
-      "recordForm"
-    );
-
-  if (!modalTitle || !recordForm) {
-    return;
-  }
-
-  modalTitle.textContent = id
-    ? "Modifier"
-    : schema.title;
-
-  recordForm.innerHTML = `
-    <div class="form-grid">
-
-      ${schema.fields
-        .map(field => {
-          const [
-            name,
-            label,
-            type,
-            required,
-            options
-          ] = field;
-
-          const value =
-            old?.[name] ?? "";
-
-          if (type === "textarea") {
-            return `
-              <label class="full">
-                ${label}
-
-                <textarea
-                  name="${name}"
-                >${esc(value)}</textarea>
-              </label>
-            `;
-          }
-
-          if (type === "select") {
-            return `
-              <label>
-                ${label}
-
-                <select
-                  name="${name}"
-                >
-                  ${options
-                    .map(
-                      option => `
-                        <option
-                          value="${esc(
-                            option
-                          )}"
-                          ${
-                            value ===
-                            option
-                              ? "selected"
-                              : ""
-                          }
-                        >
-                          ${esc(
-                            option
-                          )}
-                        </option>
-                      `
-                    )
-                    .join("")}
-                </select>
-              </label>
-            `;
-          }
-
-          return `
-            <label>
-              ${label}
-
-              <input
-                name="${name}"
-                type="${type}"
-                value="${esc(value)}"
-                ${
-                  required
-                    ? "required"
-                    : ""
-                }
-              >
-            </label>
-          `;
-        })
-        .join("")}
-
-      <div class="full actions">
-
-        <button
-          type="button"
-          class="secondary"
-          id="cancelForm"
-        >
-          Annuler
-        </button>
-
-        <button
-          class="primary"
-        >
-          Enregistrer
-        </button>
-
-      </div>
-    </div>
-  `;
-
-  document.getElementById(
-    "cancelForm"
-  ).onclick = closeModal;
-
-  recordForm.onsubmit =
-    async event => {
-      event.preventDefault();
-
-      const payload =
-        Object.fromEntries(
-          new FormData(
-            event.target
-          ).entries()
-        );
-
-      for (const field of schema.fields) {
-        if (
-          field[2] === "number" &&
-          payload[field[0]] !== ""
-        ) {
-          payload[field[0]] =
-            Number(
-              payload[field[0]]
-            );
-        }
-      }
-
-      try {
-        if (id) {
-          await update(
-            table,
-            id,
-            payload
-          );
-        } else {
-          await insert(
-            table,
-            payload
-          );
-        }
-
-        await audit(
-          id ? "update" : "insert",
-          table,
-          id || null,
-          payload
-        );
-
-        toast("Enregistré.");
-
-        closeModal();
-
-        render();
-      } catch (error) {
-        console.error(error);
-
-        toast(
-          error.message ||
-            "Erreur lors de l’enregistrement."
-        );
-      }
-    };
-
-  document
-    .getElementById("modal")
-    .classList.remove("hidden");
+ return (state.db[table]||[])
+  .filter(x=>x[key]===id);
 }
 
-function closeModal() {
-  document
-    .getElementById("modal")
-    ?.classList.add("hidden");
-}
+function documentTotal(type,id){
 
-async function del(table, id) {
-  if (state.role !== "admin") {
-    toast(
-      "La suppression est réservée à l’administrateur."
-    );
-    return;
-  }
-
-  if (
-    !confirm(
-      "Supprimer cet enregistrement ?"
-    )
-  ) {
-    return;
-  }
-
-  try {
-    await remove(
-      table,
-      id
-    );
-
-    await audit(
-      "delete",
-      table,
-      id
-    );
-
-    toast("Supprimé.");
-
-    render();
-  } catch (error) {
-    console.error(error);
-
-    toast(
-      error.message ||
-        "Erreur lors de la suppression."
-    );
-  }
-}
-
-function openPaymentForm(
-  invoiceId = null
-) {
-  const invoices =
-    state.db.invoices || [];
-
-  if (!invoices.length) {
-    toast(
-      "Aucune facture disponible."
-    );
-    return;
-  }
-
-  const selectedInvoice =
-    invoices.find(
-      invoice =>
-        invoice.id ===
-        invoiceId
-    ) || invoices[0];
-
-  const invoiceOptions =
-    invoices
-      .map(
-        invoice => `
-          <option
-            value="${invoice.id}"
-            ${
-              invoice.id ===
-              selectedInvoice.id
-                ? "selected"
-                : ""
-            }
-          >
-            ${esc(
-              invoice.invoice_number ||
-                "Facture"
-            )}
-            — 
-            ${esc(
-              clientName(
-                invoice.client_id
-              )
-            )}
-            — 
-            ${money(
-              invoice.total
-            )}
-          </option>
-        `
-      )
-      .join("");
-
-  const paymentDate =
-    new Date()
-      .toISOString()
-      .slice(0, 10);
-
-  document.getElementById(
-    "modalTitle"
-  ).textContent =
-    "Nouveau paiement";
-
-  document.getElementById(
-    "recordForm"
-  ).innerHTML = `
-    <div class="form-grid">
-
-      <label class="full">
-        Facture
-
-        <select
-          name="invoice_id"
-          id="paymentInvoice"
-          required
-        >
-          ${invoiceOptions}
-        </select>
-      </label>
-
-      <label>
-        Montant (FCFA)
-
-        <input
-          name="amount"
-          id="paymentAmount"
-          type="number"
-          min="0"
-          step="0.01"
-          required
-        >
-      </label>
-
-      <label>
-        Mode de paiement
-
-        <select
-          name="payment_method"
-          required
-        >
-          <option value="cash">
-            Espèces
-          </option>
-
-          <option value="mtn_momo">
-            MTN MoMo
-          </option>
-
-          <option value="moov_money">
-            Moov Money
-          </option>
-
-          <option value="celtiis_cash">
-            Celtiis Cash
-          </option>
-
-          <option value="bank_transfer">
-            Virement bancaire
-          </option>
-
-          <option value="card">
-            Carte bancaire
-          </option>
-
-          <option value="check">
-            Chèque bancaire
-          </option>
-
-          <option value="pi_spi">
-            PI-SPI
-          </option>
-
-          <option value="other">
-            Autre
-          </option>
-        </select>
-      </label>
-
-      <label>
-        Date
-
-        <input
-          name="payment_date"
-          type="date"
-          value="${paymentDate}"
-          required
-        >
-      </label>
-
-      <label>
-        Référence
-
-        <input
-          name="reference"
-          type="text"
-          placeholder="Ex : Momo, chèque, virement..."
-        >
-      </label>
-
-      <label class="full">
-        Notes
-
-        <textarea
-          name="notes"
-          placeholder="Informations complémentaires"
-        ></textarea>
-      </label>
-
-      <div class="full actions">
-
-        <button
-          type="button"
-          class="secondary"
-          id="cancelPayment"
-        >
-          Annuler
-        </button>
-
-        <button
-          class="primary"
-        >
-          Enregistrer
-        </button>
-
-      </div>
-    </div>
-  `;
-
-  document
-    .getElementById("cancelPayment")
-    .onclick = closeModal;
-
-  document
-    .getElementById("paymentInvoice")
-    .addEventListener(
-      "change",
-      event => {
-        const invoice =
-          invoices.find(
-            item =>
-              item.id ===
-              event.target.value
-          );
-
-        if (!invoice) return;
-
-        const total =
-          Number(
-            invoice.total || 0
-          );
-
-        const paid =
-          Number(
-            invoice.amount_paid ||
-              0
-          );
-
-        const remaining =
-          Math.max(
-            0,
-            total - paid
-          );
-
-        const amountInput =
-          document.getElementById(
-            "paymentAmount"
-          );
-
-        if (amountInput) {
-          amountInput.value =
-            remaining || "";
-        }
-      }
-    );
-
-  const amountInput =
-    document.getElementById(
-      "paymentAmount"
-    );
-
-  const initialTotal =
+ return documentLines(type,id)
+  .reduce(
+   (a,x)=>
+    a+
     Number(
-      selectedInvoice.total || 0
-    );
-
-  const initialPaid =
-    Number(
-      selectedInvoice.amount_paid ||
-        0
-    );
-
-  const initialRemaining =
-    Math.max(
-      0,
-      initialTotal -
-        initialPaid
-    );
-
-  if (amountInput) {
-    amountInput.value =
-      initialRemaining || "";
-  }
-
-  document.getElementById(
-    "recordForm"
-  ).onsubmit =
-    async event => {
-      event.preventDefault();
-
-      const formData =
-        new FormData(
-          event.target
-        );
-
-      const invoiceId =
-        formData.get(
-          "invoice_id"
-        );
-
-      const amount =
-        Number(
-          formData.get(
-            "amount"
-          ) || 0
-        );
-
-      if (!invoiceId) {
-        toast(
-          "Sélectionnez une facture."
-        );
-        return;
-      }
-
-      if (
-        !Number.isFinite(amount) ||
-        amount <= 0
-      ) {
-        toast(
-          "Le montant du paiement doit être supérieur à zéro."
-        );
-        return;
-      }
-
-      const invoice =
-        invoices.find(
-          item =>
-            item.id ===
-            invoiceId
-        );
-
-      if (!invoice) {
-        toast(
-          "Facture introuvable."
-        );
-        return;
-      }
-
-      const total =
-        Number(
-          invoice.total || 0
-        );
-
-      const alreadyPaid =
-        Number(
-          invoice.amount_paid ||
-            0
-        );
-
-      const remaining =
-        Math.max(
-          0,
-          total -
-            alreadyPaid
-        );
-
-      if (
-        remaining > 0 &&
-        amount > remaining
-      ) {
-        toast(
-          `Le montant dépasse le reste à payer : ${money(
-            remaining
-          )}.`
-        );
-        return;
-      }
-
-      const payload = {
-        invoice_id: invoiceId,
-        amount,
-        payment_method:
-          formData.get(
-            "payment_method"
-          ),
-        payment_date:
-          formData.get(
-            "payment_date"
-          ),
-        reference:
-          String(
-            formData.get(
-              "reference"
-            ) || ""
-          ).trim(),
-        notes:
-          String(
-            formData.get(
-              "notes"
-            ) || ""
-          ).trim()
-      };
-
-      try {
-        const payment =
-          await insert(
-            "payments",
-            payload
-          );
-
-        const newPaid =
-          alreadyPaid +
-          amount;
-
-        const newDue =
-          Math.max(
-            0,
-            total -
-              newPaid
-          );
-
-        let newStatus =
-          invoice.status ||
-          "unpaid";
-
-        if (
-          invoice.status !==
-          "cancelled"
-        ) {
-          if (
-            total > 0 &&
-            newPaid >= total
-          ) {
-            newStatus =
-              "paid";
-          } else if (
-            newPaid > 0
-          ) {
-            newStatus =
-              "partial";
-          } else if (
-            invoice.due_date &&
-            new Date(
-              invoice.due_date
-            ) < new Date()
-          ) {
-            newStatus =
-              "overdue";
-          } else {
-            newStatus =
-              "unpaid";
-          }
-        }
-
-        await update(
-          "invoices",
-          invoiceId,
-          {
-            amount_paid:
-              newPaid,
-            amount_due:
-              newDue,
-            status:
-              newStatus,
-            updated_at:
-              now()
-          }
-        );
-
-        await audit(
-          "insert",
-          "payments",
-          payment.id,
-          payload
-        );
-
-        await audit(
-          "update",
-          "invoices",
-          invoiceId,
-          {
-            amount_paid:
-              newPaid,
-            amount_due:
-              newDue,
-            status:
-              newStatus
-          }
-        );
-
-        toast(
-          "Paiement enregistré."
-        );
-
-        closeModal();
-
-        render();
-      } catch (error) {
-        console.error(
-          "Erreur paiement :",
-          error
-        );
-
-        toast(
-          error.message ||
-            "Impossible d’enregistrer le paiement."
-        );
-      }
-    };
-
-  document
-    .getElementById("modal")
-    .classList.remove("hidden");
+     x.amount??
+     (
+      Number(x.quantity||0)*
+      Number(x.unit_price||0)
+     )
+    ),
+   0
+  );
 }
 
-async function deletePayment(id) {
-  if (state.role !== "admin") {
-    toast(
-      "La suppression est réservée à l’administrateur."
-    );
-    return;
-  }
-
-  if (
-    !confirm(
-      "Supprimer ce paiement ?"
-    )
-  ) {
-    return;
-  }
-
-  try {
-    const payment =
-      (
-        state.db.payments ||
-        []
-      ).find(
-        item => item.id === id
-      );
-
-    if (!payment) {
-      return;
-    }
-
-    await remove(
-      "payments",
-      id
-    );
-
-    const invoice =
-      (
-        state.db.invoices ||
-        []
-      ).find(
-        item =>
-          item.id ===
-          payment.invoice_id
-      );
-
-    if (invoice) {
-      const total =
-        Number(
-          invoice.total || 0
-        );
-
-      const oldPaid =
-        Number(
-          invoice.amount_paid ||
-            0
-        );
-
-      const newPaid =
-        Math.max(
-          0,
-          oldPaid -
-            Number(
-              payment.amount || 0
-            )
-        );
-
-      const newDue =
-        Math.max(
-          0,
-          total -
-            newPaid
-        );
-
-      let status =
-        "unpaid";
-
-      if (
-        invoice.status ===
-        "cancelled"
-      ) {
-        status =
-          "cancelled";
-      } else if (
-        newPaid >= total &&
-        total > 0
-      ) {
-        status =
-          "paid";
-      } else if (
-        newPaid > 0
-      ) {
-        status =
-          "partial";
-      } else if (
-        invoice.due_date &&
-        new Date(
-          invoice.due_date
-        ) < new Date()
-      ) {
-        status =
-          "overdue";
-      }
-
-      await update(
-        "invoices",
-        invoice.id,
-        {
-          amount_paid:
-            newPaid,
-          amount_due:
-            newDue,
-          status,
-          updated_at:
-            now()
-        }
-      );
-    }
-
-    await audit(
-      "delete",
-      "payments",
-      id,
-      payment
-    );
-
-    toast(
-      "Paiement supprimé."
-    );
-
-    render();
-  } catch (error) {
-    console.error(error);
-
-    toast(
-      error.message ||
-        "Impossible de supprimer le paiement."
-    );
-  }
-}
-
-function openStockMovementForm(
-  stockItemId
-) {
-  const item =
-    (
-      state.db.stock_items ||
-      []
-    ).find(
-      stockItem =>
-        stockItem.id ===
-        stockItemId
-    );
-
-  if (!item) {
-    toast(
-      "Article de stock introuvable."
-    );
-    return;
-  }
-
-  const projects =
-    state.db.projects || [];
-
-  const employees =
-    state.db.profiles || [];
-
-  const employeeOptions =
-    employees
-      .filter(
-        employee =>
-          employee.active !== false
-      )
-      .map(
-        employee => `
-          <option
-            value="${employee.id}"
-          >
-            ${esc(
-              employee.full_name ||
-                employee.email ||
-                "Utilisateur"
-            )}
-          </option>
-        `
-      )
-      .join("");
-
-  const projectOptions =
-    projects
-      .map(
-        project => `
-          <option
-            value="${project.id}"
-          >
-            ${esc(
-              project.name
-            )}
-          </option>
-        `
-      )
-      .join("");
-
-  const movementTypes =
-    state.role === "employee"
-      ? [
-          ["use", "Utilisation"],
-          ["return", "Retour"]
-        ]
-      : [
-          ["entry", "Entrée"],
-          ["exit", "Sortie"],
-          ["use", "Utilisation"],
-          ["return", "Retour"],
-          ["adjustment", "Ajustement"]
-        ];
-
-  document.getElementById(
-    "modalTitle"
-  ).textContent =
-    "Mouvement de stock";
-
-  document.getElementById(
-    "recordForm"
-  ).innerHTML = `
-    <div class="form-grid">
-
-      <div class="card full">
-        <strong>
-          ${esc(item.name)}
-        </strong>
-
-        <p class="muted">
-          Stock actuel :
-          ${Number(
-            item.quantity || 0
-          )}
-          ${esc(
-            item.unit || ""
-          )}
-        </p>
-      </div>
-
-      <label>
-        Type
-
-        <select
-          name="type"
-          required
-        >
-          ${movementTypes
-            .map(
-              option => `
-                <option
-                  value="${option[0]}"
-                >
-                  ${option[1]}
-                </option>
-              `
-            )
-            .join("")}
-        </select>
-      </label>
-
-      <label>
-        Quantité
-
-        <input
-          name="quantity"
-          type="number"
-          min="0.01"
-          step="0.01"
-          required
-        >
-      </label>
-
-      <label>
-        Projet
-
-        <select name="project_id">
-          <option value="">
-            Aucun projet
-          </option>
-
-          ${projectOptions}
-        </select>
-      </label>
-
-      <label>
-        Responsable
-
-        <select
-          name="employee_id"
-        >
-          <option value="">
-            Sélectionner
-          </option>
-
-          ${employeeOptions}
-        </select>
-      </label>
-
-      <label class="full">
-        Notes
-
-        <textarea
-          name="notes"
-        ></textarea>
-      </label>
-
-      <div class="full actions">
-
-        <button
-          type="button"
-          class="secondary"
-          id="cancelStockMovement"
-        >
-          Annuler
-        </button>
-
-        <button
-          class="primary"
-        >
-          Enregistrer
-        </button>
-
-      </div>
-    </div>
-  `;
-
-  document.getElementById(
-    "cancelStockMovement"
-  ).onclick = closeModal;
-
-  document.getElementById(
-    "recordForm"
-  ).onsubmit =
-    async event => {
-      event.preventDefault();
-
-      const formData =
-        new FormData(
-          event.target
-        );
-
-      const type =
-        formData.get("type");
-
-      const quantity =
-        Number(
-          formData.get(
-            "quantity"
-          ) || 0
-        );
-
-      if (
-        !Number.isFinite(
-          quantity
-        ) ||
-        quantity <= 0
-      ) {
-        toast(
-          "La quantité doit être supérieure à zéro."
-        );
-        return;
-      }
-
-      const payload = {
-        stock_item_id:
-          stockItemId,
-        type,
-        quantity,
-        project_id:
-          formData.get(
-            "project_id"
-          ) || null,
-        employee_id:
-          formData.get(
-            "employee_id"
-          ) ||
-          state.user.id,
-        notes:
-          String(
-            formData.get(
-              "notes"
-            ) || ""
-          ).trim()
-      };
-
-      try {
-        if (
-          state.cloud &&
-          sb
-        ) {
-          const {
-            data,
-            error
-          } = await sb.rpc(
-            "create_stock_movement",
-            {
-              p_stock_item_id:
-                stockItemId,
-              p_type: type,
-              p_quantity:
-                quantity,
-              p_project_id:
-                payload.project_id,
-              p_activity_id:
-                null,
-              p_employee_id:
-                payload.employee_id,
-              p_notes:
-                payload.notes
-            }
-          );
-
-          if (error) {
-            throw error;
-          }
-
-          if (data) {
-            await syncCloud();
-          }
-        } else {
-          const current =
-            Number(
-              item.quantity || 0
-            );
-
-          let newQuantity =
-            current;
-
-          if (
-            type ===
-              "entry" ||
-            type === "return"
-          ) {
-            newQuantity +=
-              quantity;
-          }
-
-          if (
-            type ===
-              "exit" ||
-            type === "use"
-          ) {
-            newQuantity -=
-              quantity;
-          }
-
-          if (
-            type ===
-            "adjustment"
-          ) {
-            newQuantity =
-              quantity;
-          }
-
-          if (
-            newQuantity < 0
-          ) {
-            throw new Error(
-              "Stock insuffisant."
-            );
-          }
-
-          item.quantity =
-            newQuantity;
-
-          await insert(
-            "stock_movements",
-            payload
-          );
-        }
-
-        await audit(
-          "insert",
-          "stock_movements",
-          null,
-          payload
-        );
-
-        toast(
-          "Mouvement enregistré."
-        );
-
-        closeModal();
-
-        render();
-      } catch (error) {
-        console.error(error);
-
-        toast(
-          error.message ||
-            "Erreur lors du mouvement de stock."
-        );
-      }
-    };
-
-  document
-    .getElementById("modal")
-    .classList.remove("hidden");
+function nextNumber(type){
+
+ const year=new Date().getFullYear();
+
+ const prefix=
+  type==="quotes"
+   ?`DEV-${year}-`
+   :`FAC-${year}-`;
+
+ const arr=
+  type==="quotes"
+   ?state.db.quotes||[]
+   :state.db.invoices||[];
+
+ let max=0;
+
+ arr.forEach(x=>{
+
+  const n=String(
+   type==="quotes"
+    ?x.quote_number
+    :x.invoice_number
+  );
+
+  const m=n.match(
+   new RegExp(
+    "^"+prefix+"(\\d+)$"
+   )
+  );
+
+  if(m)
+   max=Math.max(
+    max,
+    Number(m[1])
+   );
+ });
+
+ return prefix+
+  String(max+1).padStart(4,"0");
 }
 
 function openDocumentForm(
-  table,
-  id = null,
-  readonly = false
-) {
-  if (
-    table !== "quotes" &&
-    table !== "invoices"
-  ) {
-    return;
-  }
+ type,
+ id=null,
+ readonly=false
+){
 
-  const existing =
-    id
-      ? (
-          state.db[table] ||
-          []
-        ).find(
-          item => item.id === id
-        )
-      : null;
+ const table=type;
 
-  const isInvoice =
-    table === "invoices";
+ const old=id
+  ?(state.db[table]||[])
+    .find(x=>x.id===id)
+  :null;
 
-  const title =
-    readonly
-      ? isInvoice
-        ? "Détails de la facture"
-        : "Détails du devis"
-      : id
-      ? isInvoice
-        ? "Modifier la facture"
-        : "Modifier le devis"
-      : isInvoice
-      ? "Nouvelle facture"
-      : "Nouveau devis";
+ const lines=old
+  ?documentLines(type,id)
+  :[];
 
-  document.getElementById(
-    "modalTitle"
-  ).textContent = title;
+ const isInvoice=
+  type==="invoices";
 
-  const clients =
-    state.db.clients || [];
+ document.getElementById("modalTitle")
+  .textContent=
+   readonly
+    ?`${isInvoice?"Facture":"Devis"} ${
+      old?.[
+       isInvoice
+        ?"invoice_number"
+        :"quote_number"
+      ]||""
+     }`
+    :(id?"Modifier":"Nouveau")+
+      ` ${isInvoice?"facture":"devis"}`;
 
-  const clientOptions =
-    clients
-      .map(
-        client => `
-          <option
-            value="${client.id}"
-            ${
-              existing?.client_id ===
-              client.id
-                ? "selected"
-                : ""
-            }
-          >
-            ${esc(
-              client.full_name ||
-                client.company_name ||
-                "Client"
-            )}
-          </option>
-        `
-      )
-      .join("");
+ const clients=state.db.clients||[];
 
-  const issueDate =
-    existing?.issue_date ||
-    new Date()
-      .toISOString()
-      .slice(0, 10);
+ const clientOptions=
+  clients.map(c=>`
+   <option
+     value="${c.id}"
+     ${
+      old?.client_id===c.id
+       ?"selected"
+       :""
+     }
+   >
+     ${esc(
+      c.company_name||
+      c.full_name||
+      "Client"
+     )}
+   </option>
+  `).join("");
 
-  const dueDate =
-    existing?.due_date ||
-    new Date(
-      Date.now() +
-        30 * 86400000
-    )
-      .toISOString()
-      .slice(0, 10);
+ const units=[
+  "pièce",
+  "m",
+  "kg",
+  "h",
+  "forfait",
+  "lot",
+  "service"
+ ];
 
-  const validUntil =
-    existing?.valid_until ||
-    new Date(
-      Date.now() +
-        15 * 86400000
-    )
-      .toISOString()
-      .slice(0, 10);
+ const statuses=
+  isInvoice
+   ?[
+     "draft",
+     "unpaid",
+     "partial",
+     "paid",
+     "cancelled",
+     "overdue"
+    ]
+   :[
+     "draft",
+     "sent",
+     "accepted",
+     "rejected",
+     "expired",
+     "converted"
+    ];
 
-  const statuses = isInvoice
-    ? [
-        "draft",
-        "unpaid",
-        "partial",
-        "paid",
-        "cancelled",
-        "overdue"
-      ]
-    : [
-        "draft",
-        "sent",
-        "accepted",
-        "rejected",
-        "expired",
-        "converted"
-      ];
+ const number=
+  old?.[
+   isInvoice
+    ?"invoice_number"
+    :"quote_number"
+  ]||
+  nextNumber(type);
 
-  document.getElementById(
-    "recordForm"
-  ).innerHTML = `
-    <div class="form-grid">
+ let draft=
+  lines.length
+   ?lines.map(x=>({...x}))
+   :[];
 
-      <label>
-        ${
-          isInvoice
-            ? "N° facture"
-            : "N° devis"
-        }
+ const renderLines=()=>draft.map((l,i)=>`
 
-        <input
-          name="${
-            isInvoice
-              ? "invoice_number"
-              : "quote_number"
-          }"
-          value="${esc(
-            existing?.[
-              isInvoice
-                ? "invoice_number"
-                : "quote_number"
-            ] ||
-              ""
-          )}"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >
-      </label>
+  <tr>
 
-      <label>
-        Client
+   <td>
+    <input
+      data-line-desc="${i}"
+      value="${esc(l.description||"")}"
+      ${readonly?"disabled":""}
+    >
+   </td>
 
-        <select
-          name="client_id"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-          required
-        >
-          <option value="">
-            Sélectionner un client
-          </option>
+   <td>
 
-          ${clientOptions}
-        </select>
-      </label>
+    <select
+      data-line-unit="${i}"
+      ${readonly?"disabled":""}
+    >
 
-      <label>
-        Date
+     ${
+      units.map(u=>`
+       <option
+         ${l.unit===u?"selected":""}
+       >
+         ${u}
+       </option>
+      `).join("")
+     }
 
-        <input
-          type="date"
-          name="issue_date"
-          value="${issueDate}"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-          required
-        >
-      </label>
+    </select>
 
-      <label>
-        ${
-          isInvoice
-            ? "Échéance"
-            : "Valable jusqu’au"
-        }
+   </td>
 
-        <input
-          type="date"
-          name="${
-            isInvoice
-              ? "due_date"
-              : "valid_until"
-          }"
-          value="${
-            isInvoice
-              ? dueDate
-              : validUntil
-          }"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >
-      </label>
+   <td>
+    <input
+      type="number"
+      step="0.01"
+      data-line-qty="${i}"
+      value="${l.quantity??1}"
+      ${readonly?"disabled":""}
+    >
+   </td>
 
-      <label class="full">
-        Titre
+   <td>
+    <input
+      type="number"
+      step="0.01"
+      data-line-price="${i}"
+      value="${l.unit_price??0}"
+      ${readonly?"disabled":""}
+    >
+   </td>
 
-        <input
-          name="title"
-          value="${esc(
-            existing?.title ||
-              ""
-          )}"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >
-      </label>
+   <td>
+    ${money(Number(l.amount||0))}
+   </td>
 
-      <label class="full">
-        Description
-
-        <textarea
-          name="description"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >${esc(
-          existing?.description ||
-            ""
-        )}</textarea>
-      </label>
-
-      <label>
-        Remise
-
-        <input
-          type="number"
-          name="discount"
-          min="0"
-          step="0.01"
-          value="${Number(
-            existing?.discount ||
-              0
-          )}"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >
-      </label>
-
-      <label>
-        Taxe
-
-        <input
-          type="number"
-          name="tax"
-          min="0"
-          step="0.01"
-          value="${Number(
-            existing?.tax ||
-              0
-          )}"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >
-      </label>
-
-      <label>
-        Statut
-
-        <select
-          name="status"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >
-          ${statuses
-            .map(
-              status => `
-                <option
-                  value="${status}"
-                  ${
-                    (
-                      existing?.status ||
-                      "draft"
-                    ) === status
-                      ? "selected"
-                      : ""
-                  }
-                >
-                  ${statusLabel(
-                    status
-                  )}
-                </option>
-              `
-            )
-            .join("")}
-        </select>
-      </label>
-
-      ${
-        isInvoice
-          ? `
-            <label>
-              Montant payé
-
-              <input
-                type="number"
-                name="amount_paid"
-                min="0"
-                step="0.01"
-                value="${Number(
-                  existing?.amount_paid ||
-                    0
-                )}"
-                ${
-                  readonly
-                    ? "disabled"
-                    : ""
-                }
-              >
-            </label>
-          `
-          : ""
-      }
-
-      <div class="full">
-        <h3>
-          Lignes détaillées
-        </h3>
-
-        <div
-          id="documentLines"
-          class="document-lines"
-        ></div>
-      </div>
-
-      <div class="full">
-        <div
-          id="documentSummary"
-          class="card"
-        ></div>
-      </div>
-
-      <label class="full">
-        Notes
-
-        <textarea
-          name="notes"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >${esc(
-          existing?.notes ||
-            ""
-        )}</textarea>
-      </label>
-
-      <label class="full">
-        Conditions
-
-        <textarea
-          name="terms"
-          ${
-            readonly
-              ? "disabled"
-              : ""
-          }
-        >${esc(
-          existing?.terms ||
-            ""
-        )}</textarea>
-      </label>
-
-      ${
-        readonly
-          ? `
-            <div class="full actions">
-              <button
-                type="button"
-                class="secondary"
-                id="closeDocumentDetails"
-              >
-                Fermer
-              </button>
-            </div>
-          `
-          : `
-            <div class="full actions">
-
-              <button
-                type="button"
-                class="secondary"
-                id="cancelDocument"
-              >
-                Annuler
-              </button>
-
-              <button
-                class="primary"
-              >
-                Enregistrer
-              </button>
-
-            </div>
-          `
-      }
-    </div>
-  `;
-
-  const linesContainer =
-    document.getElementById(
-      "documentLines"
-    );
-
-  const existingLines =
-    existing
-      ? (
-          state.db[
-            isInvoice
-              ? "invoice_items"
-              : "quote_items"
-          ] || []
-        ).filter(
-          line =>
-            line[
-              isInvoice
-                ? "invoice_id"
-                : "quote_id"
-            ] === existing.id
-        )
-      : [];
-
-  let lineDrafts =
-    existingLines.length
-      ? existingLines.map(
-          line => ({
-            id: line.id,
-            description:
-              line.description ||
-              "",
-            quantity:
-              Number(
-                line.quantity || 1
-              ),
-            unit_price:
-              Number(
-                line.unit_price ||
-                  0
-              ),
-            amount:
-              Number(
-                line.amount ||
-                  0
-              )
-          })
-        )
-      : [
-          {
-            description: "",
-            quantity: 1,
-            unit_price: 0,
-            amount: 0
-          }
-        ];
-
-  function renderLines() {
-    if (!linesContainer) {
-      return;
+   <td>
+    ${
+     readonly
+      ?""
+      :`
+       <button
+         type="button"
+         class="danger"
+         data-remove-line="${i}"
+       >
+         ×
+       </button>
+      `
     }
+   </td>
 
-    linesContainer.innerHTML = `
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Désignation</th>
-              <th>Qté</th>
-              <th>Prix unitaire</th>
-              <th>Total</th>
-              ${
-                readonly
-                  ? ""
-                  : "<th></th>"
-              }
-            </tr>
-          </thead>
+  </tr>
+ `).join("");
 
-          <tbody>
-            ${lineDrafts
-              .map(
-                (line, index) => `
-                  <tr>
+ const calc=()=>{
 
-                    <td>
-                      <input
-                        type="text"
-                        data-line-description="${index}"
-                        value="${esc(
-                          line.description
-                        )}"
-                        ${
-                          readonly
-                            ? "disabled"
-                            : ""
-                        }
-                      >
-                    </td>
+  draft.forEach(l=>
+   l.amount=
+    Number(l.quantity||0)*
+    Number(l.unit_price||0)
+  );
 
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        data-line-quantity="${index}"
-                        value="${Number(
-                          line.quantity ||
-                            0
-                        )}"
-                        ${
-                          readonly
-                            ? "disabled"
-                            : ""
-                        }
-                      >
-                    </td>
+  const subtotal=
+   draft.reduce(
+    (a,l)=>a+Number(l.amount||0),
+    0
+   );
 
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        data-line-price="${index}"
-                        value="${Number(
-                          line.unit_price ||
-                            0
-                        )}"
-                        ${
-                          readonly
-                            ? "disabled"
-                            : ""
-                        }
-                      >
-                    </td>
+  const discount=
+   Number(
+    document.querySelector(
+     '[name="discount"]'
+    )?.value||0
+   );
 
-                    <td>
-                      <strong>
-                        ${money(
-                          Number(
-                            line.quantity ||
-                              0
-                          ) *
-                            Number(
-                              line.unit_price ||
-                                0
-                            )
-                        )}
-                      </strong>
-                    </td>
+  const tax=
+   Number(
+    document.querySelector(
+     '[name="tax"]'
+    )?.value||0
+   );
 
-                    ${
-                      readonly
-                        ? ""
-                        : `
-                          <td>
-                            <button
-                              type="button"
-                              class="danger ghost"
-                              data-remove-line="${index}"
-                            >
-                              ×
-                            </button>
-                          </td>
-                        `
-                    }
+  return {
+   subtotal,
+   total:Math.max(
+    0,
+    subtotal-discount+tax
+   )
+  };
+ };
 
-                  </tr>
-                `
-              )
-              .join("")}
-          </tbody>
-        </table>
-      </div>
+ document.getElementById("recordForm").innerHTML=`
+
+ <div class="form-grid">
+
+  <label>
+    Numéro
+    <input
+      name="document_number"
+      value="${esc(number)}"
+      readonly
+    >
+  </label>
+
+  <label>
+    Client
+
+    <select
+      name="client_id"
+      ${readonly?"disabled":""}
+      required
+    >
+
+      <option value="">
+        Sélectionner
+      </option>
+
+      ${clientOptions}
+
+    </select>
+
+  </label>
+
+  <label>
+    Date
+
+    <input
+      type="date"
+      name="issue_date"
+      value="${esc(old?.issue_date||today())}"
+      ${readonly?"disabled":""}
+    >
+  </label>
+
+  <label>
+    ${isInvoice?"Échéance":"Valable jusqu'au"}
+
+    <input
+      type="date"
+      name="${isInvoice?"due_date":"valid_until"}"
+      value="${esc(
+       old?.[
+        isInvoice
+         ?"due_date"
+         :"valid_until"
+       ]||today()
+      )}"
+      ${readonly?"disabled":""}
+    >
+  </label>
+
+  <label>
+    Titre
+
+    <input
+      name="title"
+      value="${esc(old?.title||"")}"
+      ${readonly?"disabled":""}
+    >
+  </label>
+
+  <label>
+    Statut
+
+    <select
+      name="status"
+      ${readonly?"disabled":""}
+    >
+
+     ${
+      statuses.map(s=>`
+       <option
+         value="${s}"
+         ${
+          (old?.status||"draft")===s
+           ?"selected"
+           :""
+         }
+       >
+         ${statusLabel(s)}
+       </option>
+      `).join("")
+     }
+
+    </select>
+
+  </label>
+
+  <label class="full">
+
+    Description
+
+    <textarea
+      name="description"
+      ${readonly?"disabled":""}
+    >${esc(old?.description||"")}</textarea>
+
+  </label>
+
+  <div class="full">
+
+   <h3 style="margin:.4rem 0">
+     Lignes détaillées
+   </h3>
+
+   <div class="table-wrap">
+
+    <table>
+
+     <thead>
+
+      <tr>
+       <th>Désignation</th>
+       <th>Unité</th>
+       <th>Qté</th>
+       <th>Prix unitaire</th>
+       <th>Total</th>
+       <th></th>
+      </tr>
+
+     </thead>
+
+     <tbody id="documentLinesBody">
 
       ${
-        readonly
-          ? ""
-          : `
-            <button
-              type="button"
-              class="secondary"
-              id="addDocumentLine"
-              style="margin-top:10px"
-            >
-              + Ajouter une ligne
-            </button>
-          `
-      }
-    `;
-
-    updateSummary();
-  }
-
-  function updateSummary() {
-    const subtotal =
-      lineDrafts.reduce(
-        (sum, line) =>
-          sum +
-          Number(
-            line.quantity || 0
-          ) *
-            Number(
-              line.unit_price ||
-                0
-            ),
-        0
-      );
-
-    const discount =
-      Number(
-        document.querySelector(
-          '[name="discount"]'
-        )?.value || 0
-      );
-
-    const tax =
-      Number(
-        document.querySelector(
-          '[name="tax"]'
-        )?.value || 0
-      );
-
-    const total =
-      Math.max(
-        0,
-        subtotal -
-          discount +
-          tax
-      );
-
-    const paid =
-      Number(
-        document.querySelector(
-          '[name="amount_paid"]'
-        )?.value || 0
-      );
-
-    const due =
-      Math.max(
-        0,
-        total - paid
-      );
-
-    const summary =
-      document.getElementById(
-        "documentSummary"
-      );
-
-    if (!summary) return;
-
-    summary.innerHTML = `
-      <div class="grid kpis">
-
-        <div class="kpi">
-          <small>Sous-total</small>
-          <strong>
-            ${money(subtotal)}
-          </strong>
-        </div>
-
-        <div class="kpi">
-          <small>Remise</small>
-          <strong>
-            ${money(discount)}
-          </strong>
-        </div>
-
-        <div class="kpi">
-          <small>Taxe</small>
-          <strong>
-            ${money(tax)}
-          </strong>
-        </div>
-
-        <div class="kpi">
-          <small>Total</small>
-          <strong>
-            ${money(total)}
-          </strong>
-        </div>
-
-        ${
-          isInvoice
-            ? `
-              <div class="kpi">
-                <small>Reste</small>
-                <strong>
-                  ${money(due)}
-                </strong>
-              </div>
-            `
-            : ""
-        }
-
-      </div>
-    `;
-  }
-
-  renderLines();
-
-  if (!readonly) {
-    document.getElementById(
-      "addDocumentLine"
-    )?.addEventListener(
-      "click",
-      () => {
-        lineDrafts.push({
-          description: "",
-          quantity: 1,
-          unit_price: 0,
-          amount: 0
-        });
-
-        renderLines();
-      }
-    );
-
-    linesContainer?.addEventListener(
-      "input",
-      event => {
-        const target =
-          event.target;
-
-        const descriptionIndex =
-          target.dataset
-            .lineDescription;
-
-        const quantityIndex =
-          target.dataset
-            .lineQuantity;
-
-        const priceIndex =
-          target.dataset
-            .linePrice;
-
-        if (
-          descriptionIndex !==
-          undefined
-        ) {
-          lineDrafts[
-            Number(
-              descriptionIndex
-            )
-          ].description =
-            target.value;
-        }
-
-        if (
-          quantityIndex !==
-          undefined
-        ) {
-          lineDrafts[
-            Number(
-              quantityIndex
-            )
-          ].quantity =
-            Number(
-              target.value || 0
-            );
-        }
-
-        if (
-          priceIndex !==
-          undefined
-        ) {
-          lineDrafts[
-            Number(
-              priceIndex
-            )
-          ].unit_price =
-            Number(
-              target.value || 0
-            );
-        }
-
-        renderLines();
-      }
-    );
-
-    linesContainer?.addEventListener(
-      "click",
-      event => {
-        const button =
-          event.target.closest(
-            "[data-remove-line]"
-          );
-
-        if (!button) return;
-
-        const index =
-          Number(
-            button.dataset
-              .removeLine
-          );
-
-        lineDrafts.splice(
-          index,
-          1
-        );
-
-        if (
-          lineDrafts.length === 0
-        ) {
-          lineDrafts.push({
-            description: "",
-            quantity: 1,
-            unit_price: 0,
-            amount: 0
-          });
-        }
-
-        renderLines();
-      }
-    );
-
-    document
-      .querySelector(
-        '[name="discount"]'
-      )
-      ?.addEventListener(
-        "input",
-        updateSummary
-      );
-
-    document
-      .querySelector(
-        '[name="tax"]'
-      )
-      ?.addEventListener(
-        "input",
-        updateSummary
-      );
-
-    document
-      .querySelector(
-        '[name="amount_paid"]'
-      )
-      ?.addEventListener(
-        "input",
-        updateSummary
-      );
-  }
-
-  const cancelButton =
-    document.getElementById(
-      "cancelDocument"
-    );
-
-  if (cancelButton) {
-    cancelButton.onclick =
-      closeModal;
-  }
-
-  const closeDetails =
-    document.getElementById(
-      "closeDocumentDetails"
-    );
-
-  if (closeDetails) {
-    closeDetails.onclick =
-      closeModal;
-  }
-
-  if (!readonly) {
-    document.getElementById(
-      "recordForm"
-    ).onsubmit =
-      async event => {
-        event.preventDefault();
-
-        const formData =
-          new FormData(
-            event.target
-          );
-
-        const subtotal =
-          lineDrafts.reduce(
-            (sum, line) =>
-              sum +
-              Number(
-                line.quantity ||
-                  0
-              ) *
-                Number(
-                  line.unit_price ||
-                    0
-                ),
-            0
-          );
-
-        const discount =
-          Number(
-            formData.get(
-              "discount"
-            ) || 0
-          );
-
-        const tax =
-          Number(
-            formData.get(
-              "tax"
-            ) || 0
-          );
-
-        const total =
-          Math.max(
-            0,
-            subtotal -
-              discount +
-              tax
-          );
-
-        const amountPaid =
-          isInvoice
-            ? Number(
-                formData.get(
-                  "amount_paid"
-                ) || 0
-              )
-            : 0;
-
-        const amountDue =
-          Math.max(
-            0,
-            total -
-              amountPaid
-          );
-
-        let status =
-          formData.get(
-            "status"
-          ) ||
-          "draft";
-
-        if (isInvoice) {
-          if (
-            status !==
-            "cancelled"
-          ) {
-            if (
-              total > 0 &&
-              amountPaid >= total
-            ) {
-              status = "paid";
-            } else if (
-              amountPaid > 0
-            ) {
-              status = "partial";
-            } else if (
-              formData.get(
-                "due_date"
-              ) &&
-              new Date(
-                formData.get(
-                  "due_date"
-                )
-              ) < new Date() &&
-              total > amountPaid
-            ) {
-              status = "overdue";
-            } else {
-              status = "unpaid";
-            }
-          }
-        }
-
-        const payload = {
-          client_id:
-            formData.get(
-              "client_id"
-            ) || null,
-
-          issue_date:
-            formData.get(
-              "issue_date"
-            ),
-
-          title:
-            formData.get(
-              "title"
-            ),
-
-          description:
-            formData.get(
-              "description"
-            ),
-
-          subtotal,
-          discount,
-          tax,
-          total,
-
-          status,
-
-          notes:
-            formData.get(
-              "notes"
-            ),
-
-          terms:
-            formData.get(
-              "terms"
-            ),
-
-          updated_at:
-            now()
-        };
-
-        if (isInvoice) {
-          payload.invoice_number =
-            formData.get(
-              "invoice_number"
-            );
-
-          payload.due_date =
-            formData.get(
-              "due_date"
-            );
-
-          payload.amount_paid =
-            amountPaid;
-
-          payload.amount_due =
-            amountDue;
-        } else {
-          payload.quote_number =
-            formData.get(
-              "quote_number"
-            );
-
-          payload.valid_until =
-            formData.get(
-              "valid_until"
-            );
-        }
-
-        try {
-          let documentId =
-            id;
-
-          if (id) {
-            await update(
-              table,
-              id,
-              payload
-            );
-          } else {
-            const created =
-              await insert(
-                table,
-                payload
-              );
-
-            documentId =
-              created.id;
-          }
-
-          const itemTable =
-            isInvoice
-              ? "invoice_items"
-              : "quote_items";
-
-          const foreignKey =
-            isInvoice
-              ? "invoice_id"
-              : "quote_id";
-
-          if (state.cloud) {
-            const {
-              error:
-                deleteError
-            } = await sb
-              .from(itemTable)
-              .delete()
-              .eq(
-                foreignKey,
-                documentId
-              );
-
-            if (deleteError) {
-              throw deleteError;
-            }
-
-            if (lineDrafts.length) {
-              const items =
-                lineDrafts
-                  .filter(
-                    line =>
-                      String(
-                        line.description ||
-                          ""
-                      ).trim() ||
-                      Number(
-                        line.quantity ||
-                          0
-                      ) > 0
-                  )
-                  .map(line => ({
-                    [foreignKey]:
-                      documentId,
-                    description:
-                      String(
-                        line.description ||
-                          ""
-                      ).trim(),
-                    quantity:
-                      Number(
-                        line.quantity ||
-                          0
-                      ),
-                    unit_price:
-                      Number(
-                        line.unit_price ||
-                          0
-                      ),
-                    amount:
-                      Number(
-                        line.quantity ||
-                          0
-                      ) *
-                      Number(
-                        line.unit_price ||
-                          0
-                      )
-                  }));
-
-              if (items.length) {
-                const {
-                  error:
-                    insertError
-                } = await sb
-                  .from(itemTable)
-                  .insert(items);
-
-                if (insertError) {
-                  throw insertError;
-                }
-              }
-            }
-
-            await syncCloud();
-          } else {
-            state.db[
-              itemTable
-            ] = (
-              state.db[
-                itemTable
-              ] || []
-            ).filter(
-              item =>
-                item[
-                  foreignKey
-                ] !== documentId
-            );
-
-            lineDrafts.forEach(
-              line => {
-                state.db[
-                  itemTable
-                ].push({
-                  id: uid(),
-                  [foreignKey]:
-                    documentId,
-                  description:
-                    String(
-                      line.description ||
-                        ""
-                    ).trim(),
-                  quantity:
-                    Number(
-                      line.quantity ||
-                        0
-                    ),
-                  unit_price:
-                    Number(
-                      line.unit_price ||
-                        0
-                    ),
-                  amount:
-                    Number(
-                      line.quantity ||
-                        0
-                    ) *
-                    Number(
-                      line.unit_price ||
-                        0
-                    ),
-                  created_at:
-                    now()
-                });
-              }
-            );
-
-            saveLocal();
-          }
-
-          await audit(
-            id
-              ? "update"
-              : "insert",
-            table,
-            documentId,
-            {
-              ...payload,
-              line_count:
-                lineDrafts.length
-            }
-          );
-
-          toast(
-            isInvoice
-              ? "Facture enregistrée."
-              : "Devis enregistré."
-          );
-
-          closeModal();
-
-          render();
-        } catch (error) {
-          console.error(error);
-
-          toast(
-            error.message ||
-              "Erreur lors de l’enregistrement."
-          );
-        }
-      };
-  }
-
-  document
-    .getElementById("modal")
-    .classList.remove("hidden");
-}
-
-function bindPage() {
-  document
-    .querySelectorAll(
-      "[data-add]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          const table =
-            button.dataset.add;
-
-          if (
-            table ===
-            "quotes"
-          ) {
-            openDocumentForm(
-              "quotes"
-            );
-            return;
-          }
-
-          if (
-            table ===
-            "invoices"
-          ) {
-            openDocumentForm(
-              "invoices"
-            );
-            return;
-          }
-
-          openForm(table);
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-edit]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openForm(
-            button.dataset.edit,
-            button.dataset.id
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-delete]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          del(
-            button.dataset.delete,
-            button.dataset.id
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-edit-document]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openDocumentForm(
-            button.dataset
-              .editDocument,
-            button.dataset.id,
-            false
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-details-document]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openDocumentForm(
-            button.dataset
-              .detailsDocument,
-            button.dataset.id,
-            true
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-add-payment]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openPaymentForm(
-            button.dataset
-              .addPayment
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-delete-payment]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          deletePayment(
-            button.dataset
-              .deletePayment
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-stock-move]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openStockMovementForm(
-            button.dataset
-              .stockMove
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-edit-stock]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        () => {
-          openForm(
-            "stock_items",
-            button.dataset
-              .editStock
-          );
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-role]"
-    )
-    .forEach(select => {
-      select.addEventListener(
-        "change",
-        async event => {
-          if (
-            state.role !==
-            "admin"
-          ) {
-            return;
-          }
-
-          const userId =
-            event.target.dataset
-              .role;
-
-          const role =
-            event.target.value;
-
-          try {
-            await update(
-              "profiles",
-              userId,
-              {
-                role,
-                updated_at:
-                  now()
-              }
-            );
-
-            await audit(
-              "update",
-              "profiles",
-              userId,
-              { role }
-            );
-
-            toast(
-              "Rôle modifié."
-            );
-
-            if (
-              userId ===
-              state.user.id
-            ) {
-              state.role =
-                role;
-            }
-
-            render();
-          } catch (error) {
-            console.error(
-              error
-            );
-
-            toast(
-              error.message ||
-                "Impossible de modifier le rôle."
-            );
-          }
-        }
-      );
-    });
-
-  document
-    .querySelectorAll(
-      "[data-toggle-active]"
-    )
-    .forEach(button => {
-      button.addEventListener(
-        "click",
-        async () => {
-          if (
-            state.role !==
-            "admin"
-          ) {
-            return;
-          }
-
-          const userId =
-            button.dataset
-              .toggleActive;
-
-          const user =
-            (
-              state.db.profiles ||
-              []
-            ).find(
-              profile =>
-                profile.id ===
-                userId
-            );
-
-          if (!user) {
-            return;
-          }
-
-          try {
-            await update(
-              "profiles",
-              userId,
-              {
-                active:
-                  user.active ===
-                  false
-                    ? true
-                    : false,
-                updated_at:
-                  now()
-              }
-            );
-
-            await audit(
-              "update",
-              "profiles",
-              userId,
-              {
-                active:
-                  user.active ===
-                  false
-                    ? true
-                    : false
-              }
-            );
-
-            toast(
-              "Statut du compte modifié."
-            );
-
-            render();
-          } catch (error) {
-            console.error(
-              error
-            );
-
-            toast(
-              error.message ||
-                "Impossible de modifier le compte."
-            );
-          }
-        }
-      );
-    });
-
-  const createEmployeeButton =
-    document.getElementById(
-      "createEmployeeBtn"
-    );
-
-  if (createEmployeeButton) {
-    createEmployeeButton.addEventListener(
-      "click",
-      openCreateEmployeeForm
-    );
-  }
-
-  const newPaymentButton =
-    document.getElementById(
-      "newPaymentBtn"
-    );
-
-  if (newPaymentButton) {
-    newPaymentButton.addEventListener(
-      "click",
-      () =>
-        openPaymentForm()
-    );
-  }
-
-  const settingsForm =
-    document.getElementById(
-      "settingsForm"
-    );
-
-  if (settingsForm) {
-    settingsForm.addEventListener(
-      "submit",
-      saveSettings
-    );
-  }
-}
-
-function openCreateEmployeeForm() {
-  if (state.role !== "admin") {
-    toast(
-      "Seul l’administrateur peut créer un compte employé."
-    );
-    return;
-  }
-
-  document.getElementById(
-    "modalTitle"
-  ).textContent =
-    "Créer un compte employé";
-
-  document.getElementById(
-    "recordForm"
-  ).innerHTML = `
-    <div class="form-grid">
-
-      <label>
-        Nom complet
-
-        <input
-          name="full_name"
-          required
-        >
-      </label>
-
-      <label>
-        Téléphone
-
-        <input
-          name="phone"
-          type="tel"
-        >
-      </label>
-
-      <label>
-        E-mail
-
-        <input
-          name="email"
-          type="email"
-          required
-        >
-      </label>
-
-      <label>
-        Mot de passe initial
-
-        <input
-          name="password"
-          type="password"
-          minlength="8"
-          required
-        >
-      </label>
-
-      <label>
-        Confirmation
-
-        <input
-          name="password_confirm"
-          type="password"
-          minlength="8"
-          required
-        >
-      </label>
-
-      <div class="full actions">
-
-        <button
-          type="button"
-          class="secondary"
-          id="cancelEmployee"
-        >
-          Annuler
-        </button>
-
-        <button
-          class="primary"
-        >
-          Créer le compte
-        </button>
-
-      </div>
-    </div>
-  `;
-
-  document.getElementById(
-    "cancelEmployee"
-  ).onclick = closeModal;
-
-  document.getElementById(
-    "recordForm"
-  ).onsubmit =
-    async event => {
-      event.preventDefault();
-
-      const formData =
-        new FormData(
-          event.target
-        );
-
-      const fullName =
-        String(
-          formData.get(
-            "full_name"
-          ) || ""
-        ).trim();
-
-      const phone =
-        String(
-          formData.get(
-            "phone"
-          ) || ""
-        ).trim();
-
-      const email =
-        String(
-          formData.get(
-            "email"
-          ) || ""
-        )
-          .trim()
-          .toLowerCase();
-
-      const password =
-        String(
-          formData.get(
-            "password"
-          ) || ""
-        );
-
-      const confirmation =
-        String(
-          formData.get(
-            "password_confirm"
-          ) || ""
-        );
-
-      if (
-        password !==
-        confirmation
-      ) {
-        toast(
-          "Les mots de passe ne correspondent pas."
-        );
-        return;
+       renderLines()||
+       `
+        <tr>
+         <td
+           colspan="6"
+           class="empty"
+         >
+          Aucune ligne.
+         </td>
+        </tr>
+       `
       }
 
-      if (
-        password.length < 8
-      ) {
-        toast(
-          "Le mot de passe doit contenir au moins 8 caractères."
-        );
-        return;
-      }
+     </tbody>
 
-      try {
-        if (
-          !state.cloud ||
-          !sb
-        ) {
-          const profile = {
-            id: uid(),
-            full_name:
-              fullName,
-            phone,
-            email,
-            role: "employee",
-            active: true,
-            created_at:
-              now()
-          };
+    </table>
 
-          state.db.profiles.unshift(
-            profile
-          );
+   </div>
 
-          saveLocal();
+   ${
+    readonly
+     ?""
+     :`
+      <button
+        type="button"
+        class="secondary"
+        id="addDocumentLine"
+      >
+        + Ajouter une ligne
+      </button>
+     `
+   }
 
-          await audit(
-            "insert",
-            "profiles",
-            profile.id,
-            {
-              full_name:
-                fullName,
-              email
-            }
-          );
+  </div>
 
-          toast(
-            "Compte employé créé en mode démo."
-          );
+  <label>
+    Remise
 
-          closeModal();
+    <input
+      type="number"
+      step="0.01"
+      name="discount"
+      value="${old?.discount||0}"
+      ${readonly?"disabled":""}
+    >
+  </label>
 
-          render();
+  <label>
+    Taxe / frais
 
-          return;
-        }
+    <input
+      type="number"
+      step="0.01"
+      name="tax"
+      value="${old?.tax||0}"
+      ${readonly?"disabled":""}
+    >
+  </label>
 
-        const {
-          data: sessionData
-        } = await sb.auth.getSession();
+  ${
+   isInvoice
+    ?`
+     <label>
+       Montant déjà payé
 
-        const accessToken =
-          sessionData?.session
-            ?.access_token;
-
-        if (!accessToken) {
-          throw new Error(
-            "Session administrateur introuvable."
-          );
-        }
-
-        const functionUrl =
-          `${CFG.SUPABASE_URL}/functions/v1/create-employee`;
-
-        const response =
-          await fetch(
-            functionUrl,
-            {
-              method: "POST",
-              headers: {
-                Authorization:
-                  `Bearer ${accessToken}`,
-                apikey:
-                  CFG.SUPABASE_ANON_KEY,
-                "Content-Type":
-                  "application/json"
-              },
-              body:
-                JSON.stringify({
-                  full_name:
-                    fullName,
-                  email,
-                  password,
-                  phone
-                })
-            }
-          );
-
-        const result =
-          await response
-            .json()
-            .catch(
-              () => ({})
-            );
-
-        if (
-          !response.ok ||
-          !result.success
-        ) {
-          throw new Error(
-            result.error ||
-              "Impossible de créer le compte employé."
-          );
-        }
-
-        await syncCloud();
-
-        await audit(
-          "insert",
-          "profiles",
-          result.user?.id ||
-            null,
-          {
-            full_name:
-              fullName,
-            email
-          }
-        );
-
-        toast(
-          "Compte employé créé."
-        );
-
-        closeModal();
-
-        render();
-      } catch (error) {
-        console.error(
-          "Création employé :",
-          error
-        );
-
-        toast(
-          error.message ||
-            "Impossible de créer le compte."
-        );
-      }
-    };
-
-  document
-    .getElementById("modal")
-    .classList.remove("hidden");
-}
-
-function csvCell(value) {
-  let text =
-    value == null
-      ? ""
-      : typeof value ===
-        "object"
-      ? safeJson(value)
-      : String(value);
-
-  if (
-    /^[=+\-@]/.test(text)
-  ) {
-    text = "'" + text;
+       <input
+         type="number"
+         step="0.01"
+         name="amount_paid"
+         value="${old?.amount_paid||0}"
+         ${readonly?"disabled":""}
+       >
+     </label>
+    `
+    :""
   }
 
-  return `"${text.replace(
-    /"/g,
-    '""'
-  )}"`;
-}
+  <div
+    class="card full"
+    style="padding:12px"
+  >
 
-function rowsToCsv(
-  headers,
-  rows
-) {
-  return [
-    headers
-      .map(csvCell)
-      .join(","),
+   <b>
+     Sous-total :
+     <span id="docSubtotal">
+       0 FCFA
+     </span>
+   </b>
 
-    ...rows.map(row =>
-      headers
-        .map(header =>
-          csvCell(
-            row[header]
-          )
-        )
-        .join(",")
-    )
-  ].join("\r\n");
-}
+   <br>
 
-function exportSalesCsv() {
-  const rows = (
-    state.db.sales || []
-  ).map(item => ({
-    Client:
-      item.customer || "",
+   <b>
+     Total :
+     <span id="docTotal">
+       0 FCFA
+     </span>
+   </b>
 
-    Article:
-      item.item || "",
+   ${
+    isInvoice
+     ?`
+      <br>
 
-    Quantité:
-      item.quantity ?? "",
+      <b>
+       Reste :
+       <span id="docDue">
+        0 FCFA
+       </span>
+      </b>
+     `
+     :""
+   }
 
-    Montant:
-      item.amount ?? 0,
+  </div>
 
-    Paiement:
-      paymentMethodLabel(
-        item.payment_method
-      ),
+  <label class="full">
 
-    Statut:
-      statusLabel(
-        item.status
-      ),
+    Notes
 
-    Notes:
-      item.notes || "",
+    <textarea
+      name="notes"
+      ${readonly?"disabled":""}
+    >${esc(old?.notes||"")}</textarea>
 
-    Date:
-      item.created_at || ""
-  }));
+  </label>
 
-  downloadFile(
-    "luc-bricotech-ventes.csv",
-    rowsToCsv(
-      [
-        "Client",
-        "Article",
-        "Quantité",
-        "Montant",
-        "Paiement",
-        "Statut",
-        "Notes",
-        "Date"
-      ],
-      rows
-    ),
-    "text/csv;charset=utf-8"
+  <div class="full actions">
+
+   <button
+     type="button"
+     class="secondary"
+     id="cancelForm"
+   >
+     Fermer
+   </button>
+
+   ${
+    readonly
+     ?""
+     :`
+      <button class="primary">
+       Enregistrer
+      </button>
+     `
+   }
+
+  </div>
+
+ </div>
+ `;
+
+ const refresh=()=>{
+
+  draft.forEach(l=>
+   l.amount=
+    Number(l.quantity||0)*
+    Number(l.unit_price||0)
   );
-}
 
-function exportAllCsv() {
-  const sections = [];
+  const subtotal=
+   draft.reduce(
+    (a,l)=>a+Number(l.amount||0),
+    0
+   );
 
-  const add = (
-    title,
-    table,
-    headers,
-    map
-  ) => {
-    sections.push(
-      `### ${title}`
+  const discount=
+   Number(
+    document.querySelector(
+     '[name="discount"]'
+    )?.value||0
+   );
+
+  const tax=
+   Number(
+    document.querySelector(
+     '[name="tax"]'
+    )?.value||0
+   );
+
+  const total=
+   Math.max(
+    0,
+    subtotal-discount+tax
+   );
+
+  const paid=
+   Number(
+    document.querySelector(
+     '[name="amount_paid"]'
+    )?.value||0
+   );
+
+  document.getElementById(
+   "docSubtotal"
+  ).textContent=money(subtotal);
+
+  document.getElementById(
+   "docTotal"
+  ).textContent=money(total);
+
+  if(
+   document.getElementById("docDue")
+  )
+   document.getElementById(
+    "docDue"
+   ).textContent=
+    money(
+     Math.max(
+      0,
+      total-paid
+     )
     );
+ };
 
-    sections.push(
-      headers
-        .map(csvCell)
-        .join(",")
-    );
+ document.getElementById("cancelForm")
+  .onclick=closeModal;
 
-    (
-      state.db[table] || []
-    ).forEach(item => {
-      const row = map(item);
+ if(!readonly){
 
-      sections.push(
-        headers
-          .map(header =>
-            csvCell(
-              row[header]
-            )
-          )
-          .join(",")
-      );
-    });
+  document.getElementById(
+   "addDocumentLine"
+  ).onclick=()=>{
 
-    sections.push("");
+   draft.push({
+    description:"",
+    unit:"pièce",
+    quantity:1,
+    unit_price:0,
+    amount:0
+   });
+
+   document.getElementById(
+    "documentLinesBody"
+   ).innerHTML=renderLines();
+
+   wire();
+   refresh();
   };
 
-  add(
-    "Ventes",
-    "sales",
-    [
-      "Client",
-      "Article",
-      "Quantité",
-      "Montant",
-      "Paiement",
-      "Statut",
-      "Notes",
-      "Date"
-    ],
-    item => ({
-      Client:
-        item.customer || "",
-      Article:
-        item.item || "",
-      Quantité:
-        item.quantity ?? "",
-      Montant:
-        item.amount ?? 0,
-      Paiement:
-        paymentMethodLabel(
-          item.payment_method
+  const wire=()=>{
+
+   document.querySelectorAll(
+    "[data-remove-line]"
+   ).forEach(b=>
+    b.onclick=()=>{
+
+     draft.splice(
+      Number(b.dataset.removeLine),
+      1
+     );
+
+     document.getElementById(
+      "documentLinesBody"
+     ).innerHTML=renderLines();
+
+     wire();
+     refresh();
+    }
+   );
+
+   document.querySelectorAll(
+    "[data-line-desc]"
+   ).forEach(i=>
+    i.oninput=()=>
+     draft[
+      Number(i.dataset.lineDesc)
+     ].description=i.value
+   );
+
+   document.querySelectorAll(
+    "[data-line-unit]"
+   ).forEach(i=>
+    i.onchange=()=>
+     draft[
+      Number(i.dataset.lineUnit)
+     ].unit=i.value
+   );
+
+   document.querySelectorAll(
+    "[data-line-qty]"
+   ).forEach(i=>
+    i.oninput=()=>{
+
+     draft[
+      Number(i.dataset.lineQty)
+     ].quantity=Number(i.value||0);
+
+     refresh();
+    }
+   );
+
+   document.querySelectorAll(
+    "[data-line-price]"
+   ).forEach(i=>
+    i.oninput=()=>{
+
+     draft[
+      Number(i.dataset.linePrice)
+     ].unit_price=Number(i.value||0);
+
+     refresh();
+    }
+   );
+  };
+
+  wire();
+
+  document.querySelector(
+   '[name="discount"]'
+  ).oninput=refresh;
+
+  document.querySelector(
+   '[name="tax"]'
+  ).oninput=refresh;
+
+  document.querySelector(
+   '[name="amount_paid"]'
+  )?.addEventListener(
+   "input",
+   refresh
+  );
+
+  document.getElementById(
+   "recordForm"
+  ).onsubmit=async e=>{
+
+   e.preventDefault();
+
+   try{
+
+    const fd=
+     Object.fromEntries(
+      new FormData(e.target).entries()
+     );
+
+    const {subtotal,total}=calc();
+
+    let status=fd.status||"draft";
+
+    const paid=
+     isInvoice
+      ?Number(fd.amount_paid||0)
+      :0;
+
+    if(
+     isInvoice&&
+     status!=="cancelled"&&
+     status!=="draft"
+    ){
+
+     status=
+      paid>=total&&total>0
+       ?"paid"
+       :paid>0
+         ?"partial"
+         :(fd.due_date&&
+           fd.due_date<today()
+           ?"overdue"
+           :"unpaid");
+    }
+
+    const payload=
+     isInvoice
+      ?{
+        user_id:state.user.id,
+        client_id:fd.client_id,
+        invoice_number:number,
+        issue_date:fd.issue_date,
+        due_date:fd.due_date,
+        status,
+        title:fd.title,
+        description:fd.description,
+        subtotal,
+        discount:Number(fd.discount||0),
+        tax:Number(fd.tax||0),
+        total,
+        amount_paid:paid,
+        amount_due:Math.max(
+         0,
+         total-paid
         ),
-      Statut:
-        statusLabel(
-          item.status
-        ),
-      Notes:
-        item.notes || "",
-      Date:
-        item.created_at || ""
-    })
-  );
+        notes:fd.notes
+       }
+      :{
+        user_id:state.user.id,
+        client_id:fd.client_id,
+        quote_number:number,
+        issue_date:fd.issue_date,
+        valid_until:fd.valid_until,
+        status,
+        title:fd.title,
+        description:fd.description,
+        subtotal,
+        discount:Number(fd.discount||0),
+        tax:Number(fd.tax||0),
+        total,
+        notes:fd.notes
+       };
 
-  add(
-    "Achats",
-    "purchases",
-    [
-      "Fournisseur",
-      "Article",
-      "Quantité",
-      "Montant",
-      "Statut",
-      "Notes",
-      "Date"
-    ],
-    item => ({
-      Fournisseur:
-        item.supplier || "",
-      Article:
-        item.item || "",
-      Quantité:
-        item.quantity ?? "",
-      Montant:
-        item.amount ?? 0,
-      Statut:
-        statusLabel(
-          item.status
-        ),
-      Notes:
-        item.notes || "",
-      Date:
-        item.created_at || ""
-    })
-  );
+    let saved;
 
-  add(
-    "Dépenses",
-    "expenses",
-    [
-      "Catégorie",
-      "Libellé",
-      "Montant",
-      "Bénéficiaire",
-      "Notes",
-      "Date"
-    ],
-    item => ({
-      Catégorie:
-        item.category || "",
-      Libellé:
-        item.label || "",
-      Montant:
-        item.amount ?? 0,
-      Bénéficiaire:
-        item.beneficiary ||
-        "",
-      Notes:
-        item.notes || "",
-      Date:
-        item.created_at || ""
-    })
-  );
+    if(id)
+     saved=
+      await updateDocument(
+       type,
+       id,
+       payload
+      );
+    else
+     saved=
+      await insert(
+       type,
+       payload
+      );
 
-  add(
-    "Activités",
-    "activities",
-    [
-      "Titre",
-      "Catégorie",
-      "Description",
-      "Lieu",
-      "Statut",
-      "Montant",
-      "Date"
-    ],
-    item => ({
-      Titre:
-        item.title || "",
-      Catégorie:
-        item.category || "",
-      Description:
-        item.description ||
-        "",
-      Lieu:
-        item.location || "",
-      Statut:
-        statusLabel(
-          item.status
-        ),
-      Montant:
-        item.amount ?? 0,
-      Date:
-        item.created_at || ""
-    })
-  );
+    await saveDocumentLines(
+     type,
+     saved.id,
+     draft
+    );
 
-  add(
-    "Projets",
-    "projects",
-    [
-      "Nom",
-      "Client",
-      "Description",
-      "Statut",
-      "Progression",
-      "Budget",
-      "Date"
-    ],
-    item => ({
-      Nom:
-        item.name || "",
-      Client:
-        item.client || "",
-      Description:
-        item.description ||
-        "",
-      Statut:
-        statusLabel(
-          item.status
-        ),
-      Progression:
-        item.progress ?? "",
-      Budget:
-        item.budget ?? 0,
-      Date:
-        item.created_at || ""
-    })
-  );
+    await audit(
+     id?"update":"insert",
+     type,
+     saved.id,
+     {
+      total,
+      lines:draft.length
+     }
+    );
 
-  add(
-    "Innovations",
-    "innovations",
-    [
-      "Titre",
-      "Description",
-      "Étape",
-      "Budget",
-      "Progression",
-      "Date"
-    ],
-    item => ({
-      Titre:
-        item.title || "",
-      Description:
-        item.description ||
-        "",
-      Étape:
-        statusLabel(
-          item.stage
-        ),
-      Budget:
-        item.budget ?? 0,
-      Progression:
-        item.progress ?? "",
-      Date:
-        item.created_at || ""
-    })
-  );
+    closeModal();
 
-  add(
-    "Stock",
-    "stock_items",
-    [
-      "Article",
-      "Catégorie",
-      "Unité",
-      "Quantité",
-      "Seuil minimum",
-      "Emplacement",
-      "Date"
-    ],
-    item => ({
-      Article:
-        item.name || "",
-      Catégorie:
-        item.category || "",
-      Unité:
-        item.unit || "",
-      Quantité:
-        item.quantity ?? "",
-      "Seuil minimum":
-        item.min_quantity ??
-        "",
-      Emplacement:
-        item.location || "",
-      Date:
-        item.created_at || ""
-    })
-  );
+    render();
 
-  add(
-    "Clients",
-    "clients",
-    [
-      "Nom",
-      "Entreprise",
-      "Téléphone",
-      "Email",
-      "Ville",
-      "Date"
-    ],
-    item => ({
-      Nom:
-        item.full_name || "",
-      Entreprise:
-        item.company_name ||
-        "",
-      Téléphone:
-        item.phone || "",
-      Email:
-        item.email || "",
-      Ville:
-        item.city || "",
-      Date:
-        item.created_at || ""
-    })
-  );
+    toast(
+     "Document enregistré."
+    );
 
-  add(
-    "Factures",
-    "invoices",
-    [
-      "Numéro",
-      "Client",
-      "Date",
-      "Échéance",
-      "Total",
-      "Payé",
-      "Reste",
-      "Statut"
-    ],
-    item => ({
-      Numéro:
-        item.invoice_number ||
-        "",
-      Client:
-        clientName(
-          item.client_id
-        ),
-      Date:
-        item.issue_date || "",
-      Échéance:
-        item.due_date || "",
-      Total:
-        item.total ?? 0,
-      Payé:
-        item.amount_paid ??
-        0,
-      Reste:
-        item.amount_due ??
-        0,
-      Statut:
-        statusLabel(
-          invoiceDisplayStatus(
-            item
-          )
-        )
-    })
-  );
+   }catch(err){
 
-  add(
-    "Paiements",
-    "payments",
-    [
-      "Facture",
-      "Montant",
-      "Mode",
-      "Date",
-      "Référence",
-      "Notes"
-    ],
-    item => ({
-      Facture:
-        (
-          state.db.invoices ||
-          []
-        ).find(
-          invoice =>
-            invoice.id ===
-            item.invoice_id
-        )?.invoice_number ||
-        "",
+    console.error(err);
 
-      Montant:
-        item.amount ?? 0,
+    toast(
+     err.message||
+     "Erreur d’enregistrement."
+    );
+   }
+  };
+ }
 
-      Mode:
-        paymentMethodLabel(
-          item.payment_method
-        ),
+ refresh();
 
-      Date:
-        item.payment_date ||
-        "",
-
-      Référence:
-        item.reference ||
-        "",
-
-      Notes:
-        item.notes || ""
-    })
-  );
-
-  downloadFile(
-    "luc-bricotech-export-complet.csv",
-    sections.join("\r\n"),
-    "text/csv;charset=utf-8"
-  );
+ document.getElementById("modal")
+  .classList.remove("hidden");
 }
 
-function exportAuditCsv() {
-  if (state.role !== "admin") {
-    toast(
-      "Export du journal réservé à l’administrateur."
+async function updateDocument(
+ type,
+ id,
+ payload
+){
+
+ if(!state.cloud){
+
+  const arr=state.db[type]||[];
+
+  const i=
+   arr.findIndex(
+    x=>x.id===id
+   );
+
+  if(i>=0)
+   arr[i]={
+    ...arr[i],
+    ...payload,
+    updated_at:now()
+   };
+
+  saveLocal();
+
+  return arr[i];
+ }
+
+ const {data,error}=
+  await sb
+   .from(type)
+   .update(payload)
+   .eq("id",id)
+   .select()
+   .single();
+
+ if(error)throw error;
+
+ const arr=state.db[type]||[];
+
+ const i=
+  arr.findIndex(
+   x=>x.id===id
+  );
+
+ if(i>=0)arr[i]=data;
+
+ return data;
+}
+
+async function saveDocumentLines(
+ type,
+ id,
+ lines
+){
+
+ const table=
+  type==="quotes"
+   ?"quote_items"
+   :"invoice_items";
+
+ const key=
+  type==="quotes"
+   ?"quote_id"
+   :"invoice_id";
+
+ if(!state.cloud){
+
+  state.db[table]=
+   (state.db[table]||[])
+    .filter(x=>x[key]!==id);
+
+  lines.forEach(l=>
+   state.db[table].push({
+    id:uid(),
+    [key]:id,
+    description:l.description||"",
+    unit:l.unit||"pièce",
+    quantity:Number(l.quantity||0),
+    unit_price:Number(l.unit_price||0),
+    amount:Number(l.amount||0),
+    created_at:now()
+   })
+  );
+
+  saveLocal();
+
+  return;
+ }
+
+ const {error:delErr}=
+  await sb
+   .from(table)
+   .delete()
+   .eq(key,id);
+
+ if(delErr)throw delErr;
+
+ if(lines.length){
+
+  const payload=
+   lines.map(l=>({
+    [key]:id,
+    description:l.description||"",
+    quantity:Number(l.quantity||0),
+    unit_price:Number(l.unit_price||0),
+    amount:Number(l.amount||0)
+   }));
+
+  const {data,error}=
+   await sb
+    .from(table)
+    .insert(payload)
+    .select();
+
+  if(error)throw error;
+
+  state.db[table]=
+   (state.db[table]||[])
+    .filter(x=>x[key]!==id)
+    .concat(data);
+
+ }else{
+
+  state.db[table]=
+   (state.db[table]||[])
+    .filter(x=>x[key]!==id);
+ }
+}
+
+function openPaymentForm(invoiceId=""){
+
+ const invoices=state.db.invoices||[];
+
+ document.getElementById(
+  "modalTitle"
+ ).textContent=
+  "Enregistrer un paiement";
+
+ const methods={
+  cash:"Espèces",
+  mtn_momo:"MTN MoMo",
+  moov_money:"Moov Money",
+  celtiis_cash:"Celtiis Cash",
+  bank_transfer:"Virement bancaire",
+  card:"Carte bancaire",
+  check:"Chèque bancaire",
+  pi_spi:"PI-SPI / paiement instantané",
+  other:"Autre"
+ };
+
+ document.getElementById(
+  "recordForm"
+ ).innerHTML=`
+
+ <div class="form-grid">
+
+  <label class="full">
+
+   Facture
+
+   <select
+     name="invoice_id"
+     required
+   >
+
+    <option value="">
+      Sélectionner
+    </option>
+
+    ${
+     invoices.map(i=>`
+      <option
+        value="${i.id}"
+        ${
+         invoiceId===i.id
+          ?"selected"
+          :""
+        }
+      >
+       ${esc(i.invoice_number||i.id)}
+       —
+       ${esc(clientName(i.client_id))}
+       —
+       ${money(i.total)}
+      </option>
+     `).join("")
+    }
+
+   </select>
+
+  </label>
+
+  <label>
+
+   Montant
+
+   <input
+     type="number"
+     name="amount"
+     min="0.01"
+     step="0.01"
+     required
+   >
+
+  </label>
+
+  <label>
+
+   Mode de paiement
+
+   <select name="payment_method">
+
+    ${
+     Object.entries(methods)
+      .map(([k,v])=>`
+       <option value="${k}">
+        ${v}
+       </option>
+      `).join("")
+    }
+
+   </select>
+
+  </label>
+
+  <label>
+
+   Date
+
+   <input
+     type="date"
+     name="payment_date"
+     value="${today()}"
+   >
+
+  </label>
+
+  <label>
+
+   Référence
+
+   <input
+     name="reference"
+     placeholder="Référence transaction / chèque"
+   >
+
+  </label>
+
+  <label class="full">
+
+   Notes
+
+   <textarea name="notes"></textarea>
+
+  </label>
+
+  <div class="full actions">
+
+   <button
+     type="button"
+     class="secondary"
+     id="cancelForm"
+   >
+     Annuler
+   </button>
+
+   <button class="primary">
+     Enregistrer
+   </button>
+
+  </div>
+
+ </div>
+ `;
+
+ document.getElementById("cancelForm")
+  .onclick=closeModal;
+
+ document.getElementById(
+  "recordForm"
+ ).onsubmit=async e=>{
+
+  e.preventDefault();
+
+  try{
+
+   const p=
+    Object.fromEntries(
+     new FormData(e.target).entries()
     );
-    return;
+
+   p.amount=Number(p.amount);
+
+   const x=
+    await insert(
+     "payments",
+     p
+    );
+
+   await recalcInvoicePaid(
+    p.invoice_id
+   );
+
+   await audit(
+    "insert",
+    "payments",
+    x.id,
+    p
+   );
+
+   closeModal();
+
+   render();
+
+   toast(
+    "Paiement enregistré."
+   );
+
+  }catch(err){
+
+   toast(err.message)
+  }
+ };
+
+ document.getElementById("modal")
+  .classList.remove("hidden");
+}
+
+async function recalcInvoicePaid(invoiceId){
+
+ const inv=
+  (state.db.invoices||[])
+   .find(x=>x.id===invoiceId);
+
+ if(!inv)return;
+
+ const paid=
+  (state.db.payments||[])
+   .filter(
+    x=>x.invoice_id===invoiceId
+   )
+   .reduce(
+    (a,x)=>a+Number(x.amount||0),
+    0
+   );
+
+ const total=Number(
+  inv.total||0
+ );
+
+ let status=inv.status;
+
+ if(
+  status!=="cancelled"&&
+  status!=="draft"
+ ){
+
+  status=
+   paid>=total&&total>0
+    ?"paid"
+    :paid>0
+      ?"partial"
+      :(inv.due_date&&
+        inv.due_date<today()
+        ?"overdue"
+        :"unpaid");
+ }
+
+ inv.amount_paid=paid;
+
+ inv.amount_due=
+  Math.max(
+   0,
+   total-paid
+  );
+
+ inv.status=status;
+
+ if(state.cloud){
+
+  const {error}=
+   await sb
+    .from("invoices")
+    .update({
+     amount_paid:paid,
+     amount_due:Math.max(
+      0,
+      total-paid
+     ),
+     status
+    })
+    .eq("id",invoiceId);
+
+  if(error)throw error;
+
+ }else{
+
+  saveLocal();
+ }
+}
+
+async function deletePayment(id){
+
+ if(!confirm(
+  "Supprimer ce paiement ?"
+ ))return;
+
+ try{
+
+  const p=
+   (state.db.payments||[])
+    .find(x=>x.id===id);
+
+  await remove(
+   "payments",
+   id
+  );
+
+  if(p?.invoice_id)
+   await recalcInvoicePaid(
+    p.invoice_id
+   );
+
+  await audit(
+   "delete",
+   "payments",
+   id
+  );
+
+  render();
+
+  toast(
+   "Paiement supprimé."
+  );
+
+ }catch(e){
+  toast(e.message)
+ }
+}
+
+function reports(){
+
+ const sum=t=>
+  (state.db[t]||[])
+   .reduce(
+    (a,x)=>a+Number(x.amount||0),
+    0
+   );
+
+ const sales=sum("sales");
+ const purchases=sum("purchases");
+ const expenses=sum("expenses");
+
+ return `
+ <div class="grid cards">
+
+  <div class="card">
+   <h3>Chiffre des ventes</h3>
+   <strong>${money(sales)}</strong>
+  </div>
+
+  <div class="card">
+   <h3>Total achats</h3>
+   <strong>${money(purchases)}</strong>
+  </div>
+
+  <div class="card">
+   <h3>Total dépenses</h3>
+   <strong>${money(expenses)}</strong>
+  </div>
+
+ </div>
+
+ <div
+   class="card"
+   style="margin-top:16px"
+ >
+
+  <h3>
+    Résultat simplifié
+  </h3>
+
+  <p>
+    Ventes − achats − dépenses
+  </p>
+
+  <strong>
+    ${money(
+      sales-purchases-expenses
+    )}
+  </strong>
+
+ </div>
+
+ <div
+   class="toolbar"
+   style="margin-top:16px"
+ >
+
+  <button
+    class="secondary"
+    id="exportSalesCsv"
+  >
+    Exporter les ventes CSV
+  </button>
+
+  <button
+    class="secondary"
+    id="exportAllCsv"
+  >
+    Exporter tout en CSV
+  </button>
+
+  <button
+    class="secondary"
+    id="backupBtn"
+  >
+    Sauvegarder toutes les données
+  </button>
+
+ </div>`;
+}
+
+function auditPage(){
+
+ if(state.role!=="admin")
+  return `
+   <div class="card">
+    <h3>Accès réservé</h3>
+    <p class="muted">
+      Le journal des actions est réservé à l’administrateur.
+    </p>
+   </div>
+  `;
+
+ const arr=state.db.audit_logs||[];
+
+ return `
+ <div class="toolbar">
+
+  <div class="muted">
+    ${arr.length} action(s) enregistrée(s)
+  </div>
+
+  <button
+    class="secondary"
+    id="exportAuditCsv"
+  >
+    Exporter le journal CSV
+  </button>
+
+ </div>
+
+ <div class="table-wrap">
+
+  <table>
+
+   <thead>
+
+    <tr>
+     <th>Date</th>
+     <th>Action</th>
+     <th>Entité</th>
+     <th>Détails</th>
+    </tr>
+
+   </thead>
+
+   <tbody>
+
+    ${
+     arr.map(x=>`
+
+      <tr>
+
+       <td>
+        ${
+         x.created_at
+          ?new Date(
+            x.created_at
+           ).toLocaleString("fr-FR")
+          :""
+        }
+       </td>
+
+       <td>
+        ${esc(x.action)}
+       </td>
+
+       <td>
+        ${esc(x.entity)}
+       </td>
+
+       <td>
+        ${esc(
+         safeJson(
+          x.details||{}
+         )
+        )}
+       </td>
+
+      </tr>
+
+     `).join("")||
+     `
+      <tr>
+       <td colspan="4">
+        <div class="empty">
+         Aucune action enregistrée.
+        </div>
+       </td>
+      </tr>
+     `
+    }
+
+   </tbody>
+
+  </table>
+
+ </div>`;
+}
+
+function settings(){
+
+ const s=
+  state.db.settings
+   .find(
+    x=>x.user_id===state.user.id
+   )||{};
+
+ return `
+ <div class="card">
+
+  <h3>
+    Informations de l’entreprise
+  </h3>
+
+  <form
+    id="settingsForm"
+    class="form-grid"
+  >
+
+   <label>
+    Nom
+    <input
+      name="company_name"
+      value="${esc(
+       s.company_name||
+       "LUC BRICO-TECH"
+      )}"
+    >
+   </label>
+
+   <label>
+    Adresse
+    <input
+      name="address"
+      value="${esc(
+       s.address||
+       "Hévié Hounzévié, Abomey-Calavi"
+      )}"
+    >
+   </label>
+
+   <label>
+    Téléphone
+    <input
+      name="phone"
+      value="${esc(
+       s.phone||
+       "01 67 02 84 91"
+      )}"
+    >
+   </label>
+
+   <label>
+    Email
+    <input
+      name="email"
+      value="${esc(
+       s.email||""
+      )}"
+    >
+   </label>
+
+   <div class="full">
+
+    <button class="primary">
+      Enregistrer
+    </button>
+
+   </div>
+
+  </form>
+
+ </div>`;
+}
+
+async function saveSettings(e){
+
+ e.preventDefault();
+
+ const f=new FormData(e.target);
+ const p=Object.fromEntries(f.entries());
+
+ try{
+
+  if(!state.cloud){
+
+   const arr=state.db.settings||[];
+
+   const existing=
+    arr.find(
+     x=>x.user_id===state.user.id
+    );
+
+   if(existing){
+
+    Object.assign(
+     existing,
+     p,
+     {updated_at:now()}
+    );
+
+   }else{
+
+    arr.unshift({
+     id:uid(),
+     user_id:state.user.id,
+     created_at:now(),
+     updated_at:now(),
+     ...p
+    });
+   }
+
+   state.db.settings=arr;
+
+   saveLocal();
+
+  }else{
+
+   const {data,error}=
+    await sb
+     .from("settings")
+     .upsert(
+      {
+       user_id:state.user.id,
+       ...p,
+       updated_at:now()
+      },
+      {
+       onConflict:"user_id"
+      }
+     )
+     .select()
+     .single();
+
+   if(error)throw error;
+
+   const arr=
+    state.db.settings||[];
+
+   const i=
+    arr.findIndex(
+     x=>x.user_id===state.user.id
+    );
+
+   if(i>=0)
+    arr[i]=data;
+   else
+    arr.unshift(data);
+
+   state.db.settings=arr;
   }
 
-  const rows = (
-    state.db.audit_logs ||
-    []
-  ).map(item => ({
-    Date:
-      item.created_at || "",
-    Action:
-      item.action || "",
-    Entité:
-      item.entity || "",
-    "ID entité":
-      item.entity_id || "",
-    Détails:
-      safeJson(
-        item.details || {}
-      )
-  }));
-
-  downloadFile(
-    "luc-bricotech-journal.csv",
-    rowsToCsv(
-      [
-        "Date",
-        "Action",
-        "Entité",
-        "ID entité",
-        "Détails"
-      ],
-      rows
-    ),
-    "text/csv;charset=utf-8"
+  await audit(
+   "update",
+   "settings",
+   state.user.id,
+   p
   );
+
+  toast(
+   "Paramètres enregistrés."
+  );
+
+  render();
+
+ }catch(err){
+
+  console.error(err);
+
+  toast(
+   err.message||
+   "Erreur lors de l’enregistrement."
+  );
+ }
 }
 
-function backupAllData() {
-  downloadFile(
-    "luc-bricotech-backup.json",
-    JSON.stringify(
-      {
-        application:
-          "LUC BRICO-TECH",
-        exported_at: now(),
-        role:
-          state.role,
-        user_id:
-          state.user?.id ||
-          null,
-        data:
-          state.db
-      },
-      null,
-      2
-    ),
-    "application/json;charset=utf-8"
+function openForm(table,id=null){
+
+ const schema=schemas[table];
+
+ if(!schema)return;
+
+ const old=id
+  ?(state.db[table]||[])
+   .find(x=>x.id===id)
+  :null;
+
+ document.getElementById(
+  "modalTitle"
+ ).textContent=
+  id
+   ?"Modifier"
+   :schema.title;
+
+ document.getElementById(
+  "recordForm"
+ ).innerHTML=`
+
+ <div class="form-grid">
+
+ ${
+  schema.fields.map(f=>{
+
+   const [
+    name,
+    label,
+    type,
+    req,
+    opts
+   ]=f;
+
+   const v=old?.[name]??"";
+
+   if(type==="textarea")
+    return `
+     <label class="full">
+       ${label}
+       <textarea
+         name="${name}"
+       >${esc(v)}</textarea>
+     </label>
+    `;
+
+   if(type==="select")
+    return `
+     <label>
+       ${label}
+
+       <select name="${name}">
+
+        ${
+         opts.map(o=>`
+          <option
+            ${v===o?"selected":""}
+          >
+            ${o}
+          </option>
+         `).join("")
+        }
+
+       </select>
+
+     </label>
+    `;
+
+   return `
+    <label>
+
+      ${label}
+
+      <input
+        name="${name}"
+        type="${type}"
+        value="${esc(v)}"
+        ${req?"required":""}
+      >
+
+    </label>
+   `;
+
+  }).join("")
+ }
+
+ <div class="full actions">
+
+  <button
+    type="button"
+    class="secondary"
+    id="cancelForm"
+  >
+    Annuler
+  </button>
+
+  <button class="primary">
+    Enregistrer
+  </button>
+
+ </div>
+
+ </div>
+ `;
+
+ document.getElementById(
+  "cancelForm"
+ ).onclick=closeModal;
+
+ document.getElementById(
+  "recordForm"
+ ).onsubmit=async e=>{
+
+  e.preventDefault();
+
+  const p=
+   Object.fromEntries(
+    new FormData(e.target).entries()
+   );
+
+  for(const f of schema.fields){
+
+   if(
+    f[2]==="number"&&
+    p[f[0]]!==""
+   )
+    p[f[0]]=Number(p[f[0]]);
+  }
+
+  try{
+
+   if(id)
+    await update(
+     table,
+     id,
+     p
+    );
+   else
+    await insert(
+     table,
+     p
+    );
+
+   await audit(
+    id?"update":"insert",
+    table,
+    id||null,
+    p
+   );
+
+   toast(
+    "Enregistré."
+   );
+
+   closeModal();
+
+   render();
+
+  }catch(err){
+
+   toast(
+    err.message
+   )
+  }
+ };
+
+ document.getElementById(
+  "modal"
+ ).classList.remove("hidden");
+}
+
+function closeModal(){
+
+ document.getElementById(
+  "modal"
+ ).classList.add("hidden")
+}
+
+async function del(table,id){
+
+ if(state.role!=="admin")
+  return toast(
+   "La suppression est réservée à l’administrateur."
   );
+
+ if(!confirm(
+  "Supprimer cet enregistrement ?"
+ ))
+  return;
+
+ try{
+
+  await remove(
+   table,
+   id
+  );
+
+  await audit(
+   "delete",
+   table,
+   id
+  );
+
+  toast(
+   "Supprimé."
+  );
+
+  render();
+
+ }catch(e){
+
+  toast(e.message)
+ }
+}
+
+function safeJson(value){
+
+ try{
+  return JSON.stringify(value);
+ }catch{
+  return String(value??"");
+ }
+}
+
+function csvCell(value){
+
+ let text=
+  value==null
+   ?""
+   :(typeof value==="object"
+     ?safeJson(value)
+     :String(value));
+
+ if(/^[=+\-@]/.test(text))
+  text="'"+text;
+
+ return `"${text.replace(/"/g,'""')}"`;
+}
+
+function rowsToCsv(headers,rows){
+
+ return [
+  headers.map(csvCell).join(","),
+  ...rows.map(
+   r=>
+    headers
+     .map(h=>csvCell(r[h]))
+     .join(",")
+  )
+ ].join("\r\n");
+}
+
+function exportSalesCsv(){
+
+ const rows=
+  (state.db.sales||[])
+   .map(x=>({
+    Client:x.customer||"",
+    Article:x.item||"",
+    Quantité:x.quantity??"",
+    Montant:x.amount??0,
+    Paiement:x.payment_method||"",
+    Statut:x.status||"",
+    Notes:x.notes||"",
+    Date:x.created_at||""
+   }));
+
+ downloadFile(
+  "luc-bricotech-ventes.csv",
+  rowsToCsv(
+   [
+    "Client",
+    "Article",
+    "Quantité",
+    "Montant",
+    "Paiement",
+    "Statut",
+    "Notes",
+    "Date"
+   ],
+   rows
+  ),
+  "text/csv;charset=utf-8"
+ );
+}
+
+function exportAllCsv(){
+
+ const sections=[];
+
+ const add=(
+  title,
+  table,
+  headers,
+  map
+ )=>{
+
+  sections.push(
+   `### ${title}`
+  );
+
+  sections.push(
+   headers
+    .map(csvCell)
+    .join(",")
+  );
+
+  (state.db[table]||[])
+   .forEach(x=>{
+
+    const r=map(x);
+
+    sections.push(
+     headers
+      .map(h=>csvCell(r[h]))
+      .join(",")
+    );
+   });
+
+  sections.push("");
+ };
+
+ add(
+  "Ventes",
+  "sales",
+  [
+   "Client",
+   "Article",
+   "Quantité",
+   "Montant",
+   "Paiement",
+   "Statut",
+   "Notes",
+   "Date"
+  ],
+  x=>({
+   Client:x.customer||"",
+   Article:x.item||"",
+   Quantité:x.quantity??"",
+   Montant:x.amount??0,
+   Paiement:x.payment_method||"",
+   Statut:x.status||"",
+   Notes:x.notes||"",
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Achats",
+  "purchases",
+  [
+   "Fournisseur",
+   "Article",
+   "Quantité",
+   "Montant",
+   "Statut",
+   "Notes",
+   "Date"
+  ],
+  x=>({
+   Fournisseur:x.supplier||"",
+   Article:x.item||"",
+   Quantité:x.quantity??"",
+   Montant:x.amount??0,
+   Statut:x.status||"",
+   Notes:x.notes||"",
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Dépenses",
+  "expenses",
+  [
+   "Catégorie",
+   "Libellé",
+   "Montant",
+   "Bénéficiaire",
+   "Notes",
+   "Date"
+  ],
+  x=>({
+   Catégorie:x.category||"",
+   Libellé:x.label||"",
+   Montant:x.amount??0,
+   Bénéficiaire:x.beneficiary||"",
+   Notes:x.notes||"",
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Activités",
+  "activities",
+  [
+   "Titre",
+   "Catégorie",
+   "Description",
+   "Lieu",
+   "Statut",
+   "Montant",
+   "Date"
+  ],
+  x=>({
+   Titre:x.title||"",
+   Catégorie:x.category||"",
+   Description:x.description||"",
+   Lieu:x.location||"",
+   Statut:x.status||"",
+   Montant:x.amount??0,
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Projets",
+  "projects",
+  [
+   "Nom",
+   "Client",
+   "Description",
+   "Statut",
+   "Progression",
+   "Budget",
+   "Date"
+  ],
+  x=>({
+   Nom:x.name||"",
+   Client:x.client||"",
+   Description:x.description||"",
+   Statut:x.status||"",
+   Progression:x.progress??"",
+   Budget:x.budget??0,
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Innovations",
+  "innovations",
+  [
+   "Titre",
+   "Description",
+   "Étape",
+   "Budget",
+   "Progression",
+   "Date"
+  ],
+  x=>({
+   Titre:x.title||"",
+   Description:x.description||"",
+   Étape:x.stage||"",
+   Budget:x.budget??0,
+   Progression:x.progress??"",
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Stock",
+  "stock_items",
+  [
+   "Article",
+   "Catégorie",
+   "Unité",
+   "Quantité",
+   "Seuil minimum",
+   "Emplacement",
+   "Date"
+  ],
+  x=>({
+   Article:x.name||"",
+   Catégorie:x.category||"",
+   Unité:x.unit||"",
+   Quantité:x.quantity??"",
+   "Seuil minimum":x.min_quantity??"",
+   Emplacement:x.location||"",
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Clients",
+  "clients",
+  [
+   "Nom",
+   "Entreprise",
+   "Téléphone",
+   "Email",
+   "Ville",
+   "Date"
+  ],
+  x=>({
+   Nom:x.full_name||"",
+   Entreprise:x.company_name||"",
+   Téléphone:x.phone||"",
+   Email:x.email||"",
+   Ville:x.city||"",
+   Date:x.created_at||""
+  })
+ );
+
+ add(
+  "Factures",
+  "invoices",
+  [
+   "Numéro",
+   "Client",
+   "Date",
+   "Échéance",
+   "Total",
+   "Payé",
+   "Reste",
+   "Statut"
+  ],
+  x=>({
+   Numéro:x.invoice_number||"",
+   Client:clientName(x.client_id),
+   Date:x.issue_date||"",
+   Échéance:x.due_date||"",
+   Total:x.total??0,
+   Payé:x.amount_paid??0,
+   Reste:x.amount_due??0,
+   Statut:statusLabel(
+    invoiceDisplayStatus(x)
+   )
+  })
+ );
+
+ add(
+  "Paiements",
+  "payments",
+  [
+   "Facture",
+   "Montant",
+   "Mode",
+   "Date",
+   "Référence"
+  ],
+  x=>({
+   Facture:
+    (state.db.invoices||[])
+     .find(i=>i.id===x.invoice_id)
+     ?.invoice_number||"",
+   Montant:x.amount??0,
+   Mode:x.payment_method||"",
+   Date:x.payment_date||"",
+   Référence:x.reference||""
+  })
+ );
+
+ downloadFile(
+  "luc-bricotech-export-complet.csv",
+  sections.join("\\r\\n"),
+  "text/csv;charset=utf-8"
+ );
+}
+
+function exportAuditCsv(){
+
+ if(state.role!=="admin")
+  return toast(
+   "Export du journal réservé à l’administrateur."
+  );
+
+ const rows=
+  (state.db.audit_logs||[])
+   .map(x=>({
+    Date:x.created_at||"",
+    Action:x.action||"",
+    Entité:x.entity||"",
+    "ID entité":x.entity_id||"",
+    Détails:safeJson(x.details||{})
+   }));
+
+ downloadFile(
+  "luc-bricotech-journal.csv",
+  rowsToCsv(
+   [
+    "Date",
+    "Action",
+    "Entité",
+    "ID entité",
+    "Détails"
+   ],
+   rows
+  ),
+  "text/csv;charset=utf-8"
+ );
+}
+
+function backupAllData(){
+
+ downloadFile(
+  "luc-bricotech-backup.json",
+  JSON.stringify(
+   {
+    application:"LUC BRICO-TECH",
+    exported_at:now(),
+    role:state.role,
+    user_id:state.user?.id||null,
+    data:state.db
+   },
+   null,
+   2
+  ),
+  "application/json;charset=utf-8"
+ );
 }
 
 function downloadFile(
-  name,
-  data,
-  mime = "text/plain;charset=utf-8"
-) {
-  try {
-    const content =
-      String(data ?? "");
+ name,
+ data,
+ mime="text/plain;charset=utf-8"
+){
 
-    const blob = new Blob(
-      [
-        "\uFEFF",
-        content
-      ],
-      {
-        type: mime
-      }
+ try{
+
+  const content=String(data??"");
+
+  const blob=new Blob(
+   ["\uFEFF",content],
+   {type:mime}
+  );
+
+  const url=
+   URL.createObjectURL(blob);
+
+  const a=
+   document.createElement("a");
+
+  a.href=url;
+  a.download=name;
+  a.rel="noopener";
+  a.style.display="none";
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  setTimeout(()=>{
+
+   a.remove();
+
+   URL.revokeObjectURL(url);
+
+  },1500);
+
+  toast(
+   `Export terminé : ${name}`
+  );
+
+ }catch(error){
+
+  console.error(
+   "Erreur export :",
+   error
+  );
+
+  try{
+
+   const dataUrl=
+    "data:"+
+    mime+
+    ","+
+    encodeURIComponent(
+     "\uFEFF"+
+     String(data??"")
     );
 
-    const url =
-      URL.createObjectURL(
-        blob
-      );
+   const fallback=
+    document.createElement("a");
 
-    const link =
-      document.createElement(
-        "a"
-      );
+   fallback.href=dataUrl;
+   fallback.download=name;
+   fallback.target="_blank";
+   fallback.rel="noopener";
 
-    link.href = url;
-    link.download = name;
-    link.rel = "noopener";
-    link.style.display =
-      "none";
+   document.body.appendChild(
+    fallback
+   );
 
-    document.body.appendChild(
-      link
-    );
+   fallback.click();
 
-    link.click();
+   setTimeout(
+    ()=>fallback.remove(),
+    1000
+   );
 
-    setTimeout(() => {
-      link.remove();
-      URL.revokeObjectURL(
-        url
-      );
-    }, 1500);
+   toast(
+    `Fichier prêt : ${name}`
+   );
 
-    toast(
-      `Export terminé : ${name}`
-    );
-  } catch (error) {
-    console.error(
-      "Erreur export :",
-      error
-    );
+  }catch(fallbackError){
 
-    try {
-      const dataUrl =
-        "data:" +
-        mime +
-        "," +
-        encodeURIComponent(
-          "\uFEFF" +
-            String(
-              data ?? ""
-            )
-        );
+   console.error(
+    "Erreur export fallback :",
+    fallbackError
+   );
 
-      const link =
-        document.createElement(
-          "a"
-        );
-
-      link.href =
-        dataUrl;
-
-      link.download =
-        name;
-
-      link.target =
-        "_blank";
-
-      link.rel =
-        "noopener";
-
-      document.body.appendChild(
-        link
-      );
-
-      link.click();
-
-      setTimeout(
-        () =>
-          link.remove(),
-        1000
-      );
-
-      toast(
-        `Fichier prêt : ${name}`
-      );
-    } catch (
-      fallbackError
-    ) {
-      console.error(
-        "Erreur export fallback :",
-        fallbackError
-      );
-
-      toast(
-        "Impossible de préparer le téléchargement."
-      );
-    }
+   toast(
+    "Impossible de préparer le téléchargement."
+   );
   }
+ }
 }
 
 document.addEventListener(
-  "click",
-  event => {
-    const button =
-      event.target.closest?.(
-        "#exportSalesCsv, #exportAllCsv, #exportAuditCsv, #backupBtn"
-      );
+ "click",
+ e=>{
 
-    if (!button) return;
+  const button=
+   e.target.closest?.(
+    "#exportSalesCsv, #exportAllCsv, #exportAuditCsv, #backupBtn"
+   );
 
-    if (
-      button.id ===
-      "exportSalesCsv"
-    ) {
-      exportSalesCsv();
-    }
+  if(!button)return;
 
-    if (
-      button.id ===
-      "exportAllCsv"
-    ) {
-      exportAllCsv();
-    }
+  if(button.id==="exportSalesCsv")
+   exportSalesCsv();
 
-    if (
-      button.id ===
-      "exportAuditCsv"
-    ) {
-      exportAuditCsv();
-    }
+  else if(button.id==="exportAllCsv")
+   exportAllCsv();
 
-    if (
-      button.id ===
-      "backupBtn"
-    ) {
-      backupAllData();
-    }
-  }
+  else if(button.id==="exportAuditCsv")
+   exportAuditCsv();
+
+  else if(button.id==="backupBtn")
+   backupAllData();
+ }
 );
 
-if (
-  !document.getElementById(
-    "lbt-doc-status-style"
-  )
-) {
-  const style =
-    document.createElement(
-      "style"
-    );
+if(!document.getElementById("lbt-doc-status-style")){
 
-  style.id =
-    "lbt-doc-status-style";
+ const st=document.createElement("style");
 
-  style.textContent = `
-    .badge.success{
-      background:#dcfce7;
-      color:#166534
-    }
+ st.id="lbt-doc-status-style";
 
-    .badge.warn{
-      background:#fef3c7;
-      color:#92400e
-    }
+ st.textContent=`
+  .badge.success{
+   background:#dcfce7;
+   color:#166534
+  }
 
-    .badge.danger{
-      background:#fee2e2;
-      color:#991b1b
-    }
+  .badge.warn{
+   background:#fef3c7;
+   color:#92400e
+  }
 
-    .badge.muted{
-      background:#e5e7eb;
-      color:#374151
-    }
-  `;
+  .badge.danger{
+   background:#fee2e2;
+   color:#991b1b
+  }
 
-  document.head.appendChild(
-    style
-  );
+  .badge.muted{
+   background:#e5e7eb;
+   color:#374151
+  }
+ `;
+
+ document.head.appendChild(st)
 }
 
 boot();
