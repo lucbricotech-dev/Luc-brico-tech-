@@ -3,18 +3,35 @@
 
 /* =========================================================
    LUC BRICO-TECH — SCRIPT.JS COMPLET
-   Gestion • Supervision • Clients • Devis • Factures
-   Paiements • Stock • Membres • Rapports • Cartes QR
+   Version corrigée
+   - Tableau de bord corrigé
+   - Clients
+   - Devis
+   - Factures
+   - Paiements
+   - Ventes
+   - Achats
+   - Dépenses
+   - Stock
+   - Activités
+   - Projets
+   - Innovations
+   - Rapports
+   - Journal
+   - Paramètres
+   - Comptes employés
+   - Cartes professionnelles + QR
+   - Gestion des rôles
+   - Supabase + mode démo
    ========================================================= */
 
 const CFG = window.LBT_CONFIG || {};
 
-const hasCloud =
-  !!(
-    CFG.SUPABASE_URL &&
-    CFG.SUPABASE_ANON_KEY &&
-    window.supabase
-  );
+const hasCloud = !!(
+  CFG.SUPABASE_URL &&
+  CFG.SUPABASE_ANON_KEY &&
+  window.supabase
+);
 
 const sb = hasCloud
   ? window.supabase.createClient(
@@ -31,120 +48,166 @@ const DBKEY = "lbt_v3_demo";
 
 const schemas = {
 
-sales: {
-  title: "Nouvelle vente",
-  fields: [
-    ["customer","Client","text",true],
-    ["item","Article / service","text",true],
-    ["quantity","Quantité","number",true],
-    ["amount","Montant (FCFA)","number",true],
-    ["payment_method","Paiement","select",false,
-      ["cash","mobile_money","bank","credit"]
-    ],
-    ["status","Statut","select",false,
-      ["paid","pending","cancelled"]
-    ],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  sales: {
+    title: "Nouvelle vente",
+    fields: [
+      ["customer","Client","text",true],
+      ["item","Article / service","text",true],
+      ["quantity","Quantité","number",true],
+      ["amount","Montant (FCFA)","number",true],
+      [
+        "payment_method",
+        "Paiement",
+        "select",
+        false,
+        [
+          "cash",
+          "mtn_momo",
+          "moov_money",
+          "celtiis_cash",
+          "bank_transfer",
+          "card",
+          "check",
+          "credit",
+          "other"
+        ]
+      ],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["paid","pending","cancelled"]
+      ],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-purchases: {
-  title: "Nouvel achat",
-  fields: [
-    ["supplier","Fournisseur","text",true],
-    ["item","Article / service","text",true],
-    ["quantity","Quantité","number",true],
-    ["amount","Montant (FCFA)","number",true],
-    ["status","Statut","select",false,
-      ["paid","pending","cancelled"]
-    ],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  purchases: {
+    title: "Nouvel achat",
+    fields: [
+      ["supplier","Fournisseur","text",true],
+      ["item","Article / service","text",true],
+      ["quantity","Quantité","number",true],
+      ["amount","Montant (FCFA)","number",true],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["paid","pending","cancelled"]
+      ],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-expenses: {
-  title: "Nouvelle dépense",
-  fields: [
-    ["category","Catégorie","text",true],
-    ["description","Description","text",true],
-    ["amount","Montant (FCFA)","number",true],
-    ["payment_method","Mode de paiement","select",false,
-      ["cash","mobile_money","bank","other"]
-    ],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  expenses: {
+    title: "Nouvelle dépense",
+    fields: [
+      ["category","Catégorie","text",true],
+      ["description","Description","text",true],
+      ["amount","Montant (FCFA)","number",true],
+      [
+        "payment_method",
+        "Mode de paiement",
+        "select",
+        false,
+        [
+          "cash",
+          "mtn_momo",
+          "moov_money",
+          "celtiis_cash",
+          "bank_transfer",
+          "card",
+          "check",
+          "other"
+        ]
+      ],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-activities: {
-  title: "Nouvelle activité",
-  fields: [
-    ["title","Titre","text",true],
-    ["description","Description","textarea",false],
-    ["status","Statut","select",false,
-      ["planned","in_progress","completed","cancelled"]
-    ],
-    ["amount","Montant (FCFA)","number",false],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  activities: {
+    title: "Nouvelle activité",
+    fields: [
+      ["title","Titre","text",true],
+      ["description","Description","textarea",false],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["planned","in_progress","completed","cancelled"]
+      ],
+      ["amount","Montant (FCFA)","number",false],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-projects: {
-  title: "Nouveau projet",
-  fields: [
-    ["name","Nom du projet","text",true],
-    ["client","Client","text",false],
-    ["description","Description","textarea",false],
-    ["status","Statut","select",false,
-      ["planned","in_progress","completed","cancelled"]
-    ],
-    ["budget","Budget (FCFA)","number",false],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  projects: {
+    title: "Nouveau projet",
+    fields: [
+      ["name","Nom du projet","text",true],
+      ["client","Client","text",false],
+      ["description","Description","textarea",false],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["planned","in_progress","completed","cancelled"]
+      ],
+      ["budget","Budget (FCFA)","number",false],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-innovations: {
-  title: "Nouvelle innovation",
-  fields: [
-    ["title","Titre","text",true],
-    ["description","Description","textarea",false],
-    ["status","Statut","select",false,
-      ["idea","prototype","testing","deployed","rejected"]
-    ],
-    ["budget","Budget (FCFA)","number",false],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  innovations: {
+    title: "Nouvelle innovation",
+    fields: [
+      ["title","Titre","text",true],
+      ["description","Description","textarea",false],
+      [
+        "status",
+        "Statut",
+        "select",
+        false,
+        ["idea","prototype","testing","deployed","rejected"]
+      ],
+      ["budget","Budget (FCFA)","number",false],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-stock_items: {
-  title: "Nouvel article de stock",
-  fields: [
-    ["name","Article","text",true],
-    ["sku","Référence","text",false],
-    ["quantity","Quantité initiale","number",true],
-    ["min_quantity","Seuil minimum","number",false],
-    ["unit","Unité","text",false],
-    ["location","Emplacement","text",false],
-    ["notes","Notes","textarea",false]
-  ]
-},
+  stock_items: {
+    title: "Nouvel article de stock",
+    fields: [
+      ["name","Article","text",true],
+      ["sku","Référence","text",false],
+      ["quantity","Quantité initiale","number",true],
+      ["min_quantity","Seuil minimum","number",false],
+      ["unit","Unité","text",false],
+      ["location","Emplacement","text",false],
+      ["notes","Notes","textarea",false]
+    ]
+  },
 
-clients: {
-  title: "Nouveau client",
-  fields: [
-    ["full_name","Nom complet","text",true],
-    ["company_name","Entreprise","text",false],
-    ["phone","Téléphone","text",false],
-    ["email","E-mail","email",false],
-    ["address","Adresse","text",false],
-    ["city","Ville","text",false],
-    ["notes","Notes","textarea",false]
-  ]
-}
-
+  clients: {
+    title: "Nouveau client",
+    fields: [
+      ["full_name","Nom complet","text",true],
+      ["company_name","Entreprise","text",false],
+      ["phone","Téléphone","text",false],
+      ["email","E-mail","email",false],
+      ["address","Adresse","text",false],
+      ["city","Ville","text",false],
+      ["notes","Notes","textarea",false]
+    ]
+  }
 };
 
 /* =========================================================
-   ÉTAT
+   ÉTAT GLOBAL
    ========================================================= */
 
 const state = {
@@ -196,40 +259,50 @@ const TABLES_WITH_USER_ID = [
 ];
 
 /* =========================================================
-   LOCAL DATABASE
+   DONNÉES LOCALES
    ========================================================= */
 
 function loadLocal() {
+
   try {
+
     const raw = localStorage.getItem(DBKEY);
 
     if (raw) {
-      const parsed = JSON.parse(raw);
+      const data = JSON.parse(raw);
 
       TABLES.forEach(table => {
-        if (!Array.isArray(parsed[table])) {
-          parsed[table] = [];
+        if (!Array.isArray(data[table])) {
+          data[table] = [];
         }
       });
 
-      return parsed;
+      return data;
     }
-  } catch (e) {
-    console.warn("Local database:", e);
+
+  } catch (error) {
+    console.warn("LocalStorage:", error);
   }
 
   return seed();
 }
 
 function saveLocal() {
-  localStorage.setItem(
-    DBKEY,
-    JSON.stringify(state.db)
-  );
+
+  try {
+    localStorage.setItem(
+      DBKEY,
+      JSON.stringify(state.db)
+    );
+  } catch (error) {
+    console.warn("Sauvegarde locale:", error);
+  }
 }
 
 function seed() {
+
   return {
+
     profiles: [
       {
         id: "demo-admin",
@@ -241,6 +314,7 @@ function seed() {
         created_at: new Date().toISOString()
       }
     ],
+
     sales: [],
     purchases: [],
     expenses: [],
@@ -261,10 +335,11 @@ function seed() {
 }
 
 /* =========================================================
-   UTILITAIRES
+   OUTILS
    ========================================================= */
 
 function toast(message) {
+
   const el = document.getElementById("toast");
 
   if (!el) return;
@@ -280,6 +355,7 @@ function toast(message) {
 }
 
 function esc(value) {
+
   return String(value ?? "")
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
@@ -289,41 +365,91 @@ function esc(value) {
 }
 
 function money(value) {
-  return Number(value || 0)
-    .toLocaleString("fr-FR") + " FCFA";
+
+  const n = Number(value || 0);
+
+  return n.toLocaleString("fr-FR") + " FCFA";
 }
 
 function uid() {
+
   if (
-    window.crypto &&
-    typeof window.crypto.randomUUID === "function"
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
   ) {
-    return window.crypto.randomUUID();
+    return crypto.randomUUID();
   }
 
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-    .replace(/[xy]/g, c => {
-      const r = Math.random() * 16 | 0;
-      const v = c === "x"
+  return (
+    "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+  ).replace(/[xy]/g, c => {
+
+    const r = Math.random() * 16 | 0;
+
+    const v =
+      c === "x"
         ? r
         : (r & 3 | 8);
 
-      return v.toString(16);
-    });
+    return v.toString(16);
+  });
 }
 
 function now() {
+
   return new Date().toISOString();
 }
 
 function today() {
+
   return new Date()
     .toISOString()
     .slice(0,10);
 }
 
+function paymentMethodLabel(value) {
+
+  return {
+
+    cash: "Espèces",
+    mtn_momo: "MTN MoMo",
+    moov_money: "Moov Money",
+    celtiis_cash: "Celtiis Cash",
+    bank_transfer: "Virement bancaire",
+    card: "Carte bancaire",
+    check: "Chèque bancaire",
+    pi_spi: "PI-SPI",
+    other: "Autre",
+
+    mobile_money: "Mobile Money",
+    bank: "Virement bancaire",
+    credit: "Crédit"
+
+  }[value] || value || "—";
+}
+
+function documentPageStatus(status) {
+
+  return {
+
+    draft: "Brouillon",
+    sent: "Envoyé",
+    accepted: "Accepté",
+    rejected: "Refusé",
+    expired: "Expiré",
+    converted: "Converti",
+
+    unpaid: "Impayée",
+    partial: "Partiellement payée",
+    paid: "Payée",
+    cancelled: "Annulée",
+    overdue: "En retard"
+
+  }[status] || status || "—";
+}
+
 /* =========================================================
-   SUPABASE AUTH
+   SUPABASE
    ========================================================= */
 
 async function cloudSession() {
@@ -340,184 +466,63 @@ async function cloudSession() {
   return data.session;
 }
 
-/* =========================================================
-   BOOT
-   ========================================================= */
-
-async function boot() {
-
-  try {
-
-    if (hasCloud) {
-
-      const session = await cloudSession();
-
-      if (!session) {
-
-        if (
-          location.pathname.endsWith("login.html")
-        ) {
-          return;
-        }
-
-        location.href = "login.html";
-        return;
-      }
-
-      state.user = session.user;
-
-      const {
-        data: profile,
-        error
-      } = await sb
-        .from("profiles")
-        .select("*")
-        .eq("id",session.user.id)
-        .single();
-
-      if (
-        error &&
-        error.code !== "PGRST116"
-      ) {
-        throw error;
-      }
-
-      state.profile =
-        profile ||
-        {
-          id: session.user.id,
-          full_name:
-            session.user.email || "Utilisateur",
-          email: session.user.email || "",
-          role: "employee",
-          active: true
-        };
-
-      if (state.profile.active === false) {
-
-        toast("Compte désactivé.");
-
-        await sb.auth.signOut();
-
-        location.href = "login.html";
-
-        return;
-      }
-
-      state.role =
-        state.profile.role || "employee";
-
-      await syncCloud();
-
-    } else {
-
-      state.user = {
-        id: "demo-admin",
-        email: "demo@lucbricotech.local"
-      };
-
-      state.profile =
-        state.db.profiles[0];
-
-      state.role = "admin";
-    }
-
-    const userName =
-      document.getElementById("userName");
-
-    const userRole =
-      document.getElementById("userRole");
-
-    const modeBadge =
-      document.getElementById("modeBadge");
-
-    if (userName) {
-      userName.textContent =
-        state.profile.full_name ||
-        state.user.email ||
-        "Utilisateur";
-    }
-
-    if (userRole) {
-      userRole.textContent =
-        String(state.role).toUpperCase();
-    }
-
-    if (modeBadge) {
-      modeBadge.textContent =
-        state.cloud
-          ? "SUPABASE"
-          : "MODE DÉMO";
-    }
-
-    bind();
-    applyRoleNavigation();
-    render();
-
-  } catch (err) {
-
-    console.error("BOOT ERROR:",err);
-
-    const content =
-      document.getElementById("content");
-
-    if (content) {
-
-      content.innerHTML = `
-        <div class="card">
-          <h2>Erreur de connexion</h2>
-          <p>${esc(
-            err?.message ||
-            "Une erreur est survenue."
-          )}</p>
-        </div>
-      `;
-    }
-  }
-}
-
-/* =========================================================
-   SYNCHRONISATION SUPABASE
-   ========================================================= */
-
 async function syncCloud() {
 
   for (const table of TABLES) {
 
-    let query =
-      sb
+    try {
+
+      let query = sb
         .from(table)
         .select("*");
 
-    if (table !== "settings") {
+      /*
+       * settings n'utilise pas created_at.
+       */
+      if (table !== "settings") {
 
-      query = query.order(
-        "created_at",
-        { ascending:false }
+        query = query.order(
+          "created_at",
+          { ascending:false }
+        );
+      }
+
+      const {
+        data,
+        error
+      } = await query;
+
+      if (!error && data) {
+
+        state.db[table] = data;
+
+      } else {
+
+        if (!Array.isArray(state.db[table])) {
+          state.db[table] = [];
+        }
+
+        console.warn(
+          "Synchronisation",
+          table,
+          error?.message
+        );
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "Synchronisation",
+        table,
+        error
       );
-    }
 
-    const {
-      data,
-      error
-    } = await query;
-
-    if (!error && data) {
-
-      state.db[table] = data;
-
-    } else if (
-      !Array.isArray(state.db[table])
-    ) {
-
-      state.db[table] = [];
+      if (!Array.isArray(state.db[table])) {
+        state.db[table] = [];
+      }
     }
   }
 }
-
-/* =========================================================
-   CRUD
-   ========================================================= */
 
 async function insert(table,payload) {
 
@@ -641,10 +646,6 @@ async function remove(table,id) {
   }
 }
 
-/* =========================================================
-   AUDIT
-   ========================================================= */
-
 async function audit(
   action,
   table,
@@ -654,19 +655,182 @@ async function audit(
 
   try {
 
-    await insert("audit_logs",{
-      action,
-      table_name: table,
-      record_id: recordId,
-      details
-    });
+    await insert(
+      "audit_logs",
+      {
+        action,
+        table_name: table,
+        record_id: recordId,
+        details
+      }
+    );
 
   } catch (error) {
 
     console.warn(
-      "Audit log:",
+      "Audit:",
       error
     );
+  }
+}
+
+/* =========================================================
+   DÉMARRAGE
+   ========================================================= */
+
+async function boot() {
+
+  try {
+
+    if (hasCloud) {
+
+      const session =
+        await cloudSession();
+
+      if (!session) {
+
+        if (
+          location.pathname
+            .toLowerCase()
+            .endsWith("login.html")
+        ) {
+          return;
+        }
+
+        location.href = "login.html";
+        return;
+      }
+
+      state.user = session.user;
+
+      const {
+        data: profile,
+        error
+      } = await sb
+        .from("profiles")
+        .select("*")
+        .eq("id",session.user.id)
+        .single();
+
+      if (
+        error &&
+        error.code !== "PGRST116"
+      ) {
+        throw error;
+      }
+
+      state.profile =
+        profile || {
+          id: session.user.id,
+          full_name:
+            session.user.user_metadata?.full_name ||
+            session.user.email ||
+            "Utilisateur",
+          email:
+            session.user.email || "",
+          role: "employee",
+          active: true
+        };
+
+      if (
+        state.profile.active === false
+      ) {
+
+        toast("Compte désactivé.");
+
+        await sb.auth.signOut();
+
+        location.href =
+          "login.html";
+
+        return;
+      }
+
+      state.role =
+        state.profile.role ||
+        "employee";
+
+      await syncCloud();
+
+    } else {
+
+      state.user = {
+        id: "demo-admin",
+        email: "demo@lucbricotech.local"
+      };
+
+      state.profile =
+        state.db.profiles[0];
+
+      state.role = "admin";
+    }
+
+    const userName =
+      document.getElementById(
+        "userName"
+      );
+
+    const userRole =
+      document.getElementById(
+        "userRole"
+      );
+
+    const modeBadge =
+      document.getElementById(
+        "modeBadge"
+      );
+
+    if (userName) {
+
+      userName.textContent =
+        state.profile?.full_name ||
+        state.user?.email ||
+        "Utilisateur";
+    }
+
+    if (userRole) {
+
+      userRole.textContent =
+        String(
+          state.role || "employee"
+        ).toUpperCase();
+    }
+
+    if (modeBadge) {
+
+      modeBadge.textContent =
+        state.cloud
+          ? "SUPABASE"
+          : "MODE DÉMO";
+    }
+
+    bind();
+    render();
+
+  } catch (error) {
+
+    console.error(
+      "BOOT ERROR:",
+      error
+    );
+
+    const content =
+      document.getElementById(
+        "content"
+      );
+
+    if (content) {
+
+      content.innerHTML = `
+        <div class="card">
+          <h2>Erreur de connexion</h2>
+          <p>${esc(
+            error?.message ||
+            "Une erreur est survenue."
+          )}</p>
+        </div>
+      `;
+    }
   }
 }
 
@@ -727,10 +891,10 @@ const ROLE_PAGES = {
     "innovations",
     "reports"
   ]
-
 };
 
 function allowedPages() {
+
   return (
     ROLE_PAGES[state.role] ||
     ROLE_PAGES.employee
@@ -738,6 +902,7 @@ function allowedPages() {
 }
 
 function canManageStock() {
+
   return (
     state.role === "admin" ||
     state.role === "manager"
@@ -797,7 +962,9 @@ function bind() {
   }
 
   const menuBtn =
-    document.getElementById("menuBtn");
+    document.getElementById(
+      "menuBtn"
+    );
 
   if (menuBtn) {
 
@@ -814,18 +981,24 @@ function bind() {
     event => {
 
       const sidebar =
-        document.getElementById("sidebar");
+        document.getElementById(
+          "sidebar"
+        );
 
       const menu =
-        document.getElementById("menuBtn");
+        document.getElementById(
+          "menuBtn"
+        );
 
       if (
-        sidebar &&
-        sidebar.classList.contains("open") &&
+        sidebar?.classList.contains("open") &&
         !sidebar.contains(event.target) &&
         !menu?.contains(event.target)
       ) {
-        sidebar.classList.remove("open");
+
+        sidebar.classList.remove(
+          "open"
+        );
       }
     }
   );
@@ -858,23 +1031,33 @@ async function logout() {
     await sb.auth.signOut();
   }
 
-  location.href = "login.html";
+  location.href =
+    "login.html";
 }
 
-function setHeader(title,sub) {
+function setHeader(
+  title,
+  subtitle
+) {
 
   const titleEl =
-    document.getElementById("pageTitle");
+    document.getElementById(
+      "pageTitle"
+    );
 
   const subEl =
-    document.getElementById("pageSub");
+    document.getElementById(
+      "pageSub"
+    );
 
   if (titleEl) {
-    titleEl.textContent = title;
+    titleEl.textContent =
+      title;
   }
 
   if (subEl) {
-    subEl.textContent = sub;
+    subEl.textContent =
+      subtitle;
   }
 }
 
@@ -890,20 +1073,25 @@ function render() {
     !allowedPages()
       .includes(state.page)
   ) {
-    state.page = "dashboard";
+
+    state.page =
+      "dashboard";
   }
 
   document
-    .querySelectorAll("#nav button")
+    .querySelectorAll(
+      "#nav button"
+    )
     .forEach(button => {
 
       button.classList.toggle(
         "active",
-        button.dataset.page === state.page
+        button.dataset.page ===
+        state.page
       );
     });
 
-  const map = {
+  const headers = {
 
     dashboard: [
       "Tableau de bord",
@@ -984,42 +1172,62 @@ function render() {
       "Paramètres",
       "Configuration de l’entreprise."
     ]
-
   };
 
+  const header =
+    headers[state.page] ||
+    headers.dashboard;
+
   setHeader(
-    ...(map[state.page] || map.dashboard)
+    header[0],
+    header[1]
   );
 
-  const functions = {
+  const pages = {
 
     dashboard,
-    members,
-    clients: clientsPage,
-    quotes: quotesPage,
-    invoices: invoicesPage,
-    payments: paymentsPage,
-    sales: tablePage,
-    purchases: tablePage,
-    expenses: tablePage,
-    stock,
-    activities: tablePage,
-    projects: tablePage,
-    innovations: tablePage,
-    reports,
-    audit: auditPage,
-    settings
 
+    members,
+
+    clients: clientsPage,
+
+    quotes: quotesPage,
+
+    invoices: invoicesPage,
+
+    payments: paymentsPage,
+
+    sales: tablePage,
+
+    purchases: tablePage,
+
+    expenses: tablePage,
+
+    stock,
+
+    activities: tablePage,
+
+    projects: tablePage,
+
+    innovations: tablePage,
+
+    reports,
+
+    audit: auditPage,
+
+    settings
   };
 
   const fn =
-    functions[state.page] ||
+    pages[state.page] ||
     dashboard;
 
   try {
 
     const content =
-      document.getElementById("content");
+      document.getElementById(
+        "content"
+      );
 
     if (!content) return;
 
@@ -1031,12 +1239,14 @@ function render() {
   } catch (error) {
 
     console.error(
-      "Erreur render:",
+      "RENDER ERROR:",
       error
     );
 
     const content =
-      document.getElementById("content");
+      document.getElementById(
+        "content"
+      );
 
     if (content) {
 
@@ -1044,7 +1254,7 @@ function render() {
         <div class="card">
           <h2>Erreur d'affichage</h2>
           <p>${esc(
-            error.message ||
+            error?.message ||
             "Erreur inconnue."
           )}</p>
         </div>
@@ -1054,30 +1264,39 @@ function render() {
 }
 
 /* =========================================================
-   TABLEAU DE BORD — CORRIGÉ
+   TABLEAU DE BORD
+   IMPORTANT :
+   Une seule fonction dashboard.
+   "stockTotal" est utilisé pour éviter
+   toute collision de variable "stock".
    ========================================================= */
 
 function dashboard() {
 
-  const sum = table =>
-    (state.db[table] || [])
-      .reduce(
-        (total,row) =>
-          total +
-          Number(
-            row.amount ||
-            row.total ||
-            0
-          ),
-        0
-      );
+  const sumTable = table => {
 
-  const stock =
+    return (
+      state.db[table] || []
+    ).reduce(
+      (total,row) =>
+        total +
+        Number(
+          row.amount ||
+          row.total ||
+          0
+        ),
+      0
+    );
+  };
+
+  const stockTotal =
     (state.db.stock_items || [])
       .reduce(
         (total,row) =>
           total +
-          Number(row.quantity || 0),
+          Number(
+            row.quantity || 0
+          ),
         0
       );
 
@@ -1089,31 +1308,49 @@ function dashboard() {
       ).length;
 
   const sales =
-    sum("sales");
+    sumTable("sales");
 
   const purchases =
-    sum("purchases");
+    sumTable("purchases");
 
   const expenses =
-    sum("expenses");
+    sumTable("expenses");
 
   const payments =
-    sum("payments");
-
-  const receivables =
-    (state.db.invoices || [])
+    (state.db.payments || [])
       .reduce(
         (total,row) =>
           total +
-          Number(row.amount_due || 0),
+          Number(
+            row.amount || 0
+          ),
         0
       );
 
-  const clients =
-    (state.db.clients || []).length;
-
   const invoices =
-    (state.db.invoices || []).length;
+    state.db.invoices || [];
+
+  const unpaidInvoices =
+    invoices.filter(invoice =>
+      invoice.status === "unpaid" ||
+      invoice.status === "partial" ||
+      invoice.status === "overdue"
+    ).length;
+
+  const receivable =
+    invoices.reduce(
+      (total,invoice) =>
+        total +
+        Number(
+          invoice.amount_due || 0
+        ),
+      0
+    );
+
+  const estimatedResult =
+    sales -
+    purchases -
+    expenses;
 
   return `
 
@@ -1150,8 +1387,7 @@ function dashboard() {
 
     <img
       src="./logo-luc-bricotech.png"
-      alt="Logo LUC BRICO-TECH"
-    >
+      alt="Logo LUC BRICO-TECH">
 
   </div>
 
@@ -1176,15 +1412,12 @@ function dashboard() {
 
   <div class="card kpi">
     <small>Stock total</small>
-    <strong>${stock}</strong>
+    <strong>${stockTotal}</strong>
   </div>
 
 </div>
 
-<div
-  class="grid kpis"
-  style="margin-top:16px"
->
+<div class="grid kpis">
 
   <div class="card kpi">
     <small>Paiements reçus</small>
@@ -1193,17 +1426,17 @@ function dashboard() {
 
   <div class="card kpi">
     <small>Créances clients</small>
-    <strong>${money(receivables)}</strong>
+    <strong>${money(receivable)}</strong>
   </div>
 
   <div class="card kpi">
-    <small>Alertes stock</small>
-    <strong>${lowStock}</strong>
+    <small>Factures à suivre</small>
+    <strong>${unpaidInvoices}</strong>
   </div>
 
   <div class="card kpi">
-    <small>Clients</small>
-    <strong>${clients}</strong>
+    <small>Résultat estimatif</small>
+    <strong>${money(estimatedResult)}</strong>
   </div>
 
 </div>
@@ -1217,8 +1450,7 @@ function dashboard() {
     </strong>
 
     <span>
-      Centralisez les opérations et gardez
-      une vision claire de l’activité.
+      Centralisez les opérations et gardez une vision claire de l’activité.
     </span>
 
   </div>
@@ -1227,23 +1459,26 @@ function dashboard() {
 
     <button
       class="primary"
-      data-add="sales"
-    >
+      data-add="sales">
       + Vente
     </button>
 
     <button
       class="secondary"
-      data-add="activities"
-    >
+      data-add="activities">
       + Activité
     </button>
 
     <button
       class="secondary"
-      data-add="projects"
-    >
+      data-add="projects">
       + Projet
+    </button>
+
+    <button
+      class="secondary"
+      data-add="clients">
+      + Client
     </button>
 
   </div>
@@ -1252,8 +1487,7 @@ function dashboard() {
 
 <div
   class="grid cards"
-  style="margin-top:16px"
->
+  style="margin-top:16px">
 
   <div class="card">
 
@@ -1298,33 +1532,36 @@ function dashboard() {
 
 <div
   class="grid cards"
-  style="margin-top:16px"
->
+  style="margin-top:16px">
 
   <div class="card">
 
     <h3>
-      Situation financière
+      Alertes stock
     </h3>
 
-    <p>
-      <strong>Ventes :</strong>
-      ${money(sales)}
+    <strong>
+      ${lowStock}
+    </strong>
+
+    <p class="muted">
+      article(s) sous le seuil minimum.
     </p>
 
-    <p>
-      <strong>Achats :</strong>
-      ${money(purchases)}
-    </p>
+  </div>
 
-    <p>
-      <strong>Dépenses :</strong>
-      ${money(expenses)}
-    </p>
+  <div class="card">
 
-    <p>
-      <strong>Paiements reçus :</strong>
-      ${money(payments)}
+    <h3>
+      Clients
+    </h3>
+
+    <strong>
+      ${(state.db.clients || []).length}
+    </strong>
+
+    <p class="muted">
+      clients enregistrés.
     </p>
 
   </div>
@@ -1335,32 +1572,12 @@ function dashboard() {
       Factures
     </h3>
 
-    <p>
-      <strong>${invoices}</strong>
-      facture(s) enregistrée(s).
-    </p>
+    <strong>
+      ${invoices.length}
+    </strong>
 
-    <p>
-      <strong>${money(receivables)}</strong>
-      à recouvrer.
-    </p>
-
-  </div>
-
-  <div class="card">
-
-    <h3>
-      Stock
-    </h3>
-
-    <p>
-      <strong>${stock}</strong>
-      unité(s) enregistrée(s).
-    </p>
-
-    <p>
-      <strong>${lowStock}</strong>
-      article(s) sous le seuil.
+    <p class="muted">
+      factures enregistrées.
     </p>
 
   </div>
@@ -1370,13 +1587,17 @@ function dashboard() {
 `;
 }
 
-function recent(table,key) {
+function recent(
+  table,
+  key
+) {
 
   const rows =
     (state.db[table] || [])
       .slice(0,5);
 
   if (!rows.length) {
+
     return `
       <div class="empty">
         Aucun élément.
@@ -1404,7 +1625,9 @@ function recent(table,key) {
             row.created_at
               ? new Date(
                   row.created_at
-                ).toLocaleString("fr-FR")
+                ).toLocaleString(
+                  "fr-FR"
+                )
               : ""
           }
 
@@ -1417,7 +1640,7 @@ function recent(table,key) {
 }
 
 /* =========================================================
-   TABLEAUX
+   TABLEAUX CLASSIQUES
    ========================================================= */
 
 function tablePage(table) {
@@ -1471,18 +1694,16 @@ function tablePage(table) {
       "description",
       "Description"
     ]
-
   };
 
-  const cfg = configs[table];
+  const cfg =
+    configs[table];
 
   if (!cfg) {
 
     return `
       <div class="card">
-        <p>
-          Module indisponible.
-        </p>
+        <p>Module indisponible.</p>
       </div>
     `;
   }
@@ -1496,8 +1717,7 @@ function tablePage(table) {
 
   <button
     class="primary"
-    data-add="${table}"
-  >
+    data-add="${table}">
     + Ajouter
   </button>
 
@@ -1549,11 +1769,15 @@ function tablePage(table) {
             <tr>
 
               <td>
-                ${esc(row[cfg[1]])}
+                ${esc(
+                  row[cfg[1]]
+                )}
               </td>
 
               <td>
-                ${esc(row[cfg[3]])}
+                ${esc(
+                  row[cfg[3]]
+                )}
               </td>
 
               <td>
@@ -1567,8 +1791,7 @@ function tablePage(table) {
 
               <td>
                 ${esc(
-                  row.status ||
-                  "—"
+                  row.status || "—"
                 )}
               </td>
 
@@ -1576,15 +1799,13 @@ function tablePage(table) {
 
                 <button
                   class="secondary small"
-                  data-edit="${table}:${row.id}"
-                >
+                  data-edit="${table}:${row.id}">
                   Modifier
                 </button>
 
                 <button
                   class="danger ghost small"
-                  data-delete="${table}:${row.id}"
-                >
+                  data-delete="${table}:${row.id}">
                   Supprimer
                 </button>
 
@@ -1639,8 +1860,7 @@ function members() {
       `
       <button
         class="primary"
-        id="createEmployeeBtn"
-      >
+        id="createEmployeeBtn">
         + Créer un compte
       </button>
       `
@@ -1654,152 +1874,155 @@ function members() {
 
 <div class="card table-card">
 
-  <div class="table-wrap">
+<div class="table-wrap">
 
-    <table>
+<table>
 
-      <thead>
+<thead>
 
-        <tr>
-          <th>Nom</th>
-          <th>Rôle</th>
-          <th>Téléphone</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
+<tr>
 
-      </thead>
+<th>Nom</th>
+<th>Rôle</th>
+<th>Téléphone</th>
+<th>Statut</th>
+<th>Actions</th>
 
-      <tbody>
+</tr>
 
-        ${
-          rows.length
+</thead>
 
-          ?
+<tbody>
 
-          rows.map(profile => `
+${
+rows.length
 
-            <tr>
+?
 
-              <td>
+rows.map(profile => `
 
-                <strong>
-                  ${esc(
-                    profile.full_name ||
-                    "Sans nom"
-                  )}
-                </strong>
+<tr>
 
-              </td>
+<td>
 
-              <td>
+<strong>
+${esc(
+  profile.full_name ||
+  "Sans nom"
+)}
+</strong>
 
-                <span class="badge">
+</td>
 
-                  ${esc(
-                    String(
-                      profile.role ||
-                      "employee"
-                    ).toUpperCase()
-                  )}
+<td>
 
-                </span>
+<span class="badge">
 
-              </td>
+${esc(
+  String(
+    profile.role ||
+    "employee"
+  ).toUpperCase()
+)}
 
-              <td>
-                ${esc(
-                  profile.phone ||
-                  "—"
-                )}
-              </td>
+</span>
 
-              <td>
+</td>
 
-                <span
-                  class="
-                    badge
-                    ${
-                      profile.active === false
-                        ? "danger"
-                        : "success"
-                    }
-                  "
-                >
+<td>
+${esc(
+  profile.phone ||
+  "—"
+)}
+</td>
 
-                  ${
-                    profile.active === false
-                      ? "Inactif"
-                      : "Actif"
-                  }
+<td>
 
-                </span>
+<span
+class="badge ${
+  profile.active === false
+    ? "danger"
+    : "success"
+}">
 
-              </td>
+${
+  profile.active === false
+    ? "Inactif"
+    : "Actif"
+}
 
-              <td>
+</span>
 
-                <button
-                  class="secondary small"
-                  data-employee-card="${esc(profile.id)}"
-                >
-                  🪪 Carte
-                </button>
+</td>
 
-                ${
-                  state.role === "admin"
+<td>
 
-                    ?
+<button
+  class="secondary small"
+  data-employee-card="${esc(profile.id)}">
+  🪪 Carte
+</button>
 
-                    `
-                    <button
-                      class="secondary small"
-                      data-role="${esc(profile.id)}"
-                    >
-                      Rôle
-                    </button>
+${
+state.role === "admin"
 
-                    <button
-                      class="secondary small"
-                      data-toggle-active="${esc(profile.id)}"
-                    >
-                      ${
-                        profile.active === false
-                          ? "Activer"
-                          : "Désactiver"
-                      }
-                    </button>
-                    `
+?
 
-                    :
+`
 
-                    ""
-                }
+<button
+  class="secondary small"
+  data-role="${esc(profile.id)}">
+  Rôle
+</button>
 
-              </td>
+<button
+  class="secondary small"
+  data-toggle-active="${esc(profile.id)}">
+  ${
+    profile.active === false
+      ? "Activer"
+      : "Désactiver"
+  }
+</button>
 
-            </tr>
+`
 
-          `).join("")
+:
 
-          :
+""
+}
 
-          `
-          <tr>
-            <td colspan="5">
-              <div class="empty">
-                Aucun membre.
-              </div>
-            </td>
-          </tr>
-          `
-        }
+</td>
 
-      </tbody>
+</tr>
 
-    </table>
+`).join("")
 
-  </div>
+:
+
+`
+
+<tr>
+
+<td colspan="5">
+
+<div class="empty">
+Aucun membre.
+</div>
+
+</td>
+
+</tr>
+
+`
+}
+
+</tbody>
+
+</table>
+
+</div>
 
 </div>
 
@@ -1819,86 +2042,94 @@ function clientsPage() {
 
 <div class="page-actions">
 
-  <button
-    class="primary"
-    data-add="clients"
-  >
-    + Nouveau client
-  </button>
+<button
+  class="primary"
+  data-add="clients">
+  + Nouveau client
+</button>
 
 </div>
 
 <div class="grid cards">
 
-  ${
-    rows.length
+${
+rows.length
 
-      ?
+?
 
-      rows.map(client => `
+rows.map(client => `
 
-        <div class="card">
+<div class="card">
 
-          <h3>
-            ${esc(
-              client.full_name ||
-              "Client"
-            )}
-          </h3>
+<h3>
+${esc(
+  client.full_name ||
+  "Client"
+)}
+</h3>
 
-          <p>
-            ${esc(
-              client.company_name ||
-              ""
-            )}
-          </p>
+<p>
+${esc(
+  client.company_name ||
+  ""
+)}
+</p>
 
-          <p>
-            ${esc(
-              client.phone ||
-              ""
-            )}
-          </p>
+<p>
+${esc(
+  client.phone ||
+  ""
+)}
+</p>
 
-          <p>
-            ${esc(
-              client.email ||
-              ""
-            )}
-          </p>
+<p>
+${esc(
+  client.email ||
+  ""
+)}
+</p>
 
-          <div class="card-actions">
+<p>
+${esc(
+  client.city ||
+  ""
+)}
+</p>
 
-            <button
-              class="secondary small"
-              data-edit="clients:${client.id}"
-            >
-              Modifier
-            </button>
+<div class="card-actions">
 
-            <button
-              class="danger ghost small"
-              data-delete="clients:${client.id}"
-            >
-              Supprimer
-            </button>
+<button
+  class="secondary small"
+  data-edit="clients:${client.id}">
+  Modifier
+</button>
 
-          </div>
+<button
+  class="danger ghost small"
+  data-delete="clients:${client.id}">
+  Supprimer
+</button>
 
-        </div>
+</div>
 
-      `).join("")
+</div>
 
-      :
+`).join("")
 
-      `
-      <div class="card">
-        <div class="empty">
-          Aucun client.
-        </div>
-      </div>
-      `
-  }
+:
+
+`
+
+<div class="card">
+
+<div class="empty">
+Aucun client.
+</div>
+
+</div>
+
+`
+}
 
 </div>
 
@@ -1911,13 +2142,10 @@ function clientsPage() {
 
 function quotesPage() {
 
-  const rows =
-    state.db.quotes || [];
-
   return documentPageList(
     "Devis",
     "quotes",
-    rows,
+    state.db.quotes || [],
     "quote_number",
     "client_id"
   );
@@ -1929,41 +2157,12 @@ function quotesPage() {
 
 function invoicesPage() {
 
-  const rows =
-    state.db.invoices || [];
-
   return documentPageList(
     "Factures",
     "invoices",
-    rows,
+    state.db.invoices || [],
     "invoice_number",
     "client_id"
-  );
-}
-
-function documentPageStatus(status) {
-
-  const labels = {
-
-    draft: "Brouillon",
-    sent: "Envoyé",
-    accepted: "Accepté",
-    rejected: "Refusé",
-    expired: "Expiré",
-    converted: "Converti",
-
-    unpaid: "Impayée",
-    partial: "Partiellement payée",
-    paid: "Payée",
-    cancelled: "Annulée",
-    overdue: "En retard"
-
-  };
-
-  return (
-    labels[status] ||
-    status ||
-    "—"
   );
 }
 
@@ -1975,185 +2174,183 @@ function documentPageList(
   clientKey
 ) {
 
+  const buttonLabel =
+    table === "quotes"
+      ? "Nouveau devis"
+      : "Nouvelle facture";
+
   return `
 
 <div class="page-actions">
 
-  <button
-    class="primary"
-    data-add="${table}"
-  >
-    + ${
-      title === "Devis"
-        ? "Nouveau devis"
-        : "Nouvelle facture"
-    }
-  </button>
+<button
+  class="primary"
+  data-add="${table}">
+  + ${buttonLabel}
+</button>
 
 </div>
 
 <div class="card table-card">
 
-  <div class="table-wrap">
+<div class="table-wrap">
 
-    <table>
+<table>
 
-      <thead>
+<thead>
 
-        <tr>
-          <th>N°</th>
-          <th>Client</th>
-          <th>Date</th>
-          <th>Total</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
+<tr>
 
-      </thead>
+<th>N°</th>
+<th>Client</th>
+<th>Date</th>
+<th>Total</th>
+<th>Statut</th>
+<th>Actions</th>
 
-      <tbody>
+</tr>
 
-        ${
-          rows.length
+</thead>
 
-          ?
+<tbody>
 
-          rows.map(row => {
+${
+rows.length
 
-            const client =
-              (state.db.clients || [])
-                .find(
-                  c =>
-                    c.id ===
-                    row[clientKey]
-                );
+?
 
-            return `
+rows.map(row => {
 
-              <tr>
+  const client =
+    (state.db.clients || [])
+      .find(
+        c =>
+          c.id ===
+          row[clientKey]
+      );
 
-                <td>
-                  <strong>
-                    ${esc(
-                      row[numberKey] ||
-                      "—"
-                    )}
-                  </strong>
-                </td>
+  return `
 
-                <td>
-                  ${esc(
-                    client?.full_name ||
-                    client?.company_name ||
-                    "Client"
-                  )}
-                </td>
+<tr>
 
-                <td>
-                  ${esc(
-                    row.issue_date ||
-                    "—"
-                  )}
-                </td>
+<td>
 
-                <td>
-                  ${money(
-                    row.total || 0
-                  )}
-                </td>
+<strong>
+${esc(
+  row[numberKey] ||
+  "—"
+)}
+</strong>
 
-                <td>
+</td>
 
-                  <span
-                    class="
-                      badge
-                      ${
-                        row.status === "paid"
-                          ? "success"
-                          : row.status === "overdue"
-                            ? "danger"
-                            : row.status === "partial"
-                              ? "warn"
-                              : ""
-                      }
-                    "
-                  >
-                    ${esc(
-                      documentPageStatus(
-                        row.status
-                      )
-                    )}
-                  </span>
+<td>
+${esc(
+  client?.full_name ||
+  client?.company_name ||
+  "Client"
+)}
+</td>
 
-                </td>
+<td>
+${esc(
+  row.issue_date ||
+  "—"
+)}
+</td>
 
-                <td>
+<td>
+${money(
+  row.total || 0
+)}
+</td>
 
-                  <button
-                    class="secondary small"
-                    data-details-document="${table}:${row.id}"
-                  >
-                    Détails
-                  </button>
+<td>
 
-                  <button
-                    class="secondary small"
-                    data-edit-document="${table}:${row.id}"
-                  >
-                    Modifier
-                  </button>
+<span class="badge">
 
-                  ${
-                    table === "invoices"
+${esc(
+  documentPageStatus(
+    row.status
+  )
+)}
 
-                      ?
+</span>
 
-                      `
-                      <button
-                        class="primary small"
-                        data-add-payment="${row.id}"
-                      >
-                        + Paiement
-                      </button>
-                      `
+</td>
 
-                      :
+<td>
 
-                      ""
-                  }
+<button
+  class="secondary small"
+  data-details-document="${table}:${row.id}">
+  Détails
+</button>
 
-                  <button
-                    class="danger ghost small"
-                    data-delete="${table}:${row.id}"
-                  >
-                    Supprimer
-                  </button>
+<button
+  class="secondary small"
+  data-edit-document="${table}:${row.id}">
+  Modifier
+</button>
 
-                </td>
+${
+table === "invoices"
 
-              </tr>
+?
 
-            `;
-          }).join("")
+`
 
-          :
+<button
+  class="primary small"
+  data-add-payment="${row.id}">
+  + Paiement
+</button>
 
-          `
-          <tr>
-            <td colspan="6">
-              <div class="empty">
-                Aucun document.
-              </div>
-            </td>
-          </tr>
-          `
-        }
+`
 
-      </tbody>
+:
 
-    </table>
+""
+}
 
-  </div>
+<button
+  class="danger ghost small"
+  data-delete="${table}:${row.id}">
+  Supprimer
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+}).join("")
+
+:
+
+`
+
+<tr>
+
+<td colspan="6">
+
+<div class="empty">
+Aucun document.
+</div>
+
+</td>
+
+</tr>
+
+`
+}
+
+</tbody>
+
+</table>
+
+</div>
 
 </div>
 
@@ -2173,149 +2370,135 @@ function paymentsPage() {
 
 <div class="page-actions">
 
-  <button
-    class="primary"
-    id="addPaymentPageBtn"
-  >
-    + Nouveau paiement
-  </button>
+<button
+  class="primary"
+  id="addPaymentPageBtn">
+  + Nouveau paiement
+</button>
 
 </div>
 
 <div class="card table-card">
 
-  <div class="table-wrap">
+<div class="table-wrap">
 
-    <table>
+<table>
 
-      <thead>
+<thead>
 
-        <tr>
-          <th>Facture</th>
-          <th>Montant</th>
-          <th>Mode</th>
-          <th>Date</th>
-          <th>Référence</th>
-          <th>Actions</th>
-        </tr>
+<tr>
 
-      </thead>
+<th>Facture</th>
+<th>Montant</th>
+<th>Mode</th>
+<th>Date</th>
+<th>Référence</th>
+<th>Actions</th>
 
-      <tbody>
+</tr>
 
-        ${
-          rows.length
+</thead>
 
-          ?
+<tbody>
 
-          rows.map(payment => {
+${
+rows.length
 
-            const invoice =
-              (state.db.invoices || [])
-                .find(
-                  invoice =>
-                    invoice.id ===
-                    payment.invoice_id
-                );
+?
 
-            return `
+rows.map(payment => {
 
-              <tr>
+  const invoice =
+    (state.db.invoices || [])
+      .find(
+        invoice =>
+          invoice.id ===
+          payment.invoice_id
+      );
 
-                <td>
-                  ${esc(
-                    invoice?.invoice_number ||
-                    "—"
-                  )}
-                </td>
+  return `
 
-                <td>
-                  ${money(
-                    payment.amount
-                  )}
-                </td>
+<tr>
 
-                <td>
-                  ${esc(
-                    paymentMethodLabel(
-                      payment.payment_method
-                    )
-                  )}
-                </td>
+<td>
+${esc(
+  invoice?.invoice_number ||
+  "—"
+)}
+</td>
 
-                <td>
-                  ${esc(
-                    payment.payment_date ||
-                    "—"
-                  )}
-                </td>
+<td>
+${money(
+  payment.amount
+)}
+</td>
 
-                <td>
-                  ${esc(
-                    payment.reference ||
-                    "—"
-                  )}
-                </td>
+<td>
+${esc(
+  paymentMethodLabel(
+    payment.payment_method
+  )
+)}
+</td>
 
-                <td>
+<td>
+${esc(
+  payment.payment_date ||
+  "—"
+)}
+</td>
 
-                  <button
-                    class="danger ghost small"
-                    data-delete-payment="${payment.id}"
-                  >
-                    Supprimer
-                  </button>
+<td>
+${esc(
+  payment.reference ||
+  "—"
+)}
+</td>
 
-                </td>
+<td>
 
-              </tr>
+<button
+  class="danger ghost small"
+  data-delete-payment="${payment.id}">
+  Supprimer
+</button>
 
-            `;
-          }).join("")
+</td>
 
-          :
+</tr>
 
-          `
-          <tr>
-            <td colspan="6">
-              <div class="empty">
-                Aucun paiement.
-              </div>
-            </td>
-          </tr>
-          `
-        }
+`;
 
-      </tbody>
+}).join("")
 
-    </table>
+:
 
-  </div>
+`
+
+<tr>
+
+<td colspan="6">
+
+<div class="empty">
+Aucun paiement.
+</div>
+
+</td>
+
+</tr>
+
+`
+}
+
+</tbody>
+
+</table>
+
+</div>
 
 </div>
 
 `;
-}
-
-function paymentMethodLabel(value) {
-
-  return {
-
-    cash: "Espèces",
-    mtn_momo: "MTN MoMo",
-    moov_money: "Moov Money",
-    celtiis_cash: "Celtiis Cash",
-    bank_transfer: "Virement bancaire",
-    card: "Carte bancaire",
-    check: "Chèque bancaire",
-    pi_spi: "PI-SPI",
-    other: "Autre",
-
-    mobile_money: "Mobile Money",
-    bank: "Virement bancaire",
-    credit: "Crédit"
-
-  }[value] || value || "—";
 }
 
 /* =========================================================
@@ -2328,7 +2511,10 @@ function reports() {
     (state.db.sales || [])
       .reduce(
         (a,x) =>
-          a + Number(x.amount || 0),
+          a +
+          Number(
+            x.amount || 0
+          ),
         0
       );
 
@@ -2336,7 +2522,10 @@ function reports() {
     (state.db.purchases || [])
       .reduce(
         (a,x) =>
-          a + Number(x.amount || 0),
+          a +
+          Number(
+            x.amount || 0
+          ),
         0
       );
 
@@ -2344,7 +2533,10 @@ function reports() {
     (state.db.expenses || [])
       .reduce(
         (a,x) =>
-          a + Number(x.amount || 0),
+          a +
+          Number(
+            x.amount || 0
+          ),
         0
       );
 
@@ -2352,7 +2544,10 @@ function reports() {
     (state.db.payments || [])
       .reduce(
         (a,x) =>
-          a + Number(x.amount || 0),
+          a +
+          Number(
+            x.amount || 0
+          ),
         0
       );
 
@@ -2365,45 +2560,69 @@ function reports() {
 
 <div class="grid kpis">
 
-  <div class="card kpi">
-    <small>Ventes</small>
-    <strong>
-      ${money(sales)}
-    </strong>
-  </div>
+<div class="card kpi">
 
-  <div class="card kpi">
-    <small>Achats</small>
-    <strong>
-      ${money(purchases)}
-    </strong>
-  </div>
+<small>
+Ventes
+</small>
 
-  <div class="card kpi">
-    <small>Dépenses</small>
-    <strong>
-      ${money(expenses)}
-    </strong>
-  </div>
+<strong>
+${money(sales)}
+</strong>
 
-  <div class="card kpi">
-    <small>Paiements reçus</small>
-    <strong>
-      ${money(payments)}
-    </strong>
-  </div>
+</div>
+
+<div class="card kpi">
+
+<small>
+Achats
+</small>
+
+<strong>
+${money(purchases)}
+</strong>
+
+</div>
+
+<div class="card kpi">
+
+<small>
+Dépenses
+</small>
+
+<strong>
+${money(expenses)}
+</strong>
+
+</div>
+
+<div class="card kpi">
+
+<small>
+Paiements reçus
+</small>
+
+<strong>
+${money(payments)}
+</strong>
+
+</div>
 
 </div>
 
 <div class="card">
 
-  <h3>
-    Résultat estimatif
-  </h3>
+<h3>
+Résultat estimatif
+</h3>
 
-  <strong>
-    ${money(result)}
-  </strong>
+<strong>
+${money(result)}
+</strong>
+
+<p class="muted">
+Ventes − achats − dépenses.
+</p>
 
 </div>
 
@@ -2411,7 +2630,7 @@ function reports() {
 }
 
 /* =========================================================
-   AUDIT
+   JOURNAL
    ========================================================= */
 
 function auditPage() {
@@ -2423,85 +2642,90 @@ function auditPage() {
 
 <div class="card table-card">
 
-  <div class="table-wrap">
+<div class="table-wrap">
 
-    <table>
+<table>
 
-      <thead>
+<thead>
 
-        <tr>
-          <th>Date</th>
-          <th>Action</th>
-          <th>Table</th>
-          <th>Détails</th>
-        </tr>
+<tr>
+<th>Date</th>
+<th>Action</th>
+<th>Table</th>
+<th>Détails</th>
+</tr>
 
-      </thead>
+</thead>
 
-      <tbody>
+<tbody>
 
-        ${
-          rows.length
+${
+rows.length
 
-          ?
+?
 
-          rows
-            .slice(0,100)
-            .map(row => `
+rows
+.slice(0,100)
+.map(row => `
 
-              <tr>
+<tr>
 
-                <td>
-                  ${esc(
-                    row.created_at ||
-                    ""
-                  )}
-                </td>
+<td>
+${esc(
+  row.created_at ||
+  ""
+)}
+</td>
 
-                <td>
-                  ${esc(
-                    row.action ||
-                    ""
-                  )}
-                </td>
+<td>
+${esc(
+  row.action ||
+  ""
+)}
+</td>
 
-                <td>
-                  ${esc(
-                    row.table_name ||
-                    ""
-                  )}
-                </td>
+<td>
+${esc(
+  row.table_name ||
+  ""
+)}
+</td>
 
-                <td>
-                  ${esc(
-                    row.details ||
-                    ""
-                  )}
-                </td>
+<td>
+${esc(
+  row.details ||
+  ""
+)}
+</td>
 
-              </tr>
+</tr>
 
-            `)
-            .join("")
+`).join("")
 
-          :
+:
 
-          `
-          <tr>
-            <td colspan="4">
-              <div class="empty">
-                Aucune action.
-              </div>
-            </td>
-          </tr>
-          `
-        }
+`
 
-      </tbody>
+<tr>
 
-    </table>
+<td colspan="4">
 
-  </div>
+<div class="empty">
+Aucune action.
+</div>
+
+</td>
+
+</tr>
+
+`
+}
+
+</tbody>
+
+</table>
+
+</div>
 
 </div>
 
@@ -2526,59 +2750,60 @@ function settings() {
 
 <div class="card">
 
-  <h3>
-    Paramètres
-  </h3>
+<h3>
+Paramètres
+</h3>
 
-  <form id="settingsForm">
+<form id="settingsForm">
 
-    <label>
-      Nom de l'entreprise
+<label>
 
-      <input
-        name="company_name"
-        value="${esc(
-          current.company_name ||
-          "LUC BRICO-TECH"
-        )}"
-      >
+Nom de l'entreprise
 
-    </label>
+<input
+  name="company_name"
+  value="${esc(
+    current.company_name ||
+    "LUC BRICO-TECH"
+  )}">
 
-    <label>
-      Téléphone
+</label>
 
-      <input
-        name="phone"
-        value="${esc(
-          current.phone ||
-          ""
-        )}"
-      >
+<label>
 
-    </label>
+Téléphone
 
-    <label>
-      Adresse
+<input
+  name="phone"
+  value="${esc(
+    current.phone ||
+    ""
+  )}">
 
-      <input
-        name="address"
-        value="${esc(
-          current.address ||
-          "Hévié Hounzévié, Abomey-Calavi"
-        )}"
-      >
+</label>
 
-    </label>
+<label>
 
-    <button
-      class="primary"
-      type="submit"
-    >
-      Enregistrer
-    </button>
+Adresse
 
-  </form>
+<input
+  name="address"
+  value="${esc(
+    current.address ||
+    "Hévié Hounzévié, Abomey-Calavi"
+  )}">
+
+</label>
+
+<button
+  class="primary"
+  type="submit">
+
+Enregistrer
+
+</button>
+
+</form>
 
 </div>
 
@@ -2605,7 +2830,9 @@ function bindPage() {
           table === "invoices"
         ) {
 
-          openDocumentForm(table);
+          openDocumentForm(
+            table
+          );
 
           return;
         }
@@ -2641,14 +2868,19 @@ function bindPage() {
           button.dataset.delete
             .split(":");
 
-        const table = parts[0];
-        const id = parts[1];
+        const table =
+          parts[0];
+
+        const id =
+          parts[1];
 
         if (
           !confirm(
             "Supprimer cet élément ?"
           )
-        ) return;
+        ) {
+          return;
+        }
 
         try {
 
@@ -2680,13 +2912,16 @@ function bindPage() {
     });
 
   document
-    .querySelectorAll("[data-employee-card]")
+    .querySelectorAll(
+      "[data-employee-card]"
+    )
     .forEach(button => {
 
       button.onclick = () => {
 
         openEmployeeCard(
-          button.dataset.employeeCard
+          button.dataset
+            .employeeCard
         );
       };
     });
@@ -2762,7 +2997,8 @@ function bindPage() {
 
         const profile =
           findMemberProfile(
-            button.dataset.toggleActive
+            button.dataset
+              .toggleActive
           );
 
         if (!profile) return;
@@ -2776,6 +3012,15 @@ function bindPage() {
               active:
                 profile.active === false
             }
+          );
+
+          await audit(
+            "status_change",
+            "profiles",
+            profile.id,
+            profile.active === false
+              ? "Activation"
+              : "Désactivation"
           );
 
           toast(
@@ -2803,7 +3048,8 @@ function bindPage() {
       button.onclick = () => {
 
         const parts =
-          button.dataset.editDocument
+          button.dataset
+            .editDocument
             .split(":");
 
         openDocumentForm(
@@ -2822,7 +3068,8 @@ function bindPage() {
       button.onclick = () => {
 
         const parts =
-          button.dataset.detailsDocument
+          button.dataset
+            .detailsDocument
             .split(":");
 
         openDocumentDetails(
@@ -2841,7 +3088,8 @@ function bindPage() {
       button.onclick = () => {
 
         openPaymentForm(
-          button.dataset.addPayment
+          button.dataset
+            .addPayment
         );
       };
     });
@@ -2852,7 +3100,8 @@ function bindPage() {
     )
     ?.addEventListener(
       "click",
-      () => openPaymentForm()
+      () =>
+        openPaymentForm()
     );
 
   document
@@ -2867,13 +3116,16 @@ function bindPage() {
           !confirm(
             "Supprimer ce paiement ?"
           )
-        ) return;
+        ) {
+          return;
+        }
 
         try {
 
           await remove(
             "payments",
-            button.dataset.deletePayment
+            button.dataset
+              .deletePayment
           );
 
           toast(
@@ -2917,7 +3169,10 @@ function bindPage() {
    MODALE
    ========================================================= */
 
-function openModal(title,html) {
+function openModal(
+  title,
+  html
+) {
 
   const titleEl =
     document.getElementById(
@@ -2934,12 +3189,14 @@ function openModal(title,html) {
       "modal"
     );
 
-  if (!form || !modal) return;
-
-  if (titleEl) {
-    titleEl.textContent =
-      title;
+  if (!titleEl ||
+      !form ||
+      !modal) {
+    return;
   }
+
+  titleEl.textContent =
+    title;
 
   form.innerHTML =
     html;
@@ -2953,7 +3210,9 @@ function closeModal() {
 
   document
     .getElementById("modal")
-    ?.classList.add("hidden");
+    ?.classList.add(
+      "hidden"
+    );
 }
 
 /* =========================================================
@@ -2977,95 +3236,91 @@ function fieldHtml(
 
     return `
 
-      <label>
+<label>
 
-        ${esc(label)}
+${esc(label)}
 
-        <textarea
-          name="${esc(name)}"
-          ${required ? "required" : ""}
-        >${esc(value)}</textarea>
+<textarea
+  name="${esc(name)}"
+  ${required ? "required" : ""}>${esc(value)}</textarea>
 
-      </label>
+</label>
 
-    `;
+`;
   }
 
   if (type === "select") {
 
     return `
 
-      <label>
+<label>
 
-        ${esc(label)}
+${esc(label)}
 
-        <select
-          name="${esc(name)}"
-        >
+<select
+  name="${esc(name)}"
+  ${required ? "required" : ""}>
 
-          <option value="">
-            — Sélectionner —
-          </option>
+<option value="">
+— Sélectionner —
+</option>
 
-          ${(options || [])
-            .map(option => `
+${
+(options || [])
+.map(option => `
 
-              <option
-                value="${esc(option)}"
-                ${
-                  String(value) ===
-                  String(option)
-                    ? "selected"
-                    : ""
-                }
-              >
-                ${
-                  name ===
-                  "payment_method"
+<option
+  value="${esc(option)}"
+  ${
+    String(value) ===
+    String(option)
+      ? "selected"
+      : ""
+  }>
 
-                    ? paymentMethodLabel(
-                        option
-                      )
+${
+  name === "payment_method"
+    ? paymentMethodLabel(option)
+    : esc(option)
+}
 
-                    : esc(option)
-                }
-              </option>
+</option>
 
-            `)
-            .join("")}
+`)
+.join("")
+}
 
-        </select>
+</select>
 
-      </label>
+</label>
 
-    `;
+`;
   }
 
   return `
 
-    <label>
+<label>
 
-      ${esc(label)}
+${esc(label)}
 
-      <input
-        type="${esc(type)}"
-        name="${esc(name)}"
-        value="${esc(value)}"
-        ${required ? "required" : ""}
-      >
+<input
+  type="${esc(type)}"
+  name="${esc(name)}"
+  value="${esc(value)}"
+  ${required ? "required" : ""}>
 
-    </label>
+</label>
 
-  `;
+`;
 }
 
 /* =========================================================
-   FORMULAIRE GÉNÉRIQUE
+   FORMULAIRES CLASSIQUES
    ========================================================= */
 
 function openForm(
   table,
-  id=null
+  id = null
 ) {
 
   const schema =
@@ -3083,37 +3338,36 @@ function openForm(
 
   const html = `
 
-    ${
-      schema.fields
-        .map(field =>
-          fieldHtml(
-            field,
-            existing?.[field[0]] || ""
-          )
-        )
-        .join("")
-    }
+${
+schema.fields
+.map(field =>
+  fieldHtml(
+    field,
+    existing?.[field[0]] ??
+    ""
+  )
+)
+.join("")
+}
 
-    <div class="form-actions">
+<div class="form-actions">
 
-      <button
-        type="button"
-        class="secondary"
-        id="cancelForm"
-      >
-        Annuler
-      </button>
+<button
+  type="button"
+  class="secondary"
+  id="cancelForm">
+  Annuler
+</button>
 
-      <button
-        type="submit"
-        class="primary"
-      >
-        Enregistrer
-      </button>
+<button
+  type="submit"
+  class="primary">
+  Enregistrer
+</button>
 
-    </div>
+</div>
 
-  `;
+`;
 
   openModal(
     existing
@@ -3139,7 +3393,7 @@ function openForm(
 
       event.preventDefault();
 
-      const fd =
+      const formData =
         new FormData(
           event.target
         );
@@ -3156,7 +3410,7 @@ function openForm(
           ] = field;
 
           let value =
-            fd.get(name);
+            formData.get(name);
 
           if (type === "number") {
 
@@ -3222,7 +3476,7 @@ function openForm(
 }
 
 /* =========================================================
-   CRÉATION EMPLOYÉ
+   COMPTE EMPLOYÉ
    ========================================================= */
 
 async function openEmployeeForm() {
@@ -3240,68 +3494,63 @@ async function openEmployeeForm() {
     "Créer un compte employé",
     `
 
-      <label>
-        Nom complet
-        <input
-          name="full_name"
-          required
-        >
-      </label>
+<label>
+Nom complet
+<input
+  name="full_name"
+  required>
+</label>
 
-      <label>
-        Téléphone
-        <input name="phone">
-      </label>
+<label>
+Téléphone
+<input
+  name="phone">
+</label>
 
-      <label>
-        E-mail
-        <input
-          name="email"
-          type="email"
-          required
-        >
-      </label>
+<label>
+E-mail
+<input
+  name="email"
+  type="email"
+  required>
+</label>
 
-      <label>
-        Mot de passe initial
-        <input
-          name="password"
-          type="password"
-          minlength="8"
-          required
-        >
-      </label>
+<label>
+Mot de passe initial
+<input
+  name="password"
+  type="password"
+  minlength="8"
+  required>
+</label>
 
-      <label>
-        Confirmer le mot de passe
-        <input
-          name="password2"
-          type="password"
-          minlength="8"
-          required
-        >
-      </label>
+<label>
+Confirmer le mot de passe
+<input
+  name="password2"
+  type="password"
+  minlength="8"
+  required>
+</label>
 
-      <div class="form-actions">
+<div class="form-actions">
 
-        <button
-          type="button"
-          class="secondary"
-          id="cancelForm"
-        >
-          Annuler
-        </button>
+<button
+  type="button"
+  class="secondary"
+  id="cancelForm">
+  Annuler
+</button>
 
-        <button
-          type="submit"
-          class="primary"
-        >
-          Créer le compte
-        </button>
+<button
+  type="submit"
+  class="primary">
+  Créer le compte
+</button>
 
-      </div>
+</div>
 
-    `
+`
   );
 
   document
@@ -3328,31 +3577,38 @@ async function openEmployeeForm() {
 
       const full_name =
         String(
-          fd.get("full_name") || ""
+          fd.get("full_name") ||
+          ""
         ).trim();
 
       const phone =
         String(
-          fd.get("phone") || ""
+          fd.get("phone") ||
+          ""
         ).trim();
 
       const email =
         String(
-          fd.get("email") || ""
+          fd.get("email") ||
+          ""
         ).trim()
         .toLowerCase();
 
       const password =
         String(
-          fd.get("password") || ""
+          fd.get("password") ||
+          ""
         );
 
       const password2 =
         String(
-          fd.get("password2") || ""
+          fd.get("password2") ||
+          ""
         );
 
-      if (password !== password2) {
+      if (
+        password !== password2
+      ) {
 
         toast(
           "Les mots de passe ne correspondent pas."
@@ -3361,7 +3617,9 @@ async function openEmployeeForm() {
         return;
       }
 
-      if (password.length < 8) {
+      if (
+        password.length < 8
+      ) {
 
         toast(
           "Le mot de passe doit contenir au moins 8 caractères."
@@ -3378,8 +3636,9 @@ async function openEmployeeForm() {
             await cloudSession();
 
           if (!session) {
+
             throw new Error(
-              "Session expirée."
+              "Session Supabase expirée."
             );
           }
 
@@ -3388,14 +3647,18 @@ async function openEmployeeForm() {
               `${CFG.SUPABASE_URL}/functions/v1/create-employee`,
               {
                 method: "POST",
+
                 headers: {
                   "Content-Type":
                     "application/json",
+
                   "Authorization":
                     `Bearer ${session.access_token}`,
+
                   "apikey":
                     CFG.SUPABASE_ANON_KEY
                 },
+
                 body:
                   JSON.stringify({
                     full_name,
@@ -3407,7 +3670,11 @@ async function openEmployeeForm() {
             );
 
           const result =
-            await response.json();
+            await response
+              .json()
+              .catch(
+                () => ({})
+              );
 
           if (!response.ok) {
 
@@ -3433,6 +3700,13 @@ async function openEmployeeForm() {
           );
         }
 
+        await audit(
+          "create",
+          "profiles",
+          "",
+          `Compte employé : ${email}`
+        );
+
         toast(
           "Compte employé créé."
         );
@@ -3454,12 +3728,62 @@ async function openEmployeeForm() {
 }
 
 /* =========================================================
-   DOCUMENTS — DEVIS / FACTURES
+   DEVIS / FACTURES
    ========================================================= */
+
+function generateDocumentNumber(
+  type
+) {
+
+  const year =
+    new Date().getFullYear();
+
+  const prefix =
+    type === "quote"
+      ? "DEV"
+      : "FAC";
+
+  const rows =
+    type === "quote"
+      ? state.db.quotes || []
+      : state.db.invoices || [];
+
+  let max = 0;
+
+  rows.forEach(row => {
+
+    const key =
+      type === "quote"
+        ? "quote_number"
+        : "invoice_number";
+
+    const number =
+      row[key] || "";
+
+    const match =
+      String(number)
+        .match(/(\d+)$/);
+
+    if (match) {
+
+      max =
+        Math.max(
+          max,
+          Number(match[1])
+        );
+    }
+  });
+
+  return (
+    `${prefix}-${year}-` +
+    String(max + 1)
+      .padStart(4,"0")
+  );
+}
 
 function openDocumentForm(
   table,
-  id=null
+  id = null
 ) {
 
   const isQuote =
@@ -3473,28 +3797,30 @@ function openDocumentForm(
           )
       : null;
 
+  const clients =
+    state.db.clients || [];
+
   const clientOptions =
-    (state.db.clients || [])
-      .map(client => `
+    clients.map(client => `
 
-        <option
-          value="${esc(client.id)}"
-          ${
-            existing?.client_id ===
-            client.id
-              ? "selected"
-              : ""
-          }
-        >
-          ${esc(
-            client.full_name ||
-            client.company_name ||
-            "Client"
-          )}
-        </option>
+<option
+  value="${esc(client.id)}"
+  ${
+    existing?.client_id ===
+    client.id
+      ? "selected"
+      : ""
+  }>
 
-      `)
-      .join("");
+${esc(
+  client.full_name ||
+  client.company_name ||
+  "Client"
+)}
+
+</option>
+
+`).join("");
 
   const itemsTable =
     isQuote
@@ -3509,18 +3835,20 @@ function openDocumentForm(
   const lines =
     (state.db[itemsTable] || [])
       .filter(
-        item =>
-          item[foreignKey] === id
+        row =>
+          row[foreignKey] === id
       );
 
   openModal(
 
     existing
+
       ? `Modifier ${
           isQuote
             ? "le devis"
             : "la facture"
         }`
+
       : `Nouveau ${
           isQuote
             ? "devis"
@@ -3529,254 +3857,258 @@ function openDocumentForm(
 
     `
 
-      <label>
+<label>
 
-        Numéro
+Numéro
 
-        <input
-          name="document_number"
-          value="${esc(
-            existing?.[
-              isQuote
-                ? "quote_number"
-                : "invoice_number"
-            ] ||
-            generateDocumentNumber(
-              isQuote
-                ? "quote"
-                : "invoice"
-            )
-          )}"
-          required
-        >
+<input
+  name="document_number"
+  value="${esc(
+    existing?.[
+      isQuote
+        ? "quote_number"
+        : "invoice_number"
+    ] ||
+    generateDocumentNumber(
+      isQuote
+        ? "quote"
+        : "invoice"
+    )
+  )}"
+  required>
 
-      </label>
+</label>
 
-      <label>
+<label>
 
-        Client
+Client
 
-        <select
-          name="client_id"
-          required
-        >
+<select
+  name="client_id"
+  required>
 
-          <option value="">
-            — Sélectionner —
-          </option>
+<option value="">
+— Sélectionner —
+</option>
 
-          ${clientOptions}
+${clientOptions}
 
-        </select>
+</select>
 
-      </label>
+</label>
 
-      <label>
+<label>
 
-        Date
+Date
 
-        <input
-          type="date"
-          name="issue_date"
-          value="${esc(
-            existing?.issue_date ||
-            today()
-          )}"
-          required
-        >
+<input
+  type="date"
+  name="issue_date"
+  value="${esc(
+    existing?.issue_date ||
+    today()
+  )}"
+  required>
 
-      </label>
+</label>
 
-      <label>
+<label>
 
-        ${
-          isQuote
-            ? "Valable jusqu'au"
-            : "Échéance"
-        }
+${
+  isQuote
+    ? "Valable jusqu'au"
+    : "Échéance"
+}
 
-        <input
-          type="date"
-          name="${
-            isQuote
-              ? "valid_until"
-              : "due_date"
-          }"
-          value="${esc(
-            existing?.[
-              isQuote
-                ? "valid_until"
-                : "due_date"
-            ] || ""
-          )}"
-        >
+<input
+  type="date"
+  name="${
+    isQuote
+      ? "valid_until"
+      : "due_date"
+  }"
+  value="${esc(
+    existing?.[
+      isQuote
+        ? "valid_until"
+        : "due_date"
+    ] || ""
+  )}">
 
-      </label>
+</label>
 
-      <label>
+<label>
 
-        Statut
+Statut
 
-        <select name="status">
+<select
+  name="status">
 
-          ${
-            (
-              isQuote
-                ? [
-                    "draft",
-                    "sent",
-                    "accepted",
-                    "rejected",
-                    "expired",
-                    "converted"
-                  ]
-                : [
-                    "draft",
-                    "unpaid",
-                    "partial",
-                    "paid",
-                    "cancelled",
-                    "overdue"
-                  ]
-            )
-            .map(status => `
+${
+(
+  isQuote
 
-              <option
-                value="${status}"
-                ${
-                  existing?.status === status
-                    ? "selected"
-                    : ""
-                }
-              >
-                ${documentPageStatus(status)}
-              </option>
+    ? [
+        "draft",
+        "sent",
+        "accepted",
+        "rejected",
+        "expired",
+        "converted"
+      ]
 
-            `)
-            .join("")
-          }
+    : [
+        "draft",
+        "unpaid",
+        "partial",
+        "paid",
+        "cancelled",
+        "overdue"
+      ]
+)
+.map(status => `
 
-        </select>
+<option
+  value="${status}"
+  ${
+    existing?.status === status
+      ? "selected"
+      : ""
+  }>
 
-      </label>
+${documentPageStatus(
+  status
+)}
 
-      <label>
+</option>
 
-        Titre
+`)
+.join("")
+}
 
-        <input
-          name="title"
-          value="${esc(
-            existing?.title ||
-            ""
-          )}"
-        >
+</select>
 
-      </label>
+</label>
 
-      <label>
+<label>
 
-        Description
+Titre
 
-        <textarea
-          name="description"
-        >${esc(
-          existing?.description ||
-          ""
-        )}</textarea>
+<input
+  name="title"
+  value="${esc(
+    existing?.title ||
+    ""
+  )}">
 
-      </label>
+</label>
 
-      <div
-        id="documentLinesEditor"
-      ></div>
+<label>
 
-      <label>
+Description
 
-        Remise
+<textarea
+  name="description">${esc(
+    existing?.description ||
+    ""
+  )}</textarea>
 
-        <input
-          type="number"
-          name="discount"
-          value="${Number(
-            existing?.discount || 0
-          )}"
-          min="0"
-        >
+</label>
 
-      </label>
+<div id="documentLinesEditor"></div>
 
-      <label>
+<label>
 
-        Taxe
+Remise
 
-        <input
-          type="number"
-          name="tax"
-          value="${Number(
-            existing?.tax || 0
-          )}"
-          min="0"
-        >
+<input
+  type="number"
+  name="discount"
+  min="0"
+  step="0.01"
+  value="${Number(
+    existing?.discount ||
+    0
+  )}">
 
-      </label>
+</label>
 
-      ${
-        !isQuote
-          ? `
+<label>
 
-            <label>
+Taxe
 
-              Montant déjà payé
+<input
+  type="number"
+  name="tax"
+  min="0"
+  step="0.01"
+  value="${Number(
+    existing?.tax ||
+    0
+  )}">
 
-              <input
-                type="number"
-                name="amount_paid"
-                value="${Number(
-                  existing?.amount_paid || 0
-                )}"
-                min="0"
-              >
+</label>
 
-            </label>
+${
+!isQuote
 
-          `
-          : ""
-      }
+?
 
-      <label>
+`
 
-        Notes
+<label>
 
-        <textarea
-          name="notes"
-        >${esc(
-          existing?.notes ||
-          ""
-        )}</textarea>
+Montant déjà payé
 
-      </label>
+<input
+  type="number"
+  name="amount_paid"
+  min="0"
+  step="0.01"
+  value="${Number(
+    existing?.amount_paid ||
+    0
+  )}">
 
-      <div class="form-actions">
+</label>
 
-        <button
-          type="button"
-          class="secondary"
-          id="cancelForm"
-        >
-          Annuler
-        </button>
+`
 
-        <button
-          type="submit"
-          class="primary"
-        >
-          Enregistrer
-        </button>
+:
 
-      </div>
+""
+}
 
-    `
+<label>
+
+Notes
+
+<textarea
+  name="notes">${esc(
+    existing?.notes ||
+    ""
+  )}</textarea>
+
+</label>
+
+<div class="form-actions">
+
+<button
+  type="button"
+  class="secondary"
+  id="cancelForm">
+  Annuler
+</button>
+
+<button
+  type="submit"
+  class="primary">
+  Enregistrer
+</button>
+
+</div>
+
+`
   );
 
   document
@@ -3810,10 +4142,9 @@ function openDocumentForm(
 
       const lineDraft =
         [
-          ...document
-            .querySelectorAll(
-              ".document-line-row"
-            )
+          ...document.querySelectorAll(
+            ".document-line-row"
+          )
         ]
         .map(row => ({
 
@@ -3835,7 +4166,6 @@ function openDocumentForm(
                 "[data-line-price]"
               )?.value || 0
             )
-
         }))
         .filter(
           line =>
@@ -3855,12 +4185,14 @@ function openDocumentForm(
 
       const discount =
         Number(
-          fd.get("discount") || 0
+          fd.get("discount") ||
+          0
         );
 
       const tax =
         Number(
-          fd.get("tax") || 0
+          fd.get("tax") ||
+          0
         );
 
       const total =
@@ -3876,21 +4208,21 @@ function openDocumentForm(
         client_id:
           fd.get("client_id"),
 
-        [
-          isQuote
-            ? "quote_number"
-            : "invoice_number"
-        ]:
-          fd.get("document_number"),
+        [isQuote
+          ? "quote_number"
+          : "invoice_number"]:
+          fd.get(
+            "document_number"
+          ),
 
         issue_date:
-          fd.get("issue_date"),
+          fd.get(
+            "issue_date"
+          ),
 
-        [
-          isQuote
-            ? "valid_until"
-            : "due_date"
-        ]:
+        [isQuote
+          ? "valid_until"
+          : "due_date"]:
           fd.get(
             isQuote
               ? "valid_until"
@@ -3907,8 +4239,11 @@ function openDocumentForm(
           fd.get("description"),
 
         subtotal,
+
         discount,
+
         tax,
+
         total,
 
         notes:
@@ -3935,7 +4270,8 @@ function openDocumentForm(
 
         if (
           paid <= 0 &&
-          payload.status === "paid"
+          payload.status ===
+            "paid"
         ) {
           payload.status =
             "unpaid";
@@ -3982,7 +4318,9 @@ function openDocumentForm(
             created.id;
         }
 
-        if (state.cloud) {
+        if (
+          state.cloud
+        ) {
 
           const {
             error
@@ -4000,14 +4338,19 @@ function openDocumentForm(
         }
 
         state.db[itemsTable] =
-          (state.db[itemsTable] || [])
-            .filter(
-              item =>
-                item[foreignKey] !==
-                documentId
-            );
+          (
+            state.db[itemsTable] ||
+            []
+          ).filter(
+            row =>
+              row[foreignKey] !==
+              documentId
+          );
 
-        for (const line of lineDraft) {
+        for (
+          const line
+          of lineDraft
+        ) {
 
           const item = {
 
@@ -4052,8 +4395,7 @@ function openDocumentForm(
 
           } else {
 
-            item.id =
-              uid();
+            item.id = uid();
 
             state.db[
               itemsTable
@@ -4094,127 +4436,74 @@ function openDocumentForm(
     };
 }
 
-function generateDocumentNumber(type) {
-
-  const year =
-    new Date()
-      .getFullYear();
-
-  const prefix =
-    type === "quote"
-      ? "DEV"
-      : "FAC";
-
-  const rows =
-    type === "quote"
-      ? (
-          state.db.quotes ||
-          []
-        )
-      : (
-          state.db.invoices ||
-          []
-        );
-
-  let max = 0;
-
-  rows.forEach(row => {
-
-    const number =
-      row[
-        type === "quote"
-          ? "quote_number"
-          : "invoice_number"
-      ] || "";
-
-    const match =
-      String(number)
-        .match(/(\d+)$/);
-
-    if (match) {
-
-      max =
-        Math.max(
-          max,
-          Number(match[1])
-        );
-    }
-  });
-
-  return `${prefix}-${year}-${String(
-    max + 1
-  ).padStart(4,"0")}`;
-}
-
 /* =========================================================
-   LIGNES DEVIS / FACTURES
+   LIGNES DE DEVIS / FACTURES
    ========================================================= */
 
 function renderDocumentLines(
   container,
-  lines=[]
+  lines = []
 ) {
 
   if (!container) return;
 
   container.innerHTML = `
 
-    <div class="card">
+<div class="card">
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px
-        "
-      >
+<div
+  style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  ">
 
-        <h3>
-          Lignes détaillées
-        </h3>
+<h3>
+Lignes détaillées
+</h3>
 
-        <button
-          type="button"
-          class="secondary small"
-          id="addDocumentLine"
-        >
-          + Ligne
-        </button>
+<button
+  type="button"
+  class="secondary small"
+  id="addDocumentLine">
+  + Ligne
+</button>
 
-      </div>
+</div>
 
-      <div id="documentLineRows"></div>
+<div id="documentLineRows"></div>
 
-      <div
-        style="
-          margin-top:12px;
-          text-align:right
-        "
-      >
+<div
+  style="
+    margin-top:12px;
+    text-align:right;
+  ">
 
-        <strong>
+<strong>
 
-          Sous-total :
+Sous-total :
 
-          <span id="documentSubtotal">
-            0 FCFA
-          </span>
+<span id="documentSubtotal">
+0 FCFA
+</span>
 
-        </strong>
+</strong>
 
-      </div>
+</div>
 
-    </div>
+</div>
 
-  `;
+`;
 
   const rows =
     container.querySelector(
       "#documentLineRows"
     );
 
-  function addLine(line={}) {
+  function addLine(
+    line = {}
+  ) {
 
     const row =
       document.createElement(
@@ -4228,7 +4517,7 @@ function renderDocumentLines(
       "grid";
 
     row.style.gridTemplateColumns =
-      "1fr 80px 120px 120px 40px";
+      "1fr 90px 120px 120px 40px";
 
     row.style.gap =
       "8px";
@@ -4238,155 +4527,173 @@ function renderDocumentLines(
 
     row.innerHTML = `
 
-      <input
-        data-line-description
-        placeholder="Désignation"
-        value="${esc(
-          line.description ||
-          ""
-        )}"
-      >
+<input
+  data-line-description
+  placeholder="Désignation"
+  value="${esc(
+    line.description ||
+    ""
+  )}">
 
-      <input
-        data-line-quantity
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder="Qté"
-        value="${Number(
-          line.quantity ||
-          1
-        )}"
-      >
+<input
+  data-line-quantity
+  type="number"
+  min="0"
+  step="0.01"
+  placeholder="Qté"
+  value="${Number(
+    line.quantity || 1
+  )}">
 
-      <input
-        data-line-price
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder="Prix unitaire"
-        value="${Number(
-          line.unit_price ||
-          0
-        )}"
-      >
+<input
+  data-line-price
+  type="number"
+  min="0"
+  step="0.01"
+  placeholder="Prix unitaire"
+  value="${Number(
+    line.unit_price || 0
+  )}">
 
-      <input
-        data-line-total
-        type="text"
-        readonly
-        value="${money(
-          Number(
-            line.quantity || 0
-          ) *
-          Number(
-            line.unit_price || 0
-          )
-        )}"
-      >
+<input
+  data-line-total
+  type="text"
+  readonly
+  value="${money(
+    Number(
+      line.quantity || 0
+    ) *
+    Number(
+      line.unit_price || 0
+    )
+  )}">
 
-      <button
-        type="button"
-        class="danger ghost"
-        data-remove-line
-      >
-        ×
-      </button>
+<button
+  type="button"
+  class="danger ghost"
+  data-remove-line>
+  ×
+</button>
 
-    `;
+`;
 
     rows.appendChild(
       row
     );
 
-    const recalc = () => {
+    const recalc =
+      () => {
 
-      const quantity =
-        Number(
+        const quantity =
+          Number(
+            row.querySelector(
+              "[data-line-quantity]"
+            )?.value || 0
+          );
+
+        const price =
+          Number(
+            row.querySelector(
+              "[data-line-price]"
+            )?.value || 0
+          );
+
+        const total =
+          quantity * price;
+
+        const totalInput =
           row.querySelector(
-            "[data-line-quantity]"
-          )?.value || 0
-        );
+            "[data-line-total]"
+          );
 
-      const price =
-        Number(
-          row.querySelector(
-            "[data-line-price]"
-          )?.value || 0
-        );
+        if (totalInput) {
 
-      row.querySelector(
-        "[data-line-total]"
-      ).value =
-        money(
-          quantity *
-          price
-        );
+          totalInput.value =
+            money(total);
+        }
 
-      let subtotal = 0;
+        let subtotal = 0;
 
-      rows
-        .querySelectorAll(
-          ".document-line-row"
-        )
-        .forEach(currentRow => {
+        rows
+          .querySelectorAll(
+            ".document-line-row"
+          )
+          .forEach(
+            currentRow => {
 
-          subtotal +=
-            Number(
-              currentRow.querySelector(
-                "[data-line-quantity]"
-              )?.value || 0
-            ) *
-            Number(
-              currentRow.querySelector(
-                "[data-line-price]"
-              )?.value || 0
-            );
-        });
+              subtotal +=
+                Number(
+                  currentRow
+                    .querySelector(
+                      "[data-line-quantity]"
+                    )?.value || 0
+                ) *
+                Number(
+                  currentRow
+                    .querySelector(
+                      "[data-line-price]"
+                    )?.value || 0
+                );
+            }
+          );
 
-      const subtotalEl =
-        container.querySelector(
-          "#documentSubtotal"
-        );
+        const subtotalEl =
+          container.querySelector(
+            "#documentSubtotal"
+          );
 
-      if (subtotalEl) {
-        subtotalEl.textContent =
-          money(subtotal);
-      }
-    };
+        if (subtotalEl) {
+
+          subtotalEl.textContent =
+            money(subtotal);
+        }
+      };
 
     row
       .querySelectorAll("input")
-      .forEach(input => {
+      .forEach(
+        input =>
+          input.addEventListener(
+            "input",
+            recalc
+          )
+      );
 
-        input.addEventListener(
-          "input",
-          recalc
-        );
-      });
+    row
+      .querySelector(
+        "[data-remove-line]"
+      )
+      ?.addEventListener(
+        "click",
+        () => {
 
-    row.querySelector(
-      "[data-remove-line]"
-    ).onclick = () => {
+          row.remove();
 
-      row.remove();
-
-      recalc();
-    };
+          recalc();
+        }
+      );
 
     recalc();
   }
 
-  (
+  const initial =
     lines.length
       ? lines
-      : [{}]
-  ).forEach(addLine);
+      : [{}];
 
-  container.querySelector(
-    "#addDocumentLine"
-  ).onclick = () =>
-    addLine({});
+  initial.forEach(
+    addLine
+  );
+
+  container
+    .querySelector(
+      "#addDocumentLine"
+    )
+    ?.addEventListener(
+      "click",
+      () =>
+        addLine({})
+    );
 }
 
 /* =========================================================
@@ -4398,13 +4705,13 @@ function openDocumentDetails(
   id
 ) {
 
-  const row =
+  const document =
     (state.db[table] || [])
       .find(
-        x => x.id === id
+        row => row.id === id
       );
 
-  if (!row) return;
+  if (!document) return;
 
   const isQuote =
     table === "quotes";
@@ -4429,19 +4736,15 @@ function openDocumentDetails(
   const client =
     (state.db.clients || [])
       .find(
-        x =>
-          x.id ===
-          row.client_id
+        c =>
+          c.id ===
+          document.client_id
       );
 
   openModal(
 
-    `${
-      isQuote
-        ? "Devis"
-        : "Facture"
-    } ${
-      row[
+    `${isQuote ? "Devis" : "Facture"} ${
+      document[
         isQuote
           ? "quote_number"
           : "invoice_number"
@@ -4450,190 +4753,174 @@ function openDocumentDetails(
 
     `
 
-      <div class="card">
+<div class="card">
 
-        <h3>
-          ${esc(
-            row.title ||
-            "Document"
-          )}
-        </h3>
+<h3>
+${esc(
+  document.title ||
+  "Document"
+)}
+</h3>
 
-        <p>
-          <strong>
-            Client :
-          </strong>
+<p>
+<strong>Client :</strong>
+${esc(
+  client?.full_name ||
+  client?.company_name ||
+  "—"
+)}
+</p>
 
-          ${esc(
-            client?.full_name ||
-            client?.company_name ||
-            "—"
-          )}
-        </p>
+<p>
+<strong>Date :</strong>
+${esc(
+  document.issue_date ||
+  "—"
+)}
+</p>
 
-        <p>
-          <strong>
-            Date :
-          </strong>
+<p>
+<strong>Statut :</strong>
+${esc(
+  documentPageStatus(
+    document.status
+  )
+)}
+</p>
 
-          ${esc(
-            row.issue_date ||
-            "—"
-          )}
-        </p>
+<hr>
 
-        <p>
-          <strong>
-            Statut :
-          </strong>
+${
+lines.length
 
-          ${esc(
-            documentPageStatus(
-              row.status
-            )
-          )}
-        </p>
+?
 
-        <hr>
+lines.map(line => `
 
-        ${
-          lines.length
+<div
+  style="
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid #eee;
+  ">
 
-            ?
+<span>
+${esc(
+  line.description
+)}
+</span>
 
-            lines.map(line => `
+<strong>
+${money(
+  line.amount
+)}
+</strong>
 
-              <div
-                style="
-                  display:flex;
-                  justify-content:space-between;
-                  padding:8px 0;
-                  border-bottom:1px solid #eee
-                "
-              >
+</div>
 
-                <span>
-                  ${esc(
-                    line.description
-                  )}
-                </span>
+`).join("")
 
-                <strong>
-                  ${money(
-                    line.amount
-                  )}
-                </strong>
+:
 
-              </div>
+`
+<div class="empty">
+Aucune ligne.
+</div>
+`
+}
 
-            `).join("")
+<hr>
 
-            :
+<p>
+<strong>
+Sous-total :
+</strong>
+${money(
+  document.subtotal
+)}
+</p>
 
-            `
-            <div class="empty">
-              Aucune ligne.
-            </div>
-            `
-        }
+<p>
+<strong>
+Remise :
+</strong>
+${money(
+  document.discount
+)}
+</p>
 
-        <hr>
+<p>
+<strong>
+Taxe :
+</strong>
+${money(
+  document.tax
+)}
+</p>
 
-        <p>
-          <strong>
-            Sous-total :
-          </strong>
+<h3>
+Total :
+${money(
+  document.total
+)}
+</h3>
 
-          ${money(
-            row.subtotal
-          )}
-        </p>
+${
+!isQuote
 
-        <p>
-          <strong>
-            Remise :
-          </strong>
+?
 
-          ${money(
-            row.discount
-          )}
-        </p>
+`
 
-        <p>
-          <strong>
-            Taxe :
-          </strong>
+<p>
+<strong>
+Payé :
+</strong>
+${money(
+  document.amount_paid ||
+  0
+)}
+</p>
 
-          ${money(
-            row.tax
-          )}
-        </p>
+<p>
+<strong>
+Reste :
+</strong>
+${money(
+  document.amount_due ||
+  0
+)}
+</p>
 
-        <h3>
-          Total :
-          ${money(
-            row.total
-          )}
-        </h3>
+`
 
-        ${
-          !isQuote
+:
 
-            ?
+""
+}
 
-            `
+<p>
+${esc(
+  document.notes ||
+  ""
+)}
+</p>
 
-              <p>
-                <strong>
-                  Payé :
-                </strong>
+</div>
 
-                ${money(
-                  row.amount_paid ||
-                  0
-                )}
-              </p>
+<div class="form-actions">
 
-              <p>
-                <strong>
-                  Reste :
-                </strong>
+<button
+  type="button"
+  class="primary"
+  id="closeDetails">
+  Fermer
+</button>
 
-                ${money(
-                  row.amount_due ||
-                  0
-                )}
-              </p>
+</div>
 
-            `
-
-            :
-
-            ""
-        }
-
-        <p>
-          ${esc(
-            row.notes ||
-            ""
-          )}
-        </p>
-
-      </div>
-
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="primary"
-          id="closeDetails"
-        >
-          Fermer
-        </button>
-
-      </div>
-
-    `
+`
   );
 
   document
@@ -4651,198 +4938,199 @@ function openDocumentDetails(
    ========================================================= */
 
 function openPaymentForm(
-  invoiceId=null
+  invoiceId = null
 ) {
 
   const invoices =
     state.db.invoices || [];
 
+  if (!invoices.length) {
+
+    toast(
+      "Aucune facture disponible."
+    );
+
+    return;
+  }
+
   const html = `
 
-    <label>
+<label>
 
-      Facture
+Facture
 
-      <select
-        name="invoice_id"
-        required
-      >
+<select
+  name="invoice_id"
+  required>
 
-        <option value="">
-          — Sélectionner —
-        </option>
+<option value="">
+— Sélectionner —
+</option>
 
-        ${
-          invoices.map(
-            invoice => `
+${
+invoices.map(invoice => {
 
-              <option
-                value="${esc(
-                  invoice.id
-                )}"
-                ${
-                  invoice.id ===
-                  invoiceId
-                    ? "selected"
-                    : ""
-                }
-              >
+  const client =
+    (state.db.clients || [])
+      .find(
+        c =>
+          c.id ===
+          invoice.client_id
+      );
 
-                ${esc(
-                  invoice.invoice_number ||
-                  "Facture"
-                )}
+  return `
 
-                —
+<option
+  value="${esc(invoice.id)}"
+  ${
+    invoice.id === invoiceId
+      ? "selected"
+      : ""
+  }>
 
-                ${esc(
-                  (
-                    state.db.clients || []
-                  )
-                  .find(
-                    client =>
-                      client.id ===
-                      invoice.client_id
-                  )?.full_name ||
-                  "Client"
-                )}
+${esc(
+  invoice.invoice_number ||
+  "Facture"
+)}
 
-                —
+ —
 
-                ${money(
-                  invoice.total
-                )}
+${esc(
+  client?.full_name ||
+  client?.company_name ||
+  "Client"
+)}
 
-              </option>
+ —
 
-            `
-          ).join("")
-        }
+${money(
+  invoice.total
+)}
 
-      </select>
+</option>
 
-    </label>
+`;
 
-    <label>
+}).join("")
+}
 
-      Montant
+</select>
 
-      <input
-        name="amount"
-        type="number"
-        min="1"
-        step="0.01"
-        required
-      >
+</label>
 
-    </label>
+<label>
 
-    <label>
+Montant
 
-      Mode de paiement
+<input
+  name="amount"
+  type="number"
+  min="1"
+  step="0.01"
+  required>
 
-      <select
-        name="payment_method"
-        required
-      >
+</label>
 
-        <option value="">
-          — Sélectionner —
-        </option>
+<label>
 
-        <option value="cash">
-          Espèces
-        </option>
+Mode de paiement
 
-        <option value="mtn_momo">
-          MTN MoMo
-        </option>
+<select
+  name="payment_method"
+  required>
 
-        <option value="moov_money">
-          Moov Money
-        </option>
+<option value="">
+— Sélectionner —
+</option>
 
-        <option value="celtiis_cash">
-          Celtiis Cash
-        </option>
+<option value="cash">
+Espèces
+</option>
 
-        <option value="bank_transfer">
-          Virement bancaire
-        </option>
+<option value="mtn_momo">
+MTN MoMo
+</option>
 
-        <option value="card">
-          Carte bancaire
-        </option>
+<option value="moov_money">
+Moov Money
+</option>
 
-        <option value="check">
-          Chèque bancaire
-        </option>
+<option value="celtiis_cash">
+Celtiis Cash
+</option>
 
-        <option value="pi_spi">
-          PI-SPI
-        </option>
+<option value="bank_transfer">
+Virement bancaire
+</option>
 
-        <option value="other">
-          Autre
-        </option>
+<option value="card">
+Carte bancaire
+</option>
 
-      </select>
+<option value="check">
+Chèque bancaire
+</option>
 
-    </label>
+<option value="pi_spi">
+PI-SPI
+</option>
 
-    <label>
+<option value="other">
+Autre
+</option>
 
-      Date
+</select>
 
-      <input
-        name="payment_date"
-        type="date"
-        value="${today()}"
-        required
-      >
+</label>
 
-    </label>
+<label>
 
-    <label>
+Date
 
-      Référence
+<input
+  name="payment_date"
+  type="date"
+  value="${today()}"
+  required>
 
-      <input
-        name="reference"
-      >
+</label>
 
-    </label>
+<label>
 
-    <label>
+Référence
 
-      Notes
+<input
+  name="reference">
 
-      <textarea
-        name="notes"
-      ></textarea>
+</label>
 
-    </label>
+<label>
 
-    <div class="form-actions">
+Notes
 
-      <button
-        type="button"
-        class="secondary"
-        id="cancelForm"
-      >
-        Annuler
-      </button>
+<textarea
+  name="notes"></textarea>
 
-      <button
-        type="submit"
-        class="primary"
-      >
-        Enregistrer
-      </button>
+</label>
 
-    </div>
+<div class="form-actions">
 
-  `;
+<button
+  type="button"
+  class="secondary"
+  id="cancelForm">
+  Annuler
+</button>
+
+<button
+  type="submit"
+  class="primary">
+  Enregistrer
+</button>
+
+</div>
+
+`;
 
   openModal(
     "Nouveau paiement",
@@ -4871,18 +5159,17 @@ function openPaymentForm(
           event.target
         );
 
-      const selectedInvoice =
-        fd.get(
-          "invoice_id"
-        );
+      const selectedInvoiceId =
+        fd.get("invoice_id");
 
       const amount =
         Number(
-          fd.get("amount") || 0
+          fd.get("amount") ||
+          0
         );
 
       if (
-        !selectedInvoice ||
+        !selectedInvoiceId ||
         amount <= 0
       ) {
 
@@ -4900,7 +5187,7 @@ function openPaymentForm(
             "payments",
             {
               invoice_id:
-                selectedInvoice,
+                selectedInvoiceId,
 
               amount,
 
@@ -4929,9 +5216,9 @@ function openPaymentForm(
         const invoice =
           (state.db.invoices || [])
             .find(
-              item =>
-                item.id ===
-                selectedInvoice
+              row =>
+                row.id ===
+                selectedInvoiceId
             );
 
         if (invoice) {
@@ -4941,7 +5228,7 @@ function openPaymentForm(
               .filter(
                 payment =>
                   payment.invoice_id ===
-                  selectedInvoice
+                  selectedInvoiceId
               )
               .reduce(
                 (total,payment) =>
@@ -4972,17 +5259,19 @@ function openPaymentForm(
             paid >= total &&
             total > 0
           ) {
+
             status = "paid";
 
           } else if (
             paid > 0
           ) {
+
             status = "partial";
           }
 
           await update(
             "invoices",
-            selectedInvoice,
+            selectedInvoiceId,
             {
               amount_paid:
                 paid,
@@ -5022,14 +5311,18 @@ function openPaymentForm(
 }
 
 /* =========================================================
-   PARAMÈTRES — UPSERT CORRIGÉ
+   PARAMÈTRES
    ========================================================= */
 
-async function saveSettings(event) {
+async function saveSettings(
+  event
+) {
 
   event.preventDefault();
 
-  if (state.role !== "admin") {
+  if (
+    state.role !== "admin"
+  ) {
 
     toast(
       "Accès réservé à l'administrateur."
@@ -5054,14 +5347,10 @@ async function saveSettings(event) {
       ),
 
     phone:
-      fd.get(
-        "phone"
-      ),
+      fd.get("phone"),
 
     address:
-      fd.get(
-        "address"
-      ),
+      fd.get("address"),
 
     updated_at:
       now()
@@ -5153,10 +5442,12 @@ async function saveSettings(event) {
 }
 
 /* =========================================================
-   CARTES PROFESSIONNELLES + QR CODE
+   CARTES PROFESSIONNELLES + QR
    ========================================================= */
 
-function findMemberProfile(id) {
+function findMemberProfile(
+  id
+) {
 
   return (
     state.db.profiles || []
@@ -5188,7 +5479,8 @@ function employeeCardData(
     employee:
       "EMPLOYÉ"
 
-  }[role] || "EMPLOYÉ";
+  }[role] ||
+    "EMPLOYÉ";
 
   const employeeCode =
     profile?.employee_code ||
@@ -5202,7 +5494,8 @@ function employeeCardData(
   return {
 
     id:
-      profile?.id || "",
+      profile?.id ||
+      "",
 
     name:
       profile?.full_name ||
@@ -5262,6 +5555,11 @@ function employeeQrText(
       profile
     );
 
+  /*
+   * Pas de mot de passe ni de donnée
+   * d'authentification dans le QR.
+   */
+
   return JSON.stringify({
 
     type:
@@ -5287,12 +5585,12 @@ function employeeQrText(
 
 function qrImageUrl(
   text,
-  size=180
+  size = 180
 ) {
 
   return (
-    "https://api.qrserver.com/v1/create-qr-code/" +
-    "?size=" +
+    "https://api.qrserver.com/v1/create-qr-code/?" +
+    "size=" +
     encodeURIComponent(
       `${size}x${size}`
     ) +
@@ -5336,216 +5634,217 @@ function employeeCardHtml(
 
 <div class="lbt-id-card">
 
-  <div class="lbt-id-head">
+<div class="lbt-id-head">
 
-    <div class="lbt-id-brand">
+<div class="lbt-id-brand">
 
-      <img
-        src="./logo-luc-bricotech.png"
-        alt="LUC BRICO-TECH"
-      >
+<img
+  src="./logo-luc-bricotech.png"
+  alt="LUC BRICO-TECH">
 
-      <div>
+<div>
 
-        <strong>
-          LUC BRICO-TECH
-        </strong>
+<strong>
+LUC BRICO-TECH
+</strong>
 
-        <small>
-          Gestion & supervision
-        </small>
+<small>
+Gestion & supervision
+</small>
 
-      </div>
+</div>
 
-    </div>
+</div>
 
-    <div
-      class="lbt-id-role ${esc(
-        data.role
-      )}"
-    >
-      ${esc(
-        data.roleLabel
-      )}
-    </div>
+<div
+  class="lbt-id-role ${esc(
+    data.role
+  )}">
 
-  </div>
+${esc(
+  data.roleLabel
+)}
 
-  <div class="lbt-id-body">
+</div>
 
-    <div class="lbt-id-person">
+</div>
 
-      <div class="lbt-photo-wrap">
+<div class="lbt-id-body">
 
-        ${
-          data.photo
+<div class="lbt-id-person">
 
-            ?
+<div class="lbt-photo-wrap">
 
-            `
-            <img
-              src="${esc(
-                data.photo
-              )}"
-              alt="${esc(
-                data.name
-              )}"
-              class="lbt-card-photo"
-            >
-            `
+${
+data.photo
 
-            :
+?
 
-            `
-            <div
-              class="lbt-photo-fallback"
-            >
-              ${esc(initials)}
-            </div>
-            `
-        }
+`
 
-      </div>
+<img
+  src="${esc(
+    data.photo
+  )}"
+  alt="${esc(
+    data.name
+  )}"
+  class="lbt-card-photo">
 
-      <div class="lbt-id-name">
+`
 
-        ${esc(
-          data.name
-        )}
+:
 
-      </div>
+`
 
-      <div class="lbt-id-code">
+<div class="lbt-photo-fallback">
 
-        ${esc(
-          data.code
-        )}
+${esc(
+  initials
+)}
 
-      </div>
+</div>
 
-    </div>
+`
+}
 
-    <div class="lbt-id-info">
+</div>
 
-      <div>
+<div class="lbt-id-name">
 
-        <span>
-          Fonction
-        </span>
+${esc(
+  data.name
+)}
 
-        <strong>
-          ${esc(
-            data.position
-          )}
-        </strong>
+</div>
 
-      </div>
+<div class="lbt-id-code">
 
-      <div>
+${esc(
+  data.code
+)}
 
-        <span>
-          Téléphone
-        </span>
+</div>
 
-        <strong>
-          ${esc(
-            data.phone
-          )}
-        </strong>
+</div>
 
-      </div>
+<div class="lbt-id-info">
 
-      <div>
+<div>
 
-        <span>
-          E-mail
-        </span>
+<span>
+Fonction
+</span>
 
-        <strong>
-          ${esc(
-            data.email
-          )}
-        </strong>
+<strong>
+${esc(
+  data.position
+)}
+</strong>
 
-      </div>
+</div>
 
-      <div>
+<div>
 
-        <span>
-          Adresse
-        </span>
+<span>
+Téléphone
+</span>
 
-        <strong>
-          ${esc(
-            data.address
-          )}
-        </strong>
+<strong>
+${esc(
+  data.phone
+)}
+</strong>
 
-      </div>
+</div>
 
-      <div>
+<div>
 
-        <span>
-          Statut
-        </span>
+<span>
+E-mail
+</span>
 
-        <strong
-          class="${
-            data.active
-              ? "active"
-              : "inactive"
-          }"
-        >
-          ${
-            data.active
-              ? "ACTIF"
-              : "INACTIF"
-          }
-        </strong>
+<strong>
+${esc(
+  data.email
+)}
+</strong>
 
-      </div>
+</div>
 
-    </div>
+<div>
 
-    <div class="lbt-id-qr">
+<span>
+Adresse
+</span>
 
-      <img
-        src="${qr}"
-        alt="QR Code ${esc(
-          data.name
-        )}"
-      >
+<strong>
+${esc(
+  data.address
+)}
+</strong>
 
-      <small>
-        Scanner pour identifier la carte
-      </small>
+</div>
 
-    </div>
+<div>
 
-  </div>
+<span>
+Statut
+</span>
 
-  <div class="lbt-id-footer">
+<strong
+  class="${
+    data.active
+      ? "active"
+      : "inactive"
+  }">
 
-    <span>
-      Innovation • Fiabilité • Performance
-    </span>
+${
+  data.active
+    ? "ACTIF"
+    : "INACTIF"
+}
 
-    <span>
-      La technologie au service de vos projets
-    </span>
+</strong>
 
-  </div>
+</div>
+
+</div>
+
+<div class="lbt-id-qr">
+
+<img
+  src="${qr}"
+  alt="QR Code">
+
+<small>
+Scanner pour identifier la carte
+</small>
+
+</div>
+
+</div>
+
+<div class="lbt-id-footer">
+
+<span>
+Innovation • Fiabilité • Performance
+</span>
+
+<span>
+La technologie au service de vos projets
+</span>
+
+</div>
 
 </div>
 
 `;
 }
 
-/* =========================================================
-   OUVRIR CARTE
-   ========================================================= */
-
-function openEmployeeCard(id) {
+function openEmployeeCard(
+  id
+) {
 
   const profile =
     findMemberProfile(id);
@@ -5559,7 +5858,7 @@ function openEmployeeCard(id) {
     return;
   }
 
-  const canView =
+  const allowed =
     state.role === "admin" ||
     state.role === "manager" ||
     String(
@@ -5567,7 +5866,7 @@ function openEmployeeCard(id) {
     ) ===
     String(id);
 
-  if (!canView) {
+  if (!allowed) {
 
     toast(
       "Vous ne pouvez pas consulter cette carte."
@@ -5576,42 +5875,59 @@ function openEmployeeCard(id) {
     return;
   }
 
-  openModal(
-    "Carte professionnelle",
-    `
+  const title =
+    document.getElementById(
+      "modalTitle"
+    );
 
-      <div class="lbt-card-modal-body">
+  const form =
+    document.getElementById(
+      "recordForm"
+    );
 
-        ${employeeCardHtml(
-          profile
-        )}
+  const modal =
+    document.getElementById(
+      "modal"
+    );
 
-        <div
-          class="lbt-card-actions"
-        >
+  if (!title ||
+      !form ||
+      !modal) {
+    return;
+  }
 
-          <button
-            type="button"
-            class="secondary"
-            id="closeCardBtn"
-          >
-            Fermer
-          </button>
+  title.textContent =
+    "Carte professionnelle";
 
-          <button
-            type="button"
-            class="secondary"
-            id="printCardBtn"
-          >
-            🖨️ Imprimer
-          </button>
+  form.innerHTML = `
 
-        </div>
+<div class="lbt-card-modal-body">
 
-      </div>
+${employeeCardHtml(
+  profile
+)}
 
-    `
-  );
+<div class="lbt-card-actions">
+
+<button
+  type="button"
+  class="secondary"
+  id="closeCardBtn">
+  Fermer
+</button>
+
+<button
+  type="button"
+  class="secondary"
+  id="printCardBtn">
+  🖨️ Imprimer
+</button>
+
+</div>
+
+</div>
+
+`;
 
   document
     .getElementById(
@@ -5633,11 +5949,11 @@ function openEmployeeCard(id) {
           profile
         )
     );
-}
 
-/* =========================================================
-   IMPRESSION CARTE
-   ========================================================= */
+  modal.classList.remove(
+    "hidden"
+  );
+}
 
 function printEmployeeCard(
   profile
@@ -5648,14 +5964,14 @@ function printEmployeeCard(
       profile
     );
 
-  const win =
+  const popup =
     window.open(
       "",
       "_blank",
       "width=900,height=700"
     );
 
-  if (!win) {
+  if (!popup) {
 
     toast(
       "Autorisez les fenêtres pop-up pour imprimer la carte."
@@ -5666,11 +5982,11 @@ function printEmployeeCard(
 
   const styles = `
 
-*{
+* {
   box-sizing:border-box;
 }
 
-body{
+body {
 
   margin:0;
 
@@ -5688,7 +6004,7 @@ body{
   padding:30px;
 }
 
-.lbt-id-card{
+.lbt-id-card {
 
   width:820px;
 
@@ -5705,7 +6021,7 @@ body{
   color:#102033;
 }
 
-.lbt-id-head{
+.lbt-id-head {
 
   padding:22px 28px;
 
@@ -5725,7 +6041,7 @@ body{
   color:#fff;
 }
 
-.lbt-id-brand{
+.lbt-id-brand {
 
   display:flex;
 
@@ -5734,7 +6050,7 @@ body{
   gap:12px;
 }
 
-.lbt-id-brand img{
+.lbt-id-brand img {
 
   width:58px;
 
@@ -5749,14 +6065,14 @@ body{
   padding:5px;
 }
 
-.lbt-id-brand strong{
+.lbt-id-brand strong {
 
   display:block;
 
   font-size:19px;
 }
 
-.lbt-id-brand small{
+.lbt-id-brand small {
 
   display:block;
 
@@ -5765,7 +6081,7 @@ body{
   margin-top:4px;
 }
 
-.lbt-id-role{
+.lbt-id-role {
 
   padding:9px 13px;
 
@@ -5776,28 +6092,28 @@ body{
   font-size:11px;
 }
 
-.lbt-id-role.admin{
+.lbt-id-role.admin {
 
   background:#f59e0b;
 
   color:#fff;
 }
 
-.lbt-id-role.manager{
+.lbt-id-role.manager {
 
   background:#2563eb;
 
   color:#fff;
 }
 
-.lbt-id-role.employee{
+.lbt-id-role.employee {
 
   background:#16a34a;
 
   color:#fff;
 }
 
-.lbt-id-body{
+.lbt-id-body {
 
   padding:28px;
 
@@ -5813,12 +6129,12 @@ body{
   align-items:center;
 }
 
-.lbt-id-person{
+.lbt-id-person {
 
   text-align:center;
 }
 
-.lbt-photo-wrap{
+.lbt-photo-wrap {
 
   width:140px;
 
@@ -5839,7 +6155,7 @@ body{
   justify-content:center;
 }
 
-.lbt-card-photo{
+.lbt-card-photo {
 
   width:100%;
 
@@ -5848,7 +6164,7 @@ body{
   object-fit:cover;
 }
 
-.lbt-photo-fallback{
+.lbt-photo-fallback {
 
   width:100%;
 
@@ -5869,7 +6185,7 @@ body{
   background:#dbe7f3;
 }
 
-.lbt-id-name{
+.lbt-id-name {
 
   font-size:21px;
 
@@ -5878,7 +6194,7 @@ body{
   margin-top:13px;
 }
 
-.lbt-id-code{
+.lbt-id-code {
 
   font-size:12px;
 
@@ -5891,14 +6207,14 @@ body{
   margin-top:5px;
 }
 
-.lbt-id-info{
+.lbt-id-info {
 
   display:grid;
 
   gap:13px;
 }
 
-.lbt-id-info div{
+.lbt-id-info div {
 
   border-bottom:
     1px solid #e7ebf0;
@@ -5906,7 +6222,7 @@ body{
   padding-bottom:9px;
 }
 
-.lbt-id-info span{
+.lbt-id-info span {
 
   display:block;
 
@@ -5917,31 +6233,33 @@ body{
   text-transform:uppercase;
 }
 
-.lbt-id-info strong{
+.lbt-id-info strong {
 
   display:block;
 
   margin-top:3px;
 
   font-size:14px;
+
+  word-break:break-word;
 }
 
-.lbt-id-info strong.active{
+.lbt-id-info strong.active {
 
   color:#16a34a;
 }
 
-.lbt-id-info strong.inactive{
+.lbt-id-info strong.inactive {
 
   color:#dc2626;
 }
 
-.lbt-id-qr{
+.lbt-id-qr {
 
   text-align:center;
 }
 
-.lbt-id-qr img{
+.lbt-id-qr img {
 
   width:155px;
 
@@ -5954,7 +6272,7 @@ body{
   border:8px solid #fff;
 }
 
-.lbt-id-qr small{
+.lbt-id-qr small {
 
   display:block;
 
@@ -5965,7 +6283,7 @@ body{
   margin-top:8px;
 }
 
-.lbt-id-footer{
+.lbt-id-footer {
 
   display:flex;
 
@@ -5982,45 +6300,27 @@ body{
   font-size:10px;
 }
 
-.lbt-id-footer span:last-child{
+.lbt-id-footer span:last-child {
 
   text-align:right;
 }
 
-@media(max-width:650px){
+@media print {
 
-  .lbt-id-body{
-
-    grid-template-columns:1fr;
+  body {
+    background:#fff;
+    padding:0;
   }
 
-  .lbt-id-qr{
-
-    order:3;
+  .lbt-id-card {
+    box-shadow:none;
+    border:none;
   }
-
-  .lbt-id-footer{
-
-    display:block;
-  }
-
-  .lbt-id-footer span{
-
-    display:block;
-
-    margin:3px 0;
-  }
-
-  .lbt-id-footer span:last-child{
-
-    text-align:left;
-  }
-
 }
 
 `;
 
-  win.document.write(`
+  popup.document.write(`
 
 <!doctype html>
 
@@ -6054,23 +6354,19 @@ ${employeeCardHtml(
 
 `);
 
-  win.document.close();
+  popup.document.close();
 
   setTimeout(
     () => {
 
-      win.focus();
+      popup.focus();
 
-      win.print();
+      popup.print();
 
     },
     700
   );
 }
-
-/* =========================================================
-   BOUTONS CARTES
-   ========================================================= */
 
 function bindEmployeeCardButtons() {
 
@@ -6081,8 +6377,8 @@ function bindEmployeeCardButtons() {
     .forEach(button => {
 
       if (
-        button.dataset.cardBound ===
-        "1"
+        button.dataset
+          .cardBound === "1"
       ) {
         return;
       }
@@ -6090,18 +6386,16 @@ function bindEmployeeCardButtons() {
       button.dataset.cardBound =
         "1";
 
-      button.onclick = () => {
+      button.onclick =
+        () => {
 
-        openEmployeeCard(
-          button.dataset.employeeCard
-        );
-      };
+          openEmployeeCard(
+            button.dataset
+              .employeeCard
+          );
+        };
     });
 }
-
-/* =========================================================
-   STYLE CARTES
-   ========================================================= */
 
 function injectEmployeeCardStyles() {
 
@@ -6123,18 +6417,17 @@ function injectEmployeeCardStyles() {
 
   style.textContent = `
 
-.lbt-card-modal-body{
+.lbt-card-modal-body {
   padding:4px 0;
 }
 
-.lbt-id-card{
+.lbt-id-card {
 
   width:100%;
 
   background:#fff;
 
-  border:
-    1px solid #dbe2ea;
+  border:1px solid #dbe2ea;
 
   border-radius:22px;
 
@@ -6152,7 +6445,7 @@ function injectEmployeeCardStyles() {
   color:#102033;
 }
 
-.lbt-id-head{
+.lbt-id-head {
 
   padding:18px 20px;
 
@@ -6172,7 +6465,7 @@ function injectEmployeeCardStyles() {
   color:#fff;
 }
 
-.lbt-id-brand{
+.lbt-id-brand {
 
   display:flex;
 
@@ -6181,7 +6474,7 @@ function injectEmployeeCardStyles() {
   gap:10px;
 }
 
-.lbt-id-brand img{
+.lbt-id-brand img {
 
   width:48px;
 
@@ -6196,14 +6489,14 @@ function injectEmployeeCardStyles() {
   padding:4px;
 }
 
-.lbt-id-brand strong{
+.lbt-id-brand strong {
 
   display:block;
 
   font-size:15px;
 }
 
-.lbt-id-brand small{
+.lbt-id-brand small {
 
   display:block;
 
@@ -6214,7 +6507,7 @@ function injectEmployeeCardStyles() {
   margin-top:3px;
 }
 
-.lbt-id-role{
+.lbt-id-role {
 
   padding:7px 10px;
 
@@ -6225,28 +6518,28 @@ function injectEmployeeCardStyles() {
   font-weight:800;
 }
 
-.lbt-id-role.admin{
+.lbt-id-role.admin {
 
   background:#f59e0b;
 
   color:#fff;
 }
 
-.lbt-id-role.manager{
+.lbt-id-role.manager {
 
   background:#2563eb;
 
   color:#fff;
 }
 
-.lbt-id-role.employee{
+.lbt-id-role.employee {
 
   background:#16a34a;
 
   color:#fff;
 }
 
-.lbt-id-body{
+.lbt-id-body {
 
   padding:20px;
 
@@ -6262,12 +6555,12 @@ function injectEmployeeCardStyles() {
   align-items:center;
 }
 
-.lbt-id-person{
+.lbt-id-person {
 
   text-align:center;
 }
 
-.lbt-photo-wrap{
+.lbt-photo-wrap {
 
   width:100px;
 
@@ -6288,7 +6581,7 @@ function injectEmployeeCardStyles() {
   justify-content:center;
 }
 
-.lbt-card-photo{
+.lbt-card-photo {
 
   width:100%;
 
@@ -6297,7 +6590,7 @@ function injectEmployeeCardStyles() {
   object-fit:cover;
 }
 
-.lbt-photo-fallback{
+.lbt-photo-fallback {
 
   width:100%;
 
@@ -6318,7 +6611,7 @@ function injectEmployeeCardStyles() {
   background:#dbe7f3;
 }
 
-.lbt-id-name{
+.lbt-id-name {
 
   font-size:15px;
 
@@ -6327,7 +6620,7 @@ function injectEmployeeCardStyles() {
   margin-top:9px;
 }
 
-.lbt-id-code{
+.lbt-id-code {
 
   font-size:9px;
 
@@ -6340,14 +6633,14 @@ function injectEmployeeCardStyles() {
   margin-top:4px;
 }
 
-.lbt-id-info{
+.lbt-id-info {
 
   display:grid;
 
   gap:9px;
 }
 
-.lbt-id-info div{
+.lbt-id-info div {
 
   border-bottom:
     1px solid #e7ebf0;
@@ -6355,7 +6648,7 @@ function injectEmployeeCardStyles() {
   padding-bottom:6px;
 }
 
-.lbt-id-info span{
+.lbt-id-info span {
 
   display:block;
 
@@ -6366,7 +6659,7 @@ function injectEmployeeCardStyles() {
   text-transform:uppercase;
 }
 
-.lbt-id-info strong{
+.lbt-id-info strong {
 
   display:block;
 
@@ -6377,22 +6670,22 @@ function injectEmployeeCardStyles() {
   word-break:break-word;
 }
 
-.lbt-id-info strong.active{
+.lbt-id-info strong.active {
 
   color:#16a34a;
 }
 
-.lbt-id-info strong.inactive{
+.lbt-id-info strong.inactive {
 
   color:#dc2626;
 }
 
-.lbt-id-qr{
+.lbt-id-qr {
 
   text-align:center;
 }
 
-.lbt-id-qr img{
+.lbt-id-qr img {
 
   width:105px;
 
@@ -6405,7 +6698,7 @@ function injectEmployeeCardStyles() {
   border:6px solid #fff;
 }
 
-.lbt-id-qr small{
+.lbt-id-qr small {
 
   display:block;
 
@@ -6416,7 +6709,7 @@ function injectEmployeeCardStyles() {
   margin-top:6px;
 }
 
-.lbt-id-footer{
+.lbt-id-footer {
 
   display:flex;
 
@@ -6433,12 +6726,12 @@ function injectEmployeeCardStyles() {
   font-size:8px;
 }
 
-.lbt-id-footer span:last-child{
+.lbt-id-footer span:last-child {
 
   text-align:right;
 }
 
-.lbt-card-actions{
+.lbt-card-actions {
 
   display:flex;
 
@@ -6449,64 +6742,62 @@ function injectEmployeeCardStyles() {
   margin-top:14px;
 }
 
-.badge.success{
+.badge.success {
 
   background:#dcfce7;
 
   color:#166534;
 }
 
-.badge.warn{
+.badge.warn {
 
   background:#fef3c7;
 
   color:#92400e;
 }
 
-.badge.danger{
+.badge.danger {
 
   background:#fee2e2;
 
   color:#991b1b;
 }
 
-.badge.muted{
+.badge.muted {
 
   background:#e5e7eb;
 
   color:#374151;
 }
 
-@media(max-width:650px){
+@media(max-width:650px) {
 
-  .lbt-id-body{
+  .lbt-id-body {
 
     grid-template-columns:1fr;
   }
 
-  .lbt-id-qr{
+  .lbt-id-qr {
 
     order:3;
   }
 
-  .lbt-id-footer{
+  .lbt-id-footer {
 
     display:block;
   }
 
-  .lbt-id-footer span{
+  .lbt-id-footer span {
 
     display:block;
 
     margin:3px 0;
   }
 
-  .lbt-id-footer
-  span:last-child{
+  .lbt-id-footer span:last-child {
 
     text-align:left;
   }
-
 }
 
 `;
@@ -6516,11 +6807,11 @@ function injectEmployeeCardStyles() {
   );
 }
 
-injectEmployeeCardStyles();
-
 /* =========================================================
-   API CARTES
+   EXPORTS PUBLICS
    ========================================================= */
+
+injectEmployeeCardStyles();
 
 window.LBT_EMPLOYEE_CARD = {
 
@@ -6535,11 +6826,10 @@ window.LBT_EMPLOYEE_CARD = {
 
   qr:
     employeeQrText
-
 };
 
 /* =========================================================
-   DÉMARRAGE
+   LANCEMENT
    ========================================================= */
 
 boot();
